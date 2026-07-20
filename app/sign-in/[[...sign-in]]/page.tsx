@@ -16,7 +16,7 @@ export default function SignInPage() {
           <div style={{ borderBottom: '1px solid #f0edf8', paddingBottom: '10px' }}>
             <span style={{ fontWeight: 700, color: '#c5a059' }}>Admin Account:</span>
             <div style={{ marginTop: '4px', fontFamily: 'monospace' }}>
-              <strong>Email:</strong> admin@mineralsuniverse.com
+              <strong>Email:</strong> drtoolofficial@gmail.com
             </div>
             <div style={{ fontFamily: 'monospace' }}>
               <strong>Password:</strong> AdminPassword123!

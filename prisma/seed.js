@@ -291,7 +291,7 @@ async function main() {
   console.log('Seeding users...');
   const users = [
     {
-      email: 'admin@mineralsuniverse.com',
+      email: 'drtoolofficial@gmail.com',
       name: 'Admin Demo User',
       role: 'Admin'
     },
