@@ -1,5 +1,24 @@
 const { PrismaClient } = require('@prisma/client');
-const prisma = new PrismaClient();
+const { PrismaMariaDb } = require('@prisma/adapter-mariadb');
+
+const dbUrl = process.env.DATABASE_URL || 'mysql://root:maaz@localhost:3306/abbasshoping';
+let urlParsed;
+try {
+  urlParsed = new URL(dbUrl);
+} catch (e) {
+  urlParsed = new URL('mysql://root:maaz@localhost:3306/abbasshoping');
+}
+
+const adapter = new PrismaMariaDb({
+  host: urlParsed.hostname || 'localhost',
+  port: urlParsed.port ? Number(urlParsed.port) : 3306,
+  user: urlParsed.username || 'root',
+  password: urlParsed.password ? decodeURIComponent(urlParsed.password) : '',
+  database: urlParsed.pathname.replace(/^\//, '') || 'abbasshoping',
+  connectionLimit: 5,
+});
+
+const prisma = new PrismaClient({ adapter });
 
 const products = [
   {

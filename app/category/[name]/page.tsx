@@ -5,8 +5,6 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { ShoppingBag, ArrowLeft } from 'lucide-react';
 
-import { getProductsByCategory } from '@/lib/products';
-
 export default function CategoryPage({ params }: { params: Promise<{ name: string }> }) {
   const resolvedParams = use(params);
   const router = useRouter();
@@ -17,7 +15,18 @@ export default function CategoryPage({ params }: { params: Promise<{ name: strin
 
   useEffect(() => {
     setMounted(true);
-    setCategoryProducts(getProductsByCategory(categoryName));
+    async function loadCategoryProducts() {
+      try {
+        const res = await fetch(`/api/products?category=${categoryName}`);
+        const data = await res.json();
+        if (data.success && data.products) {
+          setCategoryProducts(data.products);
+        }
+      } catch (err) {
+        console.error('Failed to load category products:', err);
+      }
+    }
+    loadCategoryProducts();
   }, [categoryName]);
 
   if (!mounted) return null;

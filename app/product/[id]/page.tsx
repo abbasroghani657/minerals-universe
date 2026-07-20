@@ -6,8 +6,6 @@ import { useRouter } from 'next/navigation';
 import { useCart } from '@/context/CartContext';
 import { ShieldCheck, Truck, PackageCheck, ArrowLeft, Heart, ShoppingBag } from 'lucide-react';
 
-import { products, getProductById } from '@/lib/products';
-
 export default function ProductPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
   const router = useRouter();
@@ -16,12 +14,44 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
   const [added, setAdded] = useState(false);
   const [qty, setQty] = useState(1);
   const [activeTab, setActiveTab] = useState('description');
+  const [related, setRelated] = useState<any[]>([]);
 
   useEffect(() => {
     const id = parseInt(resolvedParams.id);
-    const found = getProductById(id);
-    setProduct(found || null);
+    async function loadProduct() {
+      try {
+        const res = await fetch(`/api/products?id=${id}`);
+        const data = await res.json();
+        if (data.success && data.product) {
+          setProduct(data.product);
+        }
+      } catch (err) {
+        console.error('Failed to load product detail:', err);
+      }
+    }
+    loadProduct();
   }, [resolvedParams.id]);
+
+  useEffect(() => {
+    if (product) {
+      async function loadRelated() {
+        try {
+          const res = await fetch('/api/products');
+          const data = await res.json();
+          if (data.success && data.products) {
+            const filtered = data.products
+              .filter((p: any) => p.id !== product.id)
+              .sort((a: any, b: any) => (a.cat === product.cat ? -1 : 1))
+              .slice(0, 4);
+            setRelated(filtered);
+          }
+        } catch (err) {
+          console.error('Failed to load related products:', err);
+        }
+      }
+      loadRelated();
+    }
+  }, [product]);
 
   if (!product) return null;
 
@@ -193,11 +223,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
         <h2 className="heading-serif" style={{ fontSize: '32px', color: '#1a5c4a', textAlign: 'center', margin: '0 0 10px 0' }}>Related Products</h2>
         <p style={{ textAlign: 'center', color: '#666', fontSize: '15px' }}>Customers also viewed these exclusive items</p>
         <div className="cat-grid">
-          {products
-            .filter(p => p.id !== product.id)
-            .sort((a, b) => (a.cat === product.cat ? -1 : 1))
-            .slice(0, 4)
-            .map((rp) => (
+          {related.map((rp) => (
             <div key={rp.id} className="product-card" onClick={() => router.push('/product/' + rp.id)}>
               <div style={{ position: 'relative', width: '100%', aspectRatio: '1/1' }}>
                 <Image src={rp.img} alt={rp.name} fill style={{ objectFit: 'cover' }} unoptimized />

@@ -4,33 +4,43 @@ import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useCart } from '@/context/CartContext';
-import { products } from '@/lib/products';
-
-// Dynamically construct categorizedProducts from central database
-const uniqueCategories = Array.from(new Set(products.map(p => p.cat)));
-const categorizedProducts = uniqueCategories.map(cat => ({
-  category: cat,
-  items: products
-    .filter(p => p.cat === cat)
-    .map(p => ({
-      id: p.id,
-      img: p.img,
-      name: p.name,
-      original: p.original,
-      sale: p.sale,
-      sale_num: p.priceNum,
-      badge: p.badge
-    }))
-}));
-
 export default function ShopPage() {
   const router = useRouter();
   const { addToCart, wishlist, toggleWishlist } = useCart();
   const [added, setAdded] = useState<Set<number>>(new Set());
   const [mounted, setMounted] = useState(false);
+  const [categorizedProducts, setCategorizedProducts] = useState<any[]>([]);
 
   useEffect(() => {
     setMounted(true);
+    async function loadShopData() {
+      try {
+        const res = await fetch('/api/products');
+        const data = await res.json();
+        if (data.success && data.products) {
+          const uniqueCategories = Array.from(new Set(data.products.map((p: any) => p.cat)));
+          const categorized = uniqueCategories.map(cat => ({
+            category: cat,
+            items: data.products
+              .filter((p: any) => p.cat === cat)
+              .map((p: any) => ({
+                id: p.id,
+                img: p.img,
+                name: p.name,
+                original: p.original,
+                sale: p.sale,
+                sale_num: Number(p.priceNum),
+                badge: p.badge,
+                stock: p.stock
+              }))
+          }));
+          setCategorizedProducts(categorized);
+        }
+      } catch (err) {
+        console.error('Failed to load shop products:', err);
+      }
+    }
+    loadShopData();
   }, []);
 
   if (!mounted) return null;
@@ -213,7 +223,7 @@ export default function ShopPage() {
           <h2 className="heading-serif category-title">{catGroup.category}</h2>
           
           <div className="products-grid">
-            {catGroup.items.map(product => (
+            {catGroup.items.map((product: any) => (
               <div key={product.id} className="product-card" onClick={() => router.push('/product/' + product.id)} style={{ cursor: 'pointer' }}>
                 <div className="product-img">
                   <Image src={product.img} alt={product.name} fill style={{ objectFit: 'cover' }} unoptimized />

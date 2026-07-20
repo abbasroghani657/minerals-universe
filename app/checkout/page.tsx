@@ -4,8 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { useCart } from '@/context/CartContext';
-import { PayPalScriptProvider, PayPalButtons } from '@paypal/react-paypal-js';
-import { Lock, Package, FileCheck, CreditCard, Wallet } from 'lucide-react';
+import { Lock, Package, FileCheck, CreditCard } from 'lucide-react';
 
 // ─── Constants & Types ────────────────────────────────────────────────────────
 const EMERALD = '#1a5c4a';
@@ -25,7 +24,6 @@ export default function PremiumCheckoutPage() {
   const { cartItems, clearCart } = useCart();
   const [mounted, setMounted] = useState(false);
   
-  const [paymentTab, setPaymentTab] = useState<'paypal' | 'stripe'>('stripe');
   const [formError, setFormError] = useState<string | null>(null);
 
   const [customer, setCustomer] = useState<CustomerDetails>({
@@ -89,7 +87,7 @@ export default function PremiumCheckoutPage() {
         shippingAddress: customer.shippingAddress,
         items: cartItems.map(i => ({ name: i.name, quantity: i.quantity, price: i.price })),
         total: subtotal,
-        paymentMethod: paymentTab === 'paypal' ? 'PayPal' : 'Stripe / Card',
+        paymentMethod: 'Stripe / Card',
       };
 
       const res = await fetch('/api/orders', {
@@ -334,21 +332,8 @@ export default function PremiumCheckoutPage() {
             <div className="section-card">
               <h2 className="heading-serif section-title">2. Payment Method</h2>
 
-              <div style={{ display: 'flex', marginBottom: '30px' }}>
-                <button 
-                  className={`toggle-btn ${paymentTab === 'stripe' ? 'active' : ''}`}
-                  onClick={() => setPaymentTab('stripe')}
-                >
-                  <CreditCard size={18} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '8px', marginBottom: '2px' }} />
-                  Credit / Debit Card
-                </button>
-                <button 
-                  className={`toggle-btn ${paymentTab === 'paypal' ? 'active' : ''}`}
-                  onClick={() => setPaymentTab('paypal')}
-                >
-                  <Wallet size={18} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '8px', marginBottom: '2px' }} />
-                  PayPal
-                </button>
+              <div style={{ display: 'flex', gap: '8px', alignItems: 'center', color: '#1a5c4a', background: '#e8f3f0', padding: '12px 16px', borderRadius: '4px', marginBottom: '24px', fontSize: '14px', fontWeight: 600 }}>
+                <Lock size={16} /> Secure Checkout: Encrypted Credit/Debit Card via Stripe
               </div>
 
               {formError && (
@@ -357,75 +342,51 @@ export default function PremiumCheckoutPage() {
                 </div>
               )}
 
-              {paymentTab === 'stripe' && (
-                <form onSubmit={handlePlaceOrder}>
-                  <div style={{ display: 'grid', gap: '20px' }}>
+              <form onSubmit={handlePlaceOrder}>
+                <div style={{ display: 'grid', gap: '20px' }}>
+                  <div>
+                    <label style={labelBase}>Card Number</label>
+                    <input 
+                      type="text" 
+                      className="input-field" 
+                      style={inputBase} 
+                      value={cardNumber}
+                      onChange={handleCardNumberChange}
+                      placeholder="0000 0000 0000 0000" 
+                      maxLength={19}
+                    />
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
                     <div>
-                      <label style={labelBase}>Card Number</label>
+                      <label style={labelBase}>Expiry Date</label>
                       <input 
                         type="text" 
                         className="input-field" 
                         style={inputBase} 
-                        value={cardNumber}
-                        onChange={handleCardNumberChange}
-                        placeholder="0000 0000 0000 0000" 
-                        maxLength={19}
+                        value={cardExpiry}
+                        onChange={handleExpiryChange}
+                        placeholder="MM / YY" 
+                        maxLength={7}
                       />
                     </div>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
-                      <div>
-                        <label style={labelBase}>Expiry Date</label>
-                        <input 
-                          type="text" 
-                          className="input-field" 
-                          style={inputBase} 
-                          value={cardExpiry}
-                          onChange={handleExpiryChange}
-                          placeholder="MM / YY" 
-                          maxLength={7}
-                        />
-                      </div>
-                      <div>
-                        <label style={labelBase}>CVV</label>
-                        <input 
-                          type="password" 
-                          className="input-field" 
-                          style={inputBase} 
-                          value={cardCvv}
-                          onChange={(e) => setCardCvv(e.target.value.replace(/[^0-9]/g, '').substring(0, 4))}
-                          placeholder="123" 
-                          maxLength={4}
-                        />
-                      </div>
+                    <div>
+                      <label style={labelBase}>CVV</label>
+                      <input 
+                        type="password" 
+                        className="input-field" 
+                        style={inputBase} 
+                        value={cardCvv}
+                        onChange={(e) => setCardCvv(e.target.value.replace(/[^0-9]/g, '').substring(0, 4))}
+                        placeholder="123" 
+                        maxLength={4}
+                      />
                     </div>
                   </div>
-                  <button type="submit" className="btn-submit">
-                    Place Order • PKR {subtotal.toLocaleString()}
-                  </button>
-                </form>
-              )}
-
-              {paymentTab === 'paypal' && (
-                <div style={{ marginTop: '20px' }}>
-                  <PayPalScriptProvider options={{ clientId: process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID && process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID !== 'your_sandbox_client_id' ? process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID : 'test', currency: 'USD' }}>
-                    <PayPalButtons 
-                      style={{ layout: 'vertical', shape: 'rect', color: 'gold' }}
-                      createOrder={(data, actions) => {
-                        if (!validateForm()) return Promise.reject();
-                        return actions.order.create({
-                          intent: "CAPTURE",
-                          purchase_units: [{ amount: { value: "100.00", currency_code: "USD" } }]
-                        });
-                      }}
-                      onApprove={(data, actions) => {
-                        return actions.order!.capture().then((details) => {
-                          handlePlaceOrder({ preventDefault: () => {} } as React.FormEvent);
-                        });
-                      }}
-                    />
-                  </PayPalScriptProvider>
                 </div>
-              )}
+                <button type="submit" className="btn-submit">
+                  Place Order • PKR {subtotal.toLocaleString()}
+                </button>
+              </form>
             </div>
           </div>
 

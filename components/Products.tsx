@@ -1,13 +1,27 @@
 'use client';
 import Image from 'next/image';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useCart } from '@/context/CartContext';
 import { useRouter } from 'next/navigation';
-import { products } from '@/lib/products';
-
-const homeProducts = products.filter(p => [1, 2, 3, 4].includes(p.id));
 
 export default function Products() {
+  const [homeProducts, setHomeProducts] = useState<any[]>([]);
+
+  useEffect(() => {
+    async function fetchHomeProducts() {
+      try {
+        const res = await fetch('/api/products');
+        const data = await res.json();
+        if (data.success && data.products) {
+          // Filter to first 4 products
+          setHomeProducts(data.products.filter((p: any) => [1, 2, 3, 4].includes(p.id)));
+        }
+      } catch (err) {
+        console.error('Error loading products for homepage:', err);
+      }
+    }
+    fetchHomeProducts();
+  }, []);
   const { addToCart, wishlist, toggleWishlist } = useCart();
   const [added, setAdded] = useState<Set<number>>(new Set());
   const router = useRouter();

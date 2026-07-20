@@ -4,10 +4,12 @@ import { useState, useRef, useEffect } from 'react';
 import { useCart } from '@/context/CartContext';
 import { Search, Heart, ShoppingCart } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { useAuth, UserButton } from '@clerk/nextjs';
 
 export default function Header() {
   const { cartCount, wishlist } = useCart();
   const router = useRouter();
+  const { isSignedIn, isLoaded } = useAuth();
   const [currency, setCurrency] = useState('USD $');
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -119,6 +121,28 @@ export default function Header() {
               <ShoppingCart size={20} style={{ display: 'block' }} />
               {cartCount > 0 && <span className="cart-badge">{cartCount}</span>}
             </button>
+            <div style={{ marginLeft: '12px', display: 'flex', alignItems: 'center' }}>
+              {isLoaded && !isSignedIn && (
+                <Link
+                  href="/sign-in"
+                  style={{
+                    fontSize: '13px',
+                    fontWeight: 600,
+                    color: 'var(--teal)',
+                    border: '1px solid var(--teal)',
+                    borderRadius: '4px',
+                    padding: '6px 12px',
+                    textDecoration: 'none',
+                    transition: 'all 0.2s',
+                  }}
+                >
+                  Sign In
+                </Link>
+              )}
+              {isLoaded && isSignedIn && (
+                <UserButton />
+              )}
+            </div>
           </div>
         </div>
       </header>
