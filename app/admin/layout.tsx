@@ -2,10 +2,50 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useState, useEffect } from 'react';
 import { LayoutDashboard, Package, ShoppingCart, MessageSquare, Mail, LogOut } from 'lucide-react';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const [role, setRole] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchRole() {
+      try {
+        const res = await fetch('/api/auth/role');
+        const data = await res.json();
+        if (data.success && data.role) {
+          setRole(data.role);
+        }
+      } catch (err) {
+        console.error('Error checking user role:', err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchRole();
+  }, []);
+
+  if (loading) {
+    return (
+      <div style={{ display: 'flex', minHeight: '100vh', alignItems: 'center', justifyContent: 'center', background: '#f8f7f5', color: '#1a5c4a', fontWeight: 600, fontFamily: "'DM Sans', sans-serif" }}>
+        Verifying permissions...
+      </div>
+    );
+  }
+
+  if (role !== 'Admin') {
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', alignItems: 'center', justifyContent: 'center', background: '#f8f7f5', padding: '40px 20px', fontFamily: "'DM Sans', sans-serif", textAlign: 'center' }}>
+        <h2 style={{ color: '#c94438', fontFamily: "'Cormorant Garamond', serif", fontSize: '36px', margin: '0 0 16px' }}>Access Denied</h2>
+        <p style={{ color: '#666', fontSize: '16px', margin: '0 0 30px', maxWidth: '460px' }}>You do not have Administrator permissions to access the dashboard. Please log in with an admin account.</p>
+        <div style={{ display: 'flex', gap: '16px' }}>
+          <Link href="/" style={{ background: '#1a5c4a', color: '#fff', padding: '12px 24px', borderRadius: '4px', textDecoration: 'none', fontWeight: 600, fontSize: '15px' }}>Back to Shop</Link>
+        </div>
+      </div>
+    );
+  }
 
   const navItems = [
     { name: 'Dashboard', href: '/admin', icon: LayoutDashboard },

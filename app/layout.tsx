@@ -28,8 +28,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         </head>
         <body>
           <CartProvider>
-            <GlobalUI />
-            {children}
+            <GlobalUI>{children}</GlobalUI>
           </CartProvider>
         </body>
       </html>

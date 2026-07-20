@@ -1,4 +1,3 @@
-import Header from '@/components/Header';
 import HeroSlider from '@/components/HeroSlider';
 import TrustBar from '@/components/TrustBar';
 import About from '@/components/About';
@@ -12,14 +11,12 @@ import InstagramGrid from '@/components/InstagramGrid';
 import Reviews from '@/components/Reviews';
 import FAQ from '@/components/FAQ';
 import Contact from '@/components/Contact';
-import Footer from '@/components/Footer';
 import Loader from '@/components/Loader';
 
 export default function Home() {
   return (
     <>
       <Loader />
-      <Header />
       <main>
         <HeroSlider />
         <TrustBar />
@@ -35,7 +32,6 @@ export default function Home() {
         <FAQ />
         <Contact />
       </main>
-      <Footer />
     </>
   );
 }

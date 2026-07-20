@@ -287,6 +287,36 @@ async function main() {
       create: product,
     });
   }
+
+  console.log('Seeding users...');
+  const users = [
+    {
+      email: 'admin@mineralsuniverse.com',
+      name: 'Admin Demo User',
+      role: 'Admin'
+    },
+    {
+      email: 'customer@mineralsuniverse.com',
+      name: 'Customer Demo User',
+      role: 'Customer'
+    }
+  ];
+
+  for (const user of users) {
+    await prisma.user.upsert({
+      where: { email: user.email },
+      update: {
+        name: user.name,
+        role: user.role
+      },
+      create: {
+        email: user.email,
+        name: user.name,
+        role: user.role
+      }
+    });
+  }
+
   console.log('Database seeded successfully!');
 }
 
