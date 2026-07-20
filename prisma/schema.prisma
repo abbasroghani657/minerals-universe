@@ -1,0 +1,74 @@
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Product {
+  id           Int      @id @default(autoincrement())
+  img          String
+  cat          String
+  name         String
+  original     String?
+  sale         String
+  priceNum     Float
+  badge        String
+  stock        String?
+  desc         String   @db.Text
+  origin       String
+  treatment    String
+  cert         String
+}
+
+model Order {
+  id              String      @id
+  customerName    String
+  customerEmail   String
+  customerPhone   String
+  shippingAddress String     @db.Text
+  total           Float
+  paymentMethod   String
+  paymentStatus   String
+  createdAt       DateTime    @default(now())
+  items           OrderItem[]
+}
+
+model OrderItem {
+  id        Int    @id @default(autoincrement())
+  name      String
+  quantity  Int
+  price     Float
+  orderId   String
+  order     Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+}
+
+model Inquiry {
+  id             String   @id
+  name           String
+  email          String
+  phone          String?
+  type           String   // 'General' or 'Custom Order'
+  subject        String
+  message        String   @db.Text
+  createdAt      DateTime @default(now())
+  status         String   // 'Unread', 'Read', 'Replied'
+  stoneType      String?
+  caratWeight    String?
+  preferredColor String?
+  maxBudget      String?
+  intendedUse    String?
+}
+
+model Review {
+  id        String   @id
+  author    String
+  product   String
+  productId Int?
+  rating    Int
+  text      String   @db.Text
+  status    String   // 'Pending', 'Approved', 'Rejected'
+  createdAt DateTime @default(now())
+}
