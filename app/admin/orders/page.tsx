@@ -1,42 +1,81 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Search, Eye, X, Check, Truck, Package, CreditCard, MapPin } from 'lucide-react';
+
+const dummyOrders = [
+  { 
+    id: 'ORD-001', customerName: 'Ahmed Khan', customerEmail: 'ahmed@example.com', customerPhone: '+92 300 1234567',
+    shippingAddress: '123 Defense Housing Authority, Phase 5, Lahore, Pakistan',
+    createdAt: '2026-10-24T12:00:00Z', total: 45000, status: 'Processing',
+    paymentMethod: 'Stripe / Card', paymentStatus: 'Paid',
+    items: [
+      { name: 'Natural Aquamarine Emerald Cut', quantity: 1, price: 38000 },
+      { name: 'Silver Polishing Cloth', quantity: 2, price: 3500 }
+    ]
+  },
+  { 
+    id: 'ORD-002', customerName: 'Sarah W.', customerEmail: 'sarah@example.com', customerPhone: '+1 555 987 6543',
+    shippingAddress: '456 Gemstone Blvd, New York, NY 10001, USA',
+    createdAt: '2026-10-23T12:00:00Z', total: 12500, status: 'Shipped', tracking: 'DHL-88371923',
+    paymentMethod: 'PayPal', paymentStatus: 'Paid',
+    items: [
+      { name: 'Deep Red Pyrope Garnet Oval', quantity: 1, price: 12500 }
+    ]
+  },
+  { 
+    id: 'ORD-003', customerName: 'Ali Raza', customerEmail: 'ali@example.com', customerPhone: '+971 50 123 4567',
+    shippingAddress: 'Villa 14, Jumeirah 1, Dubai, UAE',
+    createdAt: '2026-10-21T12:00:00Z', total: 85000, status: 'Delivered', tracking: 'FEDEX-9182374',
+    paymentMethod: 'Stripe / Card', paymentStatus: 'Paid',
+    items: [
+      { name: 'Pink Tourmaline Cushion Cut', quantity: 1, price: 75000 },
+      { name: 'Custom Gold Ring Setting', quantity: 1, price: 10000 }
+    ]
+  },
+];
 
 export default function AdminOrders() {
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
+  const [orders, setOrders] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const orders = [
-    { 
-      id: '#ORD-001', customer: 'Ahmed Khan', email: 'ahmed@example.com', phone: '+92 300 1234567',
-      address: '123 Defense Housing Authority, Phase 5, Lahore, Pakistan',
-      date: 'Oct 24, 2026', total: 'PKR 45,000', status: 'Processing',
-      paymentMethod: 'Stripe / Card', paymentStatus: 'Paid',
-      items: [
-        { name: 'Natural Aquamarine Emerald Cut', qty: 1, price: 'PKR 38,000' },
-        { name: 'Silver Polishing Cloth', qty: 2, price: 'PKR 3,500' }
-      ]
-    },
-    { 
-      id: '#ORD-002', customer: 'Sarah W.', email: 'sarah@example.com', phone: '+1 555 987 6543',
-      address: '456 Gemstone Blvd, New York, NY 10001, USA',
-      date: 'Oct 23, 2026', total: 'PKR 12,500', status: 'Shipped', tracking: 'DHL-88371923',
-      paymentMethod: 'PayPal', paymentStatus: 'Paid',
-      items: [
-        { name: 'Deep Red Pyrope Garnet Oval', qty: 1, price: 'PKR 12,500' }
-      ]
-    },
-    { 
-      id: '#ORD-003', customer: 'Ali Raza', email: 'ali@example.com', phone: '+971 50 123 4567',
-      address: 'Villa 14, Jumeirah 1, Dubai, UAE',
-      date: 'Oct 21, 2026', total: 'PKR 85,000', status: 'Delivered', tracking: 'FEDEX-9182374',
-      paymentMethod: 'Stripe / Card', paymentStatus: 'Paid',
-      items: [
-        { name: 'Pink Tourmaline Cushion Cut', qty: 1, price: 'PKR 75,000' },
-        { name: 'Custom Gold Ring Setting', qty: 1, price: 'PKR 10,000' }
-      ]
-    },
-  ];
+  useEffect(() => {
+    async function loadOrders() {
+      try {
+        const res = await fetch('/api/orders');
+        const data = await res.json();
+        if (data.success && data.orders && data.orders.length > 0) {
+          setOrders(data.orders);
+        } else {
+          setOrders(dummyOrders);
+        }
+      } catch (err) {
+        console.error('Failed to load real orders, using fallbacks:', err);
+        setOrders(dummyOrders);
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadOrders();
+  }, []);
+
+  const formatPrice = (p: string | number) => {
+    if (typeof p === 'number') return `PKR ${p.toLocaleString()}`;
+    return p;
+  };
+
+  const formatDate = (dateStr: string) => {
+    try {
+      return new Date(dateStr).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+    } catch {
+      return dateStr;
+    }
+  };
+
+  if (loading) {
+    return <div style={{ padding: '40px', textAlign: 'center', color: '#1a5c4a', fontWeight: 600 }}>Loading Orders...</div>;
+  }
 
   return (
     <>
@@ -75,19 +114,19 @@ export default function AdminOrders() {
               <tr key={o.id} style={{ borderBottom: i !== orders.length - 1 ? '1px solid #f5f5f5' : 'none' }}>
                 <td style={{ padding: '16px 0', fontSize: '14px', fontWeight: 500, color: '#1a5c4a' }}>{o.id}</td>
                 <td style={{ padding: '16px 0' }}>
-                  <p style={{ margin: 0, fontSize: '14px', color: '#333', fontWeight: 500 }}>{o.customer}</p>
-                  <p style={{ margin: 0, fontSize: '12px', color: '#888' }}>{o.email}</p>
+                  <p style={{ margin: 0, fontSize: '14px', color: '#333', fontWeight: 500 }}>{o.customerName}</p>
+                  <p style={{ margin: 0, fontSize: '12px', color: '#888' }}>{o.customerEmail}</p>
                 </td>
-                <td style={{ padding: '16px 0', fontSize: '14px', color: '#666' }}>{o.date}</td>
+                <td style={{ padding: '16px 0', fontSize: '14px', color: '#666' }}>{formatDate(o.createdAt)}</td>
                 <td style={{ padding: '16px 0', fontSize: '14px', color: '#333' }}>{o.items.length} items</td>
-                <td style={{ padding: '16px 0', fontSize: '14px', fontWeight: 600, color: '#333' }}>{o.total}</td>
+                <td style={{ padding: '16px 0', fontSize: '14px', fontWeight: 600, color: '#333' }}>{formatPrice(o.total)}</td>
                 <td style={{ padding: '16px 0' }}>
                   <span style={{ 
                     padding: '4px 10px', borderRadius: '20px', fontSize: '12px', fontWeight: 600,
-                    background: o.status === 'Processing' ? '#fff3cd' : o.status === 'Shipped' ? '#d1ecf1' : '#d4edda',
-                    color: o.status === 'Processing' ? '#856404' : o.status === 'Shipped' ? '#0c5460' : '#155724'
+                    background: (o.status || 'Processing') === 'Processing' ? '#fff3cd' : (o.status || 'Processing') === 'Shipped' ? '#d1ecf1' : '#d4edda',
+                    color: (o.status || 'Processing') === 'Processing' ? '#856404' : (o.status || 'Processing') === 'Shipped' ? '#0c5460' : '#155724'
                   }}>
-                    {o.status}
+                    {o.status || 'Processing'}
                   </span>
                 </td>
                 <td style={{ padding: '16px 0', textAlign: 'right' }}>
@@ -118,7 +157,7 @@ export default function AdminOrders() {
                     {selectedOrder.status}
                   </span>
                 </h2>
-                <p style={{ margin: '4px 0 0', fontSize: '13px', color: '#666' }}>Placed on {selectedOrder.date}</p>
+                <p style={{ margin: '4px 0 0', fontSize: '13px', color: '#666' }}>Placed on {formatDate(selectedOrder.createdAt)}</p>
               </div>
               <button onClick={() => setSelectedOrder(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#888' }}><X size={24} /></button>
             </div>
@@ -131,10 +170,10 @@ export default function AdminOrders() {
                   <MapPin size={16} /> Customer Details
                 </h3>
                 <div style={{ background: '#f8f9fa', padding: '16px', borderRadius: '8px', border: '1px solid #e8e6e1', marginBottom: '24px' }}>
-                  <p style={{ margin: '0 0 8px', fontSize: '14px', fontWeight: 600, color: '#333' }}>{selectedOrder.customer}</p>
-                  <p style={{ margin: '0 0 4px', fontSize: '13px', color: '#555' }}>{selectedOrder.email}</p>
-                  <p style={{ margin: '0 0 12px', fontSize: '13px', color: '#555' }}>{selectedOrder.phone}</p>
-                  <p style={{ margin: 0, fontSize: '13px', color: '#555', lineHeight: '1.5' }}><strong>Shipping Address:</strong><br/>{selectedOrder.address}</p>
+                  <p style={{ margin: '0 0 8px', fontSize: '14px', fontWeight: 600, color: '#333' }}>{selectedOrder.customerName}</p>
+                  <p style={{ margin: '0 0 4px', fontSize: '13px', color: '#555' }}>{selectedOrder.customerEmail}</p>
+                  <p style={{ margin: '0 0 12px', fontSize: '13px', color: '#555' }}>{selectedOrder.customerPhone}</p>
+                  <p style={{ margin: 0, fontSize: '13px', color: '#555', lineHeight: '1.5' }}><strong>Shipping Address:</strong><br/>{selectedOrder.shippingAddress}</p>
                 </div>
 
                 <h3 style={{ fontSize: '15px', color: '#1a5c4a', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '16px', borderBottom: '1px solid #eee', paddingBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -162,14 +201,14 @@ export default function AdminOrders() {
                     <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: idx !== selectedOrder.items.length - 1 ? '12px' : 0, paddingBottom: idx !== selectedOrder.items.length - 1 ? '12px' : 0, borderBottom: idx !== selectedOrder.items.length - 1 ? '1px solid #ddd' : 'none' }}>
                       <div>
                         <p style={{ margin: '0 0 4px', fontSize: '14px', fontWeight: 500, color: '#333' }}>{item.name}</p>
-                        <p style={{ margin: 0, fontSize: '12px', color: '#888' }}>Qty: {item.qty}</p>
+                        <p style={{ margin: 0, fontSize: '12px', color: '#888' }}>Qty: {item.quantity}</p>
                       </div>
-                      <span style={{ fontSize: '14px', fontWeight: 600, color: '#1a5c4a' }}>{item.price}</span>
+                      <span style={{ fontSize: '14px', fontWeight: 600, color: '#1a5c4a' }}>{formatPrice(item.price)}</span>
                     </div>
                   ))}
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '16px', paddingTop: '16px', borderTop: '1px solid #ccc' }}>
                     <span style={{ fontSize: '15px', fontWeight: 600, color: '#333' }}>Total Paid</span>
-                    <span style={{ fontSize: '16px', fontWeight: 700, color: '#1a5c4a' }}>{selectedOrder.total}</span>
+                    <span style={{ fontSize: '16px', fontWeight: 700, color: '#1a5c4a' }}>{formatPrice(selectedOrder.total)}</span>
                   </div>
                 </div>
 

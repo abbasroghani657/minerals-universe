@@ -1,13 +1,64 @@
 'use client';
 
-import { MailOpen, Mail, Trash2 } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { MailOpen, Mail, Trash2, CheckCheck } from 'lucide-react';
+
+const dummyInquiries = [
+  { id: 'INQ-1', name: 'John Doe', email: 'john@example.com', type: 'Custom Order', subject: 'Looking for a 3ct Ruby', createdAt: '2026-10-25T12:00:00Z', status: 'Unread' },
+  { id: 'INQ-2', name: 'Ali Raza', email: 'ali@example.com', type: 'General', subject: 'Shipping to UAE?', createdAt: '2026-10-24T12:00:00Z', status: 'Read' },
+  { id: 'INQ-3', name: 'Sarah W.', email: 'sarah@example.com', type: 'Custom Order', subject: 'Engagement Ring Stone', createdAt: '2026-10-20T12:00:00Z', status: 'Replied' },
+];
 
 export default function AdminInquiries() {
-  const inquiries = [
-    { id: 1, name: 'John Doe', email: 'john@example.com', type: 'Custom Order', subject: 'Looking for a 3ct Ruby', date: 'Oct 25', status: 'Unread' },
-    { id: 2, name: 'Ali Raza', email: 'ali@example.com', type: 'General', subject: 'Shipping to UAE?', date: 'Oct 24', status: 'Read' },
-    { id: 3, name: 'Sarah W.', email: 'sarah@example.com', type: 'Custom Order', subject: 'Engagement Ring Stone', date: 'Oct 20', status: 'Replied' },
-  ];
+  const [inquiries, setInquiries] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function loadInquiries() {
+      try {
+        const res = await fetch('/api/inquiries');
+        const data = await res.json();
+        if (data.success && data.inquiries && data.inquiries.length > 0) {
+          setInquiries(data.inquiries);
+        } else {
+          setInquiries(dummyInquiries);
+        }
+      } catch (err) {
+        console.error('Failed to load inquiries:', err);
+        setInquiries(dummyInquiries);
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadInquiries();
+  }, []);
+
+  const handleUpdateStatus = async (id: string, status: string) => {
+    try {
+      const res = await fetch('/api/inquiries', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, status }),
+      });
+      if (res.ok) {
+        setInquiries(prev => prev.map(inq => inq.id === id ? { ...inq, status } : inq));
+      }
+    } catch (err) {
+      console.error('Failed to update inquiry status:', err);
+    }
+  };
+
+  const formatDate = (dateStr: string) => {
+    try {
+      return new Date(dateStr).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+    } catch {
+      return dateStr;
+    }
+  };
+
+  if (loading) {
+    return <div style={{ padding: '40px', textAlign: 'center', color: '#1a5c4a', fontWeight: 600 }}>Loading Inquiries...</div>;
+  }
 
   return (
     <div>
@@ -41,10 +92,30 @@ export default function AdminInquiries() {
                   </span>
                 </td>
                 <td style={{ padding: '16px 0', fontSize: '14px', color: '#333', fontWeight: inq.status === 'Unread' ? 600 : 400 }}>{inq.subject}</td>
-                <td style={{ padding: '16px 0', fontSize: '13px', color: '#888' }}>{inq.date}</td>
+                <td style={{ padding: '16px 0', fontSize: '13px', color: '#888' }}>{formatDate(inq.createdAt)}</td>
                 <td style={{ padding: '16px 0', textAlign: 'right' }}>
-                  <button style={{ background: '#1a5c4a', border: 'none', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer', color: '#fff', fontSize: '13px', marginRight: '8px' }}>Reply</button>
-                  <button style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#c94438' }}><Trash2 size={16} /></button>
+                  {inq.status === 'Unread' && (
+                    <button 
+                      onClick={() => handleUpdateStatus(inq.id, 'Read')} 
+                      style={{ background: '#f5faf9', border: '1px solid #1a5c4a', color: '#1a5c4a', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer', fontSize: '13px', marginRight: '8px', fontWeight: 500 }}
+                      title="Mark as Read"
+                    >
+                      Read
+                    </button>
+                  )}
+                  {inq.status !== 'Replied' && (
+                    <button 
+                      onClick={() => handleUpdateStatus(inq.id, 'Replied')} 
+                      style={{ background: '#1a5c4a', border: 'none', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer', color: '#fff', fontSize: '13px', marginRight: '8px' }}
+                    >
+                      Reply
+                    </button>
+                  )}
+                  {inq.status === 'Replied' && (
+                    <span style={{ color: '#155724', fontSize: '12px', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '4px', marginRight: '12px' }}>
+                      <CheckCheck size={14} /> Replied
+                    </span>
+                  )}
                 </td>
               </tr>
             ))}

@@ -77,23 +77,42 @@ export default function PremiumCheckoutPage() {
     return true;
   };
 
-  const handlePlaceOrder = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handlePlaceOrder = async (e: React.FormEvent) => {
+    if (e && e.preventDefault) e.preventDefault();
     if (!validateForm()) return;
     
-    // In a real app, this would process the Stripe token securely
-    sessionStorage.setItem('minerals_universe_last_order', JSON.stringify({
-      orderId: 'ORD-' + Math.floor(Math.random() * 1000000),
-      customerName: customer.customerName,
-      customerEmail: customer.customerEmail,
-      customerPhone: customer.customerPhone,
-      shippingAddress: customer.shippingAddress,
-      items: cartItems.map(i => ({ name: i.name, quantity: i.quantity, price: i.price })),
-      total: subtotal,
-      paymentMethod: paymentTab === 'paypal' ? 'PayPal' : 'Stripe / Card',
-    }));
-    clearCart();
-    router.push('/order-confirmation');
+    try {
+      const orderPayload = {
+        customerName: customer.customerName,
+        customerEmail: customer.customerEmail,
+        customerPhone: customer.customerPhone,
+        shippingAddress: customer.shippingAddress,
+        items: cartItems.map(i => ({ name: i.name, quantity: i.quantity, price: i.price })),
+        total: subtotal,
+        paymentMethod: paymentTab === 'paypal' ? 'PayPal' : 'Stripe / Card',
+      };
+
+      const res = await fetch('/api/orders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(orderPayload),
+      });
+
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || 'Failed to place order.');
+      }
+
+      sessionStorage.setItem('minerals_universe_last_order', JSON.stringify({
+        orderId: data.orderId,
+        ...orderPayload,
+      }));
+      clearCart();
+      router.push('/order-confirmation');
+    } catch (err: any) {
+      console.error('[handlePlaceOrder]', err);
+      setFormError(err.message || 'Payment processing failed. Please try again.');
+    }
   };
 
   // ─── Styles ───

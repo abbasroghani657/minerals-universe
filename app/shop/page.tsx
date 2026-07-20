@@ -4,30 +4,24 @@ import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useCart } from '@/context/CartContext';
+import { products } from '@/lib/products';
 
-const categorizedProducts = [
-  { category: 'Sapphire', items: [{ id: 101, img: 'https://images.unsplash.com/photo-1599707367072-cd6ada2bc375?w=400&q=80', name: 'Royal Blue Sapphire', original: '$1200', sale: '$950', sale_num: 950, badge: 'PREMIUM' }] },
-  { category: 'Ruby', items: [{ id: 102, img: 'https://images.unsplash.com/photo-1602442578765-a3b374baf4d2?w=400&q=80', name: 'Pigeon Blood Ruby', original: null, sale: '$1500', sale_num: 1500, badge: 'RARE' }] },
-  { category: 'Emerald', items: [{ id: 103, img: 'https://images.unsplash.com/photo-1519608487953-e999c86e7455?w=400&q=80', name: 'Vivid Green Emerald', original: '$850', sale: '$720', sale_num: 720, badge: '' }] },
-  { category: 'Aquamarine', items: [
-      { id: 1, img: 'https://images.unsplash.com/photo-1617038220319-276d3cfab638?w=400&q=80', name: 'Natural Aquamarine Emerald Cut', original: '$480', sale: '$385', sale_num: 385, badge: 'SALE' },
-      { id: 6, img: 'https://images.unsplash.com/photo-1548802673-380ab8ebc7b7?w=400&q=80', name: 'Ocean Blue Aquamarine Round', original: null, sale: '$490', sale_num: 490, badge: '' }
-  ] },
-  { category: 'Tourmaline', items: [
-      { id: 3, img: 'https://images.unsplash.com/photo-1599707367072-cd6ada2bc375?w=400&q=80', name: 'Pink Tourmaline Cushion Cut', original: null, sale: '$740', sale_num: 740, badge: 'NEW' },
-      { id: 7, img: 'https://images.unsplash.com/photo-1519608487953-e999c86e7455?w=400&q=80', name: 'Watermelon Tourmaline Slice', original: '$1200', sale: '$950', sale_num: 950, badge: 'RARE' }
-  ] },
-  { category: 'Topaz', items: [{ id: 4, img: 'https://images.unsplash.com/photo-1551703599-6b3e8379aa8c?w=400&q=80', name: 'Imperial Topaz Pear Shape', original: null, sale: '$510', sale_num: 510, badge: '' }] },
-  { category: 'Garnet', items: [{ id: 2, img: 'https://images.unsplash.com/photo-1602442578765-a3b374baf4d2?w=400&q=80', name: 'Deep Red Pyrope Garnet Oval', original: '$320', sale: '$245', sale_num: 245, badge: 'BEST SELLER' }] },
-  { category: 'Kunzite', items: [{ id: 108, img: 'https://images.unsplash.com/photo-1599707367072-cd6ada2bc375?w=400&q=80', name: 'Lilac Pink Kunzite', original: null, sale: '$340', sale_num: 340, badge: '' }] },
-  { category: 'Opals', items: [{ id: 109, img: 'https://images.unsplash.com/photo-1551703599-6b3e8379aa8c?w=400&q=80', name: 'Ethiopian Welo Opal', original: '$220', sale: '$180', sale_num: 180, badge: '' }] },
-  { category: 'Peridot', items: [{ id: 110, img: 'https://images.unsplash.com/photo-1519608487953-e999c86e7455?w=400&q=80', name: 'Apple Green Peridot', original: null, sale: '$150', sale_num: 150, badge: '' }] },
-  { category: 'Zircon', items: [{ id: 111, img: 'https://images.unsplash.com/photo-1617038220319-276d3cfab638?w=400&q=80', name: 'Blue Zircon Round Cut', original: null, sale: '$210', sale_num: 210, badge: '' }] },
-  { category: 'Morganite', items: [{ id: 112, img: 'https://images.unsplash.com/photo-1599707367072-cd6ada2bc375?w=400&q=80', name: 'Peach Morganite Oval', original: '$450', sale: '$380', sale_num: 380, badge: '' }] },
-  { category: 'Quartz', items: [{ id: 113, img: 'https://images.unsplash.com/photo-1548802673-380ab8ebc7b7?w=400&q=80', name: 'Clear Quartz Cluster', original: null, sale: '$90', sale_num: 90, badge: '' }] },
-  { category: 'Amethyst', items: [{ id: 114, img: 'https://images.unsplash.com/photo-1599707367072-cd6ada2bc375?w=400&q=80', name: 'Deep Purple Amethyst Geode', original: '$200', sale: '$160', sale_num: 160, badge: 'POPULAR' }] },
-  { category: 'Lapis Lazuli', items: [{ id: 115, img: 'https://images.unsplash.com/photo-1617038220319-276d3cfab638?w=400&q=80', name: 'Afghan Lapis Lazuli Polished', original: null, sale: '$120', sale_num: 120, badge: '' }] }
-];
+// Dynamically construct categorizedProducts from central database
+const uniqueCategories = Array.from(new Set(products.map(p => p.cat)));
+const categorizedProducts = uniqueCategories.map(cat => ({
+  category: cat,
+  items: products
+    .filter(p => p.cat === cat)
+    .map(p => ({
+      id: p.id,
+      img: p.img,
+      name: p.name,
+      original: p.original,
+      sale: p.sale,
+      sale_num: p.priceNum,
+      badge: p.badge
+    }))
+}));
 
 export default function ShopPage() {
   const router = useRouter();

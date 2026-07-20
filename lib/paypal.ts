@@ -1,4 +1,4 @@
-# CHANGE THIS LINE TO GO LIVE: replace sandbox URL with https://api-m.paypal.com
+// CHANGE THIS LINE TO GO LIVE: replace sandbox URL with https://api-m.paypal.com
 const PAYPAL_BASE_URL = 'https://api-m.sandbox.paypal.com';
 
 export async function getPayPalAccessToken(): Promise<string> {

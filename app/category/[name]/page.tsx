@@ -5,24 +5,20 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { ShoppingBag, ArrowLeft } from 'lucide-react';
 
-const dummyProducts = [
-  { id: 1, img: 'https://images.unsplash.com/photo-1617038220319-276d3cfab638?w=400&q=80', name: 'Premium Cut Gemstone', price: 'PKR 385,000' },
-  { id: 2, img: 'https://images.unsplash.com/photo-1602442578765-a3b374baf4d2?w=400&q=80', name: 'Deep Red Crystal', price: 'PKR 245,000' },
-  { id: 3, img: 'https://images.unsplash.com/photo-1599707367072-cd6ada2bc375?w=400&q=80', name: 'Pink Tourmaline Cushion', price: 'PKR 740,000' },
-  { id: 4, img: 'https://images.unsplash.com/photo-1551703599-6b3e8379aa8c?w=400&q=80', name: 'Imperial Pear Shape', price: 'PKR 510,000' },
-  { id: 5, img: 'https://images.unsplash.com/photo-1519608487953-e999c86e7455?w=400&q=80', name: 'Emerald Green Cluster', price: 'PKR 620,000' },
-  { id: 6, img: 'https://images.unsplash.com/photo-1548802673-380ab8ebc7b7?w=400&q=80', name: 'Ocean Blue Aquamarine', price: 'PKR 490,000' },
-];
+import { getProductsByCategory } from '@/lib/products';
 
 export default function CategoryPage({ params }: { params: Promise<{ name: string }> }) {
   const resolvedParams = use(params);
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
   const categoryName = decodeURIComponent(resolvedParams.name).replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+  
+  const [categoryProducts, setCategoryProducts] = useState<any[]>([]);
 
   useEffect(() => {
     setMounted(true);
-  }, []);
+    setCategoryProducts(getProductsByCategory(categoryName));
+  }, [categoryName]);
 
   if (!mounted) return null;
 
@@ -59,14 +55,14 @@ export default function CategoryPage({ params }: { params: Promise<{ name: strin
       </div>
 
       <div className="cat-grid">
-        {dummyProducts.map((product) => (
+        {categoryProducts.map((product) => (
           <div key={product.id} className="product-card" onClick={() => router.push('/product/' + product.id)}>
             <div style={{ position: 'relative', width: '100%', aspectRatio: '1/1' }}>
               <Image src={product.img} alt={product.name} fill style={{ objectFit: 'cover' }} unoptimized />
             </div>
             <div className="product-info">
               <h3 className="heading-serif" style={{ fontSize: '18px', color: '#1a5c4a', margin: '0 0 8px 0', fontWeight: 600 }}>{product.name}</h3>
-              <p style={{ color: '#555', fontWeight: 500, fontSize: '15px', margin: 0 }}>{product.price}</p>
+              <p style={{ color: '#555', fontWeight: 500, fontSize: '15px', margin: 0 }}>PKR {product.priceNum.toLocaleString()}</p>
               <div className="btn-teal-outline">
                 <ShoppingBag size={16} /> View Details
               </div>

@@ -12,11 +12,29 @@ export default function Contact() {
     setForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSubmitted(true);
-    setTimeout(() => setSubmitted(false), 3000);
-    setForm(initialForm);
+    try {
+      const res = await fetch('/api/inquiries', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: form.name,
+          email: form.email,
+          phone: form.phone,
+          message: `${form.message} (Source: ${form.source})`,
+          type: 'General',
+          subject: 'Contact Form Message'
+        })
+      });
+      if (res.ok) {
+        setSubmitted(true);
+        setTimeout(() => setSubmitted(false), 3000);
+        setForm(initialForm);
+      }
+    } catch (err) {
+      console.error('[Contact submission error]', err);
+    }
   };
 
   return (

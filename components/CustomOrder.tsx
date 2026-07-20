@@ -19,11 +19,32 @@ export default function CustomOrder() {
     setForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSubmitted(true);
-    setTimeout(() => setSubmitted(false), 3000);
-    setForm(initialForm);
+    try {
+      const res = await fetch('/api/inquiries', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: 'Custom Order Sourcing Request',
+          contact: form.contact,
+          stoneType: form.stoneType,
+          caratWeight: form.caratWeight,
+          preferredColor: form.preferredColor,
+          maxBudget: form.maxBudget,
+          intendedUse: form.intendedUse,
+          notes: form.notes,
+          type: 'Custom Order'
+        })
+      });
+      if (res.ok) {
+        setSubmitted(true);
+        setTimeout(() => setSubmitted(false), 3000);
+        setForm(initialForm);
+      }
+    } catch (err) {
+      console.error('[CustomOrder submission error]', err);
+    }
   };
 
   return (

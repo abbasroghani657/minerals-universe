@@ -28,9 +28,26 @@ export default function Reviews() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    // Load from local storage on mount
-    const savedReviews = localStorage.getItem('minerals_universe_reviews');
-    if (savedReviews) setReviews(JSON.parse(savedReviews));
+    async function loadApprovedReviews() {
+      try {
+        const res = await fetch('/api/reviews?status=Approved');
+        const data = await res.json();
+        if (data.success && data.reviews && data.reviews.length > 0) {
+          // Format custom reviews to match the display schema
+          const formatted = data.reviews.map((r: any) => ({
+            initial: r.author.charAt(0).toUpperCase(),
+            name: r.author,
+            location: '🌍 Verified Buyer',
+            rating: r.rating,
+            text: r.text.startsWith('"') ? r.text : `"${r.text}"`,
+          }));
+          setReviews([...formatted, ...initialReviews.filter(ir => !formatted.some((fr: any) => fr.name === ir.name))]);
+        }
+      } catch (err) {
+        console.error('Failed to load approved reviews, using initial placeholders:', err);
+      }
+    }
+    loadApprovedReviews();
   }, []);
 
   const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -44,7 +61,7 @@ export default function Reviews() {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (rating === 0) {
       setErrorMsg('Please select a star rating.');
@@ -54,18 +71,34 @@ export default function Reviews() {
 
     setErrorMsg('');
 
-    const newReview = {
-      initial: name.charAt(0).toUpperCase(),
-      name,
-      location: '🌍 Verified Buyer',
-      rating,
-      text: `"${text}"`,
-      photo: photoBase64
-    };
+    try {
+      const res = await fetch('/api/reviews', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          author: name,
+          product: 'General Collection',
+          rating,
+          text,
+        }),
+      });
 
-    const updatedReviews = [newReview, ...reviews];
-    setReviews(updatedReviews);
-    localStorage.setItem('minerals_universe_reviews', JSON.stringify(updatedReviews));
+      if (res.ok) {
+        alert('Thank you! Your review has been submitted for moderation and will appear once approved.');
+        
+        // Optimistically add to local state as pending indicator or simple addition
+        const newReview = {
+          initial: name.charAt(0).toUpperCase(),
+          name: `${name} (Pending Approval)`,
+          location: '🌍 Verified Buyer',
+          rating,
+          text: `"${text}"`,
+        };
+        setReviews(prev => [newReview, ...prev]);
+      }
+    } catch (err) {
+      console.error('Failed to submit review:', err);
+    }
 
     // Reset and close
     setName('');

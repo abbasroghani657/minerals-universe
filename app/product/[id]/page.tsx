@@ -6,13 +6,7 @@ import { useRouter } from 'next/navigation';
 import { useCart } from '@/context/CartContext';
 import { ShieldCheck, Truck, PackageCheck, ArrowLeft, Heart, ShoppingBag } from 'lucide-react';
 
-// Shared dummy data for demonstration
-const dummyProducts = [
-  { id: 1, img: 'https://images.unsplash.com/photo-1617038220319-276d3cfab638?w=800&q=80', cat: 'Aquamarine', name: 'Natural Aquamarine Emerald Cut — 4.8 Cts', original: '$480', sale: '$385', priceNum: 385, desc: 'A stunning natural aquamarine with exceptional clarity and a beautiful deep blue-green hue. Perfectly cut to maximize brilliance.' },
-  { id: 2, img: 'https://images.unsplash.com/photo-1602442578765-a3b374baf4d2?w=800&q=80', cat: 'Garnet', name: 'Deep Red Pyrope Garnet Oval — 3.2 Cts', original: '$320', sale: '$245', priceNum: 245, desc: 'A rich, fiery deep red pyrope garnet. This oval cut gemstone exhibits wonderful internal reflections.' },
-  { id: 3, img: 'https://images.unsplash.com/photo-1599707367072-cd6ada2bc375?w=800&q=80', cat: 'Tourmaline', name: 'Pink Tourmaline Cushion Cut — 6.1 Cts', original: '$920', sale: '$740', priceNum: 740, desc: 'A vibrant pink tourmaline weighing over 6 carats. The cushion cut offers a vintage feel combined with modern brilliance.' },
-  { id: 4, img: 'https://images.unsplash.com/photo-1551703599-6b3e8379aa8c?w=800&q=80', cat: 'Topaz', name: 'Imperial Topaz Pear Shape — 7.4 Cts', original: '$650', sale: '$510', priceNum: 510, desc: 'A rare and valuable imperial topaz featuring warm, golden-orange hues. The pear shape elongates the stone beautifully.' },
-];
+import { products, getProductById } from '@/lib/products';
 
 export default function ProductPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
@@ -24,19 +18,9 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
   const [activeTab, setActiveTab] = useState('description');
 
   useEffect(() => {
-    // Find the product or use a fallback
     const id = parseInt(resolvedParams.id);
-    const found = dummyProducts.find(p => p.id === id) || {
-      id: id || 99,
-      img: 'https://images.unsplash.com/photo-1599707367072-cd6ada2bc375?w=800&q=80',
-      cat: 'Premium Gemstone',
-      name: 'Exquisite Natural Gemstone — High Grade',
-      original: '$1,200',
-      sale: '$950',
-      priceNum: 950,
-      desc: 'An exceptional, museum-quality gemstone sourced directly from the finest mines. Features extraordinary clarity, flawless cut, and mesmerizing color play.'
-    };
-    setProduct(found);
+    const found = getProductById(id);
+    setProduct(found || null);
   }, [resolvedParams.id]);
 
   if (!product) return null;
@@ -209,7 +193,11 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
         <h2 className="heading-serif" style={{ fontSize: '32px', color: '#1a5c4a', textAlign: 'center', margin: '0 0 10px 0' }}>Related Products</h2>
         <p style={{ textAlign: 'center', color: '#666', fontSize: '15px' }}>Customers also viewed these exclusive items</p>
         <div className="cat-grid">
-          {dummyProducts.filter(p => p.id !== product.id).slice(0, 4).map((rp) => (
+          {products
+            .filter(p => p.id !== product.id)
+            .sort((a, b) => (a.cat === product.cat ? -1 : 1))
+            .slice(0, 4)
+            .map((rp) => (
             <div key={rp.id} className="product-card" onClick={() => router.push('/product/' + rp.id)}>
               <div style={{ position: 'relative', width: '100%', aspectRatio: '1/1' }}>
                 <Image src={rp.img} alt={rp.name} fill style={{ objectFit: 'cover' }} unoptimized />
