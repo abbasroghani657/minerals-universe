@@ -1,58 +1,25 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Search, Eye, X, Check, Truck, Package, CreditCard, MapPin } from 'lucide-react';
-
-const dummyOrders = [
-  { 
-    id: 'ORD-001', customerName: 'Ahmed Khan', customerEmail: 'ahmed@example.com', customerPhone: '+92 300 1234567',
-    shippingAddress: '123 Defense Housing Authority, Phase 5, Lahore, Pakistan',
-    createdAt: '2026-10-24T12:00:00Z', total: 45000, status: 'Processing',
-    paymentMethod: 'Stripe / Card', paymentStatus: 'Paid',
-    items: [
-      { name: 'Natural Aquamarine Emerald Cut', quantity: 1, price: 38000 },
-      { name: 'Silver Polishing Cloth', quantity: 2, price: 3500 }
-    ]
-  },
-  { 
-    id: 'ORD-002', customerName: 'Sarah W.', customerEmail: 'sarah@example.com', customerPhone: '+1 555 987 6543',
-    shippingAddress: '456 Gemstone Blvd, New York, NY 10001, USA',
-    createdAt: '2026-10-23T12:00:00Z', total: 12500, status: 'Shipped', tracking: 'DHL-88371923',
-    paymentMethod: 'PayPal', paymentStatus: 'Paid',
-    items: [
-      { name: 'Deep Red Pyrope Garnet Oval', quantity: 1, price: 12500 }
-    ]
-  },
-  { 
-    id: 'ORD-003', customerName: 'Ali Raza', customerEmail: 'ali@example.com', customerPhone: '+971 50 123 4567',
-    shippingAddress: 'Villa 14, Jumeirah 1, Dubai, UAE',
-    createdAt: '2026-10-21T12:00:00Z', total: 85000, status: 'Delivered', tracking: 'FEDEX-9182374',
-    paymentMethod: 'Stripe / Card', paymentStatus: 'Paid',
-    items: [
-      { name: 'Pink Tourmaline Cushion Cut', quantity: 1, price: 75000 },
-      { name: 'Custom Gold Ring Setting', quantity: 1, price: 10000 }
-    ]
-  },
-];
+import { Search, Eye, X, Check, Truck, Package, CreditCard, MapPin, Trash2 } from 'lucide-react';
 
 export default function AdminOrders() {
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
   const [orders, setOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState('All Statuses');
 
   useEffect(() => {
     async function loadOrders() {
       try {
         const res = await fetch('/api/orders');
         const data = await res.json();
-        if (data.success && data.orders && data.orders.length > 0) {
+        if (data.success && data.orders) {
           setOrders(data.orders);
-        } else {
-          setOrders(dummyOrders);
         }
       } catch (err) {
-        console.error('Failed to load real orders, using fallbacks:', err);
-        setOrders(dummyOrders);
+        console.error('Failed to load orders:', err);
       } finally {
         setLoading(false);
       }
@@ -73,6 +40,58 @@ export default function AdminOrders() {
     }
   };
 
+  const handleUpdateFulfillment = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!selectedOrder) return;
+
+    const formData = new FormData(e.currentTarget);
+    const status = formData.get('status') as string;
+    const tracking = formData.get('tracking') as string;
+
+    try {
+      const res = await fetch('/api/orders', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: selectedOrder.id, status, tracking }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setOrders(prev => prev.map(o => o.id === selectedOrder.id ? { ...o, status, tracking } : o));
+        setSelectedOrder(null);
+      } else {
+        alert(data.error || 'Failed to update order fulfillment.');
+      }
+    } catch (err) {
+      console.error('Error updating fulfillment:', err);
+    }
+  };
+
+  const handleDeleteOrder = async (id: string) => {
+    if (!confirm(`Are you sure you want to delete order ${id}?`)) return;
+    try {
+      const res = await fetch(`/api/orders?id=${id}`, {
+        method: 'DELETE',
+      });
+      const data = await res.json();
+      if (data.success) {
+        setOrders(prev => prev.filter(o => o.id !== id));
+      } else {
+        alert(data.error || 'Failed to delete order.');
+      }
+    } catch (err) {
+      console.error('Error deleting order:', err);
+    }
+  };
+
+  // Filter orders based on search term and status
+  const filteredOrders = orders.filter(o => {
+    const matchesSearch = o.id.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                          o.customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                          o.customerEmail.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesStatus = statusFilter === 'All Statuses' || o.status === statusFilter;
+    return matchesSearch && matchesStatus;
+  });
+
   if (loading) {
     return <div style={{ padding: '40px', textAlign: 'center', color: '#1a5c4a', fontWeight: 600 }}>Loading Orders...</div>;
   }
@@ -87,13 +106,24 @@ export default function AdminOrders() {
         <div style={{ display: 'flex', gap: '16px', marginBottom: '20px' }}>
           <div style={{ flex: 1, position: 'relative' }}>
             <Search size={18} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: '#888' }} />
-            <input type="text" placeholder="Search orders by ID or customer..." style={{ width: '100%', padding: '12px 12px 12px 44px', border: '1px solid #e8e6e1', borderRadius: '6px', outline: 'none' }} />
+            <input 
+              type="text" 
+              placeholder="Search orders by ID or customer..." 
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              style={{ width: '100%', padding: '12px 12px 12px 44px', border: '1px solid #e8e6e1', borderRadius: '6px', outline: 'none' }} 
+            />
           </div>
-          <select style={{ padding: '12px 20px', border: '1px solid #e8e6e1', borderRadius: '6px', outline: 'none', background: '#fff' }}>
+          <select 
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            style={{ padding: '12px 20px', border: '1px solid #e8e6e1', borderRadius: '6px', outline: 'none', background: '#fff' }}
+          >
             <option>All Statuses</option>
             <option>Processing</option>
             <option>Shipped</option>
             <option>Delivered</option>
+            <option>Cancelled</option>
           </select>
         </div>
 
@@ -110,28 +140,31 @@ export default function AdminOrders() {
             </tr>
           </thead>
           <tbody>
-            {orders.map((o, i) => (
-              <tr key={o.id} style={{ borderBottom: i !== orders.length - 1 ? '1px solid #f5f5f5' : 'none' }}>
+            {filteredOrders.map((o, i) => (
+              <tr key={o.id} style={{ borderBottom: i !== filteredOrders.length - 1 ? '1px solid #f5f5f5' : 'none' }}>
                 <td style={{ padding: '16px 0', fontSize: '14px', fontWeight: 500, color: '#1a5c4a' }}>{o.id}</td>
                 <td style={{ padding: '16px 0' }}>
                   <p style={{ margin: 0, fontSize: '14px', color: '#333', fontWeight: 500 }}>{o.customerName}</p>
                   <p style={{ margin: 0, fontSize: '12px', color: '#888' }}>{o.customerEmail}</p>
                 </td>
                 <td style={{ padding: '16px 0', fontSize: '14px', color: '#666' }}>{formatDate(o.createdAt)}</td>
-                <td style={{ padding: '16px 0', fontSize: '14px', color: '#333' }}>{o.items.length} items</td>
+                <td style={{ padding: '16px 0', fontSize: '14px', color: '#333' }}>{o.items?.length || 0} items</td>
                 <td style={{ padding: '16px 0', fontSize: '14px', fontWeight: 600, color: '#333' }}>{formatPrice(o.total)}</td>
                 <td style={{ padding: '16px 0' }}>
                   <span style={{ 
                     padding: '4px 10px', borderRadius: '20px', fontSize: '12px', fontWeight: 600,
-                    background: (o.status || 'Processing') === 'Processing' ? '#fff3cd' : (o.status || 'Processing') === 'Shipped' ? '#d1ecf1' : '#d4edda',
-                    color: (o.status || 'Processing') === 'Processing' ? '#856404' : (o.status || 'Processing') === 'Shipped' ? '#0c5460' : '#155724'
+                    background: (o.status || 'Processing') === 'Processing' ? '#fff3cd' : (o.status || 'Processing') === 'Shipped' ? '#d1ecf1' : (o.status || 'Processing') === 'Cancelled' ? '#fdf2f2' : '#d4edda',
+                    color: (o.status || 'Processing') === 'Processing' ? '#856404' : (o.status || 'Processing') === 'Shipped' ? '#0c5460' : (o.status || 'Processing') === 'Cancelled' ? '#c94438' : '#155724'
                   }}>
                     {o.status || 'Processing'}
                   </span>
                 </td>
                 <td style={{ padding: '16px 0', textAlign: 'right' }}>
-                  <button onClick={() => setSelectedOrder(o)} style={{ background: '#f8f9fa', border: '1px solid #e8e6e1', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer', color: '#333', fontSize: '13px', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                  <button onClick={() => setSelectedOrder(o)} style={{ background: '#f8f9fa', border: '1px solid #e8e6e1', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer', color: '#333', fontSize: '13px', display: 'inline-flex', alignItems: 'center', gap: '6px', marginRight: '8px' }}>
                     <Eye size={14} /> View
+                  </button>
+                  <button onClick={() => handleDeleteOrder(o.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#c94438' }} title="Delete Order">
+                    <Trash2 size={16} />
                   </button>
                 </td>
               </tr>
@@ -151,10 +184,10 @@ export default function AdminOrders() {
                   Order {selectedOrder.id}
                   <span style={{ 
                     padding: '4px 10px', borderRadius: '20px', fontSize: '12px', fontWeight: 600, fontFamily: "'DM Sans', sans-serif",
-                    background: selectedOrder.status === 'Processing' ? '#fff3cd' : selectedOrder.status === 'Shipped' ? '#d1ecf1' : '#d4edda',
-                    color: selectedOrder.status === 'Processing' ? '#856404' : selectedOrder.status === 'Shipped' ? '#0c5460' : '#155724'
+                    background: (selectedOrder.status || 'Processing') === 'Processing' ? '#fff3cd' : (selectedOrder.status || 'Processing') === 'Shipped' ? '#d1ecf1' : (selectedOrder.status || 'Processing') === 'Cancelled' ? '#fdf2f2' : '#d4edda',
+                    color: (selectedOrder.status || 'Processing') === 'Processing' ? '#856404' : (selectedOrder.status || 'Processing') === 'Shipped' ? '#0c5460' : (selectedOrder.status || 'Processing') === 'Cancelled' ? '#c94438' : '#155724'
                   }}>
-                    {selectedOrder.status}
+                    {selectedOrder.status || 'Processing'}
                   </span>
                 </h2>
                 <p style={{ margin: '4px 0 0', fontSize: '13px', color: '#666' }}>Placed on {formatDate(selectedOrder.createdAt)}</p>
@@ -186,7 +219,7 @@ export default function AdminOrders() {
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                     <span style={{ fontSize: '13px', color: '#555' }}>Status</span>
-                    <span style={{ fontSize: '13px', fontWeight: 600, color: '#155724', background: '#d4edda', padding: '2px 8px', borderRadius: '12px' }}>{selectedOrder.paymentStatus}</span>
+                    <span style={{ fontSize: '13px', fontWeight: 600, color: selectedOrder.paymentStatus === 'Paid' ? '#155724' : '#856404', background: selectedOrder.paymentStatus === 'Paid' ? '#d4edda' : '#fff3cd', padding: '2px 8px', borderRadius: '12px' }}>{selectedOrder.paymentStatus}</span>
                   </div>
                 </div>
               </div>
@@ -197,7 +230,7 @@ export default function AdminOrders() {
                   <Package size={16} /> Order Items
                 </h3>
                 <div style={{ background: '#f8f9fa', padding: '16px', borderRadius: '8px', border: '1px solid #e8e6e1', marginBottom: '24px' }}>
-                  {selectedOrder.items.map((item: any, idx: number) => (
+                  {selectedOrder.items?.map((item: any, idx: number) => (
                     <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: idx !== selectedOrder.items.length - 1 ? '12px' : 0, paddingBottom: idx !== selectedOrder.items.length - 1 ? '12px' : 0, borderBottom: idx !== selectedOrder.items.length - 1 ? '1px solid #ddd' : 'none' }}>
                       <div>
                         <p style={{ margin: '0 0 4px', fontSize: '14px', fontWeight: 500, color: '#333' }}>{item.name}</p>
@@ -216,20 +249,22 @@ export default function AdminOrders() {
                   <Truck size={16} /> Fulfillment Actions
                 </h3>
                 <div style={{ background: '#fff', padding: '16px', borderRadius: '8px', border: '1px solid #e8e6e1' }}>
-                  <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#555', marginBottom: '8px' }}>Update Order Status</label>
-                  <select defaultValue={selectedOrder.status} style={{ width: '100%', padding: '12px', border: '1px solid #e8e6e1', borderRadius: '6px', outline: 'none', background: '#fff', marginBottom: '16px' }}>
-                    <option>Processing</option>
-                    <option>Shipped</option>
-                    <option>Delivered</option>
-                    <option>Cancelled</option>
-                  </select>
+                  <form onSubmit={handleUpdateFulfillment}>
+                    <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#555', marginBottom: '8px' }}>Update Order Status</label>
+                    <select name="status" defaultValue={selectedOrder.status || 'Processing'} style={{ width: '100%', padding: '12px', border: '1px solid #e8e6e1', borderRadius: '6px', outline: 'none', background: '#fff', marginBottom: '16px' }}>
+                      <option>Processing</option>
+                      <option>Shipped</option>
+                      <option>Delivered</option>
+                      <option>Cancelled</option>
+                    </select>
 
-                  <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#555', marginBottom: '8px' }}>Tracking Number</label>
-                  <input type="text" defaultValue={selectedOrder.tracking} placeholder="e.g. DHL-123456789" style={{ width: '100%', padding: '12px', border: '1px solid #e8e6e1', borderRadius: '6px', outline: 'none', marginBottom: '16px' }} />
+                    <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#555', marginBottom: '8px' }}>Tracking Number</label>
+                    <input name="tracking" type="text" defaultValue={selectedOrder.tracking || ''} placeholder="e.g. DHL-123456789" style={{ width: '100%', padding: '12px', border: '1px solid #e8e6e1', borderRadius: '6px', outline: 'none', marginBottom: '16px' }} />
 
-                  <button type="button" onClick={() => setSelectedOrder(null)} style={{ width: '100%', padding: '12px', background: '#1a5c4a', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '14px', fontWeight: 600, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
-                    <Check size={18} /> Update Fulfillment
-                  </button>
+                    <button type="submit" style={{ width: '100%', padding: '12px', background: '#1a5c4a', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '14px', fontWeight: 600, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                      <Check size={18} /> Update Fulfillment
+                    </button>
+                  </form>
                 </div>
               </div>
 

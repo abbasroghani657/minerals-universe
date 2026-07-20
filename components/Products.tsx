@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react';
 import { useCart } from '@/context/CartContext';
 import { useRouter } from 'next/navigation';
 
+import { formatPrice, parsePrice } from '@/utils/price';
+
 export default function Products() {
   const [homeProducts, setHomeProducts] = useState<any[]>([]);
 
@@ -22,7 +24,7 @@ export default function Products() {
     }
     fetchHomeProducts();
   }, []);
-  const { addToCart, wishlist, toggleWishlist } = useCart();
+  const { addToCart, wishlist, toggleWishlist, currency } = useCart();
   const [added, setAdded] = useState<Set<number>>(new Set());
   const router = useRouter();
 
@@ -60,9 +62,9 @@ export default function Products() {
                   {product.badge && <span className="badge-sale">{product.badge}</span>}
                   {product.stock && <span className="badge-stock">{product.stock}</span>}
                   <button
-                    className={`wishlist-btn${wishlist.has(product.id) ? ' active' : ''}`}
-                    onClick={(e) => { e.stopPropagation(); toggleWishlist(product.id); }}
-                    aria-label="Toggle wishlist"
+                     className={`wishlist-btn${wishlist.has(product.id) ? ' active' : ''}`}
+                     onClick={(e) => { e.stopPropagation(); toggleWishlist(product.id); }}
+                     aria-label="Toggle wishlist"
                   >
                     {wishlist.has(product.id) ? '♥' : '♡'}
                   </button>
@@ -72,8 +74,10 @@ export default function Products() {
                   <h3>{product.name}</h3>
                   <div className="stars">★★★★★</div>
                   <div className="price-row">
-                    <span className="price-original">{product.original}</span>
-                    <span className="price-sale">{product.sale}</span>
+                    {parsePrice(product.original) > 0 && (
+                      <span className="price-original">{formatPrice(parsePrice(product.original), currency)}</span>
+                    )}
+                    <span className="price-sale">{formatPrice(product.priceNum, currency)}</span>
                   </div>
                   <button
                     className={`add-btn${added.has(product.id) ? ' added' : ''}`}

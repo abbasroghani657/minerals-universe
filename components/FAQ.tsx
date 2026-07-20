@@ -1,18 +1,28 @@
 'use client';
-import { useState } from 'react';
-
-const faqs = [
-  { q: 'Are your gemstones natural and untreated?', a: 'All our gemstones are 100% natural. We clearly disclose the treatment status of each stone in the product listing and certification. Untreated stones are specifically labelled and priced accordingly.' },
-  { q: 'Do you provide certificates for your stones?', a: 'Yes. We offer certificates from internationally recognized laboratories including GIA, AGL, and Gübelin. Certificate options are indicated on each product page.' },
-  { q: 'How long does international shipping take?', a: 'Standard insured shipping takes 7–14 business days internationally. Express DHL/FedEx (3–5 days) is available at an additional charge. All shipments are fully insured and tracked.' },
-  { q: 'Can I request a specific stone or custom order?', a: 'Absolutely. Our custom order service lets you specify stone type, carat weight, color, origin preference, and budget. Use our Custom Order form or contact us on WhatsApp.' },
-  { q: 'What payment methods do you accept?', a: 'We accept Visa, Mastercard, PayPal, Western Union, and direct bank transfer. All online transactions are SSL-encrypted.' },
-];
+import { useState, useEffect } from 'react';
 
 export default function FAQ() {
+  const [faqs, setFaqs] = useState<any[]>([]);
   const [openIndex, setOpenIndex] = useState<number | null>(null);
 
+  useEffect(() => {
+    async function loadFaqs() {
+      try {
+        const res = await fetch('/api/faqs');
+        const data = await res.json();
+        if (data.success && data.faqs) {
+          setFaqs(data.faqs);
+        }
+      } catch (err) {
+        console.error('Failed to load FAQs:', err);
+      }
+    }
+    loadFaqs();
+  }, []);
+
   const toggle = (i: number) => setOpenIndex(prev => prev === i ? null : i);
+
+  if (faqs.length === 0) return null;
 
   return (
     <>
@@ -25,13 +35,13 @@ export default function FAQ() {
           </div>
           <div className="faq-list">
             {faqs.map((faq, i) => (
-              <div key={i} className="faq-item">
+              <div key={faq.id || i} className="faq-item">
                 <button className="faq-q" onClick={() => toggle(i)}>
-                  {faq.q}
+                  {faq.question}
                   <span className={`faq-icon${openIndex === i ? ' open' : ''}`}>+</span>
                 </button>
                 <div className={`faq-a${openIndex === i ? ' open' : ''}`}>
-                  <p>{faq.a}</p>
+                  <p>{faq.answer}</p>
                 </div>
               </div>
             ))}

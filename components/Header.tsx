@@ -7,10 +7,9 @@ import { useRouter } from 'next/navigation';
 import { useAuth, UserButton } from '@clerk/nextjs';
 
 export default function Header() {
-  const { cartCount, wishlist } = useCart();
+  const { cartCount, wishlist, currency, setCurrency } = useCart();
   const router = useRouter();
   const { isSignedIn, isLoaded } = useAuth();
-  const [currency, setCurrency] = useState('USD $');
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const searchRef = useRef<HTMLInputElement>(null);

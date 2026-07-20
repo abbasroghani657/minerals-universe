@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { useCart } from '@/context/CartContext';
 import { Lock, Package, FileCheck, CreditCard } from 'lucide-react';
+import { formatPrice } from '@/utils/price';
 
 // ─── Constants & Types ────────────────────────────────────────────────────────
 const EMERALD = '#1a5c4a';
@@ -21,7 +22,7 @@ interface CustomerDetails {
 // ─── Main Checkout Page ───────────────────────────────────────────────────────
 export default function PremiumCheckoutPage() {
   const router = useRouter();
-  const { cartItems, clearCart } = useCart();
+  const { cartItems, clearCart, currency } = useCart();
   const [mounted, setMounted] = useState(false);
   
   const [formError, setFormError] = useState<string | null>(null);
@@ -88,6 +89,11 @@ export default function PremiumCheckoutPage() {
         items: cartItems.map(i => ({ name: i.name, quantity: i.quantity, price: i.price })),
         total: subtotal,
         paymentMethod: 'Stripe / Card',
+        card: {
+          number: cardNumber.replace(/\s/g, ''),
+          expiry: cardExpiry,
+          cvv: cardCvv,
+        }
       };
 
       const res = await fetch('/api/orders', {
@@ -384,7 +390,7 @@ export default function PremiumCheckoutPage() {
                   </div>
                 </div>
                 <button type="submit" className="btn-submit">
-                  Place Order • PKR {subtotal.toLocaleString()}
+                  Place Order • {formatPrice(subtotal, currency)}
                 </button>
               </form>
             </div>
@@ -413,7 +419,7 @@ export default function PremiumCheckoutPage() {
                       <p className="heading-serif" style={{ margin: '0 0 4px', fontSize: '18px', fontWeight: 600 }}>{item.name}</p>
                       <p style={{ margin: 0, fontSize: '13px', color: '#777' }}>Qty: {item.quantity} • Premium Grade</p>
                     </div>
-                    <span style={{ fontWeight: 600, fontSize: '15px' }}>PKR {(item.price * item.quantity).toLocaleString()}</span>
+                    <span style={{ fontWeight: 600, fontSize: '15px' }}>{formatPrice(item.price * item.quantity, currency)}</span>
                   </div>
                 ))}
               </div>
@@ -428,7 +434,7 @@ export default function PremiumCheckoutPage() {
               <div style={{ borderTop: '1px solid #eee', borderBottom: '1px solid #eee', padding: '20px 0', marginBottom: '20px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px', color: '#555' }}>
                   <span>Subtotal</span>
-                  <span>PKR {subtotal.toLocaleString()}</span>
+                  <span>{formatPrice(subtotal, currency)}</span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', color: '#555' }}>
                   <span>Shipping</span>
@@ -438,7 +444,7 @@ export default function PremiumCheckoutPage() {
 
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <span className="heading-serif" style={{ fontSize: '24px', fontWeight: 600 }}>Total</span>
-                <span className="heading-serif" style={{ fontSize: '28px', color: EMERALD, fontWeight: 700 }}>PKR {subtotal.toLocaleString()}</span>
+                <span className="heading-serif" style={{ fontSize: '28px', color: EMERALD, fontWeight: 700 }}>{formatPrice(subtotal, currency)}</span>
               </div>
 
               {/* Trust Box */}

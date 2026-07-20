@@ -1,3 +1,5 @@
+'use client';
+import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { FaInstagram, FaTiktok, FaYoutube, FaEbay, FaWhatsapp } from 'react-icons/fa';
 
@@ -11,6 +13,32 @@ const photos = [
 ];
 
 export default function InstagramGrid() {
+  const [socials, setSocials] = useState<any>({
+    instagramUrl: 'https://www.instagram.com/mineralsuniverse_',
+    tiktokUrl: 'https://www.tiktok.com/@mineralsuniverse1?_r=1&_t=ZN-95hIvZ38Z30',
+    youtubeUrl: 'https://youtube.com/@mineralsuniverse?si=8xemeeSlWzqPvsAA',
+    ebayUrl: 'https://www.ebay.com/usr/mineralsuniverse',
+    whatsappNumber: '923001581210',
+  });
+
+  useEffect(() => {
+    async function loadSocials() {
+      try {
+        const res = await fetch('/api/settings');
+        const data = await res.json();
+        if (data.success && data.settings) {
+          setSocials((prev: any) => ({
+            ...prev,
+            ...data.settings
+          }));
+        }
+      } catch (err) {
+        console.error('Failed to load social settings:', err);
+      }
+    }
+    loadSocials();
+  }, []);
+
   return (
     <>
       <section style={{ background: 'var(--bg)' }}>
@@ -31,11 +59,11 @@ export default function InstagramGrid() {
           <div className="text-center" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '24px', marginTop: '10px' }}>
             <span style={{ fontSize: '20px', fontWeight: 600, color: 'var(--teal-dark)', fontFamily: "'Cormorant Garamond', serif" }}>Follow Us On</span>
             <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '15px' }}>
-              <a href="https://www.instagram.com/mineralsuniverse_" className="btn-teal" target="_blank" rel="noopener" style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#E1306C', borderColor: '#E1306C', padding: '12px 24px', textTransform: 'none', letterSpacing: '0.5px' }}><FaInstagram size={18} /> Instagram</a>
-              <a href="https://www.tiktok.com/@mineralsuniverse1?_r=1&_t=ZN-95hIvZ38Z30" className="btn-teal" target="_blank" rel="noopener" style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#000000', borderColor: '#000000', padding: '12px 24px', textTransform: 'none', letterSpacing: '0.5px' }}><FaTiktok size={18} /> TikTok</a>
-              <a href="https://youtube.com/@mineralsuniverse?si=8xemeeSlWzqPvsAA" className="btn-teal" target="_blank" rel="noopener" style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#FF0000', borderColor: '#FF0000', padding: '12px 24px', textTransform: 'none', letterSpacing: '0.5px' }}><FaYoutube size={18} /> YouTube</a>
-              <a href="https://www.ebay.com/usr/mineralsuniverse" className="btn-teal" target="_blank" rel="noopener" style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#333333', borderColor: '#333333', padding: '12px 24px', textTransform: 'none', letterSpacing: '0.5px' }}><FaEbay size={24} /> eBay</a>
-              <a href="https://wa.me/923001581210" className="btn-teal" target="_blank" rel="noopener" style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#25D366', borderColor: '#25D366', padding: '12px 24px', textTransform: 'none', letterSpacing: '0.5px' }}><FaWhatsapp size={18} /> WhatsApp</a>
+              <a href={socials.instagramUrl} className="btn-teal" target="_blank" rel="noopener" style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#E1306C', borderColor: '#E1306C', padding: '12px 24px', textTransform: 'none', letterSpacing: '0.5px' }}><FaInstagram size={18} /> Instagram</a>
+              <a href={socials.tiktokUrl} className="btn-teal" target="_blank" rel="noopener" style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#000000', borderColor: '#000000', padding: '12px 24px', textTransform: 'none', letterSpacing: '0.5px' }}><FaTiktok size={18} /> TikTok</a>
+              <a href={socials.youtubeUrl} className="btn-teal" target="_blank" rel="noopener" style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#FF0000', borderColor: '#FF0000', padding: '12px 24px', textTransform: 'none', letterSpacing: '0.5px' }}><FaYoutube size={18} /> YouTube</a>
+              <a href={socials.ebayUrl} className="btn-teal" target="_blank" rel="noopener" style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#333333', borderColor: '#333333', padding: '12px 24px', textTransform: 'none', letterSpacing: '0.5px' }}><FaEbay size={24} /> eBay</a>
+              <a href={`https://wa.me/${socials.whatsappNumber}`} className="btn-teal" target="_blank" rel="noopener" style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#25D366', borderColor: '#25D366', padding: '12px 24px', textTransform: 'none', letterSpacing: '0.5px' }}><FaWhatsapp size={18} /> WhatsApp</a>
             </div>
           </div>
         </div>

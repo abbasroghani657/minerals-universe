@@ -10,6 +10,8 @@ export interface SavedOrder {
   total: number;
   paymentMethod: string;
   paymentStatus: string;
+  status?: string;
+  tracking?: string | null;
   createdAt: string;
 }
 
@@ -25,6 +27,8 @@ export async function saveOrder(order: SavedOrder): Promise<void> {
         total: order.total,
         paymentMethod: order.paymentMethod,
         paymentStatus: order.paymentStatus,
+        status: order.status || 'Processing',
+        tracking: order.tracking || null,
         createdAt: new Date(order.createdAt),
         items: {
           create: order.items.map(item => ({
@@ -60,6 +64,8 @@ export async function getAllOrders(): Promise<SavedOrder[]> {
       total: Number(o.total),
       paymentMethod: o.paymentMethod,
       paymentStatus: o.paymentStatus,
+      status: o.status,
+      tracking: o.tracking,
       createdAt: o.createdAt.toISOString(),
       items: o.items.map(item => ({
         name: item.name,

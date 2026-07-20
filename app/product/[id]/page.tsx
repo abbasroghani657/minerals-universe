@@ -5,11 +5,12 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useCart } from '@/context/CartContext';
 import { ShieldCheck, Truck, PackageCheck, ArrowLeft, Heart, ShoppingBag } from 'lucide-react';
+import { formatPrice, parsePrice } from '@/utils/price';
 
 export default function ProductPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
   const router = useRouter();
-  const { addToCart, wishlist, toggleWishlist } = useCart();
+  const { addToCart, wishlist, toggleWishlist, currency } = useCart();
   const [product, setProduct] = useState<any>(null);
   const [added, setAdded] = useState(false);
   const [qty, setQty] = useState(1);
@@ -139,8 +140,8 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
           <h1 className="heading-serif" style={{ fontSize: '42px', color: '#1a5c4a', margin: '0 0 20px', lineHeight: 1.2 }}>{product.name}</h1>
           
           <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '30px' }}>
-            <span style={{ fontSize: '28px', color: '#1a5c4a', fontWeight: 700 }}>PKR {product.priceNum.toLocaleString()}</span>
-            {product.original && <span style={{ fontSize: '18px', color: '#888', textDecoration: 'line-through' }}>{product.original.replace('$', 'PKR ')}</span>}
+            <span style={{ fontSize: '28px', color: '#1a5c4a', fontWeight: 700 }}>{formatPrice(product.priceNum, currency)}</span>
+            {parsePrice(product.original) > 0 && <span style={{ fontSize: '18px', color: '#888', textDecoration: 'line-through' }}>{formatPrice(parsePrice(product.original), currency)}</span>}
           </div>
 
           <p style={{ fontSize: '16px', lineHeight: 1.8, color: '#555', marginBottom: '40px' }}>
@@ -171,7 +172,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
           <div className="perks-row">
             <div className="perk">
               <ShieldCheck size={28} />
-              <span>GIA Certified</span>
+              <span>{product.cert}</span>
             </div>
             <div className="perk">
               <Truck size={28} />
@@ -203,9 +204,9 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
             <div>
               <h3 style={{ color: '#1a5c4a', marginBottom: '16px', fontSize: '22px' }} className="heading-serif">Additional Information</h3>
               <ul style={{ listStyle: 'none', padding: 0 }}>
-                <li style={{ padding: '12px 0', borderBottom: '1px solid #f0eee9' }}><strong>Origin:</strong> Mined ethically from specific regions known for this mineral.</li>
-                <li style={{ padding: '12px 0', borderBottom: '1px solid #f0eee9' }}><strong>Treatment:</strong> 100% Natural, Unheated and Untreated.</li>
-                <li style={{ padding: '12px 0', borderBottom: '1px solid #f0eee9' }}><strong>Certification:</strong> Includes full gemological laboratory report.</li>
+                <li style={{ padding: '12px 0', borderBottom: '1px solid #f0eee9' }}><strong>Origin:</strong> {product.origin}</li>
+                <li style={{ padding: '12px 0', borderBottom: '1px solid #f0eee9' }}><strong>Treatment:</strong> {product.treatment}</li>
+                <li style={{ padding: '12px 0', borderBottom: '1px solid #f0eee9' }}><strong>Certification:</strong> {product.cert}</li>
               </ul>
             </div>
           )}
@@ -230,7 +231,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
               </div>
               <div className="product-info">
                 <h3 className="heading-serif" style={{ fontSize: '18px', color: '#1a5c4a', margin: '0 0 8px 0', fontWeight: 600 }}>{rp.name}</h3>
-                <p style={{ color: '#555', fontWeight: 500, fontSize: '15px', margin: 0 }}>PKR {rp.priceNum.toLocaleString()}</p>
+                <p style={{ color: '#555', fontWeight: 500, fontSize: '15px', margin: 0 }}>{formatPrice(rp.priceNum, currency)}</p>
                 <div className="btn-teal-outline">
                   <ShoppingBag size={16} /> View Details
                 </div>

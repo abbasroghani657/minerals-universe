@@ -15,6 +15,8 @@ interface CartContextType {
   toast: string | null;
   isCartOpen: boolean;
   cartCount: number; // derived from cartItems
+  currency: string;
+  setCurrency: (currency: string) => void;
   addToCart: (item: Omit<CartItem, 'quantity'> & { quantity?: number }) => void;
   removeFromCart: (id: number) => void;
   updateQuantity: (id: number, delta: number) => void;
@@ -30,6 +32,8 @@ const CartContext = createContext<CartContextType>({
   toast: null,
   isCartOpen: false,
   cartCount: 0,
+  currency: 'USD $',
+  setCurrency: () => {},
   addToCart: () => {},
   removeFromCart: () => {},
   updateQuantity: () => {},
@@ -62,6 +66,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const [toast, setToast] = useState<string | null>(null);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isHydrated, setIsHydrated] = useState(false);
+  const [currency, setCurrencyState] = useState('USD $');
 
   // Rehydrate on mount
   useEffect(() => {
@@ -78,11 +83,23 @@ export function CartProvider({ children }: { children: ReactNode }) {
       if (storedWishlist) {
         setWishlist(new Set(JSON.parse(storedWishlist)));
       }
+
+      const storedCurrency = localStorage.getItem('minerals_universe_currency');
+      if (storedCurrency) {
+        setCurrencyState(storedCurrency);
+      }
     } catch (e) {
       console.error('Failed to load cart/wishlist from localStorage', e);
     }
     setIsHydrated(true);
   }, []);
+
+  const setCurrency = (cur: string) => {
+    setCurrencyState(cur);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('minerals_universe_currency', cur);
+    }
+  };
 
   // Sync cart to localStorage
   useEffect(() => {
@@ -151,7 +168,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   return (
     <CartContext.Provider value={{
-      cartItems, wishlist, toast, isCartOpen, cartCount,
+      cartItems, wishlist, toast, isCartOpen, cartCount, currency, setCurrency,
       addToCart, removeFromCart, updateQuantity, clearCart, toggleWishlist, openCart, closeCart
     }}>
       {children}

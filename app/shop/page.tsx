@@ -4,9 +4,11 @@ import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useCart } from '@/context/CartContext';
+import { formatPrice, parsePrice } from '@/utils/price';
+
 export default function ShopPage() {
   const router = useRouter();
-  const { addToCart, wishlist, toggleWishlist } = useCart();
+  const { addToCart, wishlist, toggleWishlist, currency } = useCart();
   const [added, setAdded] = useState<Set<number>>(new Set());
   const [mounted, setMounted] = useState(false);
   const [categorizedProducts, setCategorizedProducts] = useState<any[]>([]);
@@ -241,8 +243,10 @@ export default function ShopPage() {
                 <div className="product-info">
                   <h4>{product.name}</h4>
                   <div className="price-row">
-                    <span className="sale-price">{product.sale.replace('$', 'PKR ')}</span>
-                    {product.original && <span className="original-price">{product.original.replace('$', 'PKR ')}</span>}
+                    <span className="sale-price">{formatPrice(product.sale_num, currency)}</span>
+                    {parsePrice(product.original) > 0 && (
+                      <span className="original-price">{formatPrice(parsePrice(product.original), currency)}</span>
+                    )}
                   </div>
                   
                   <button

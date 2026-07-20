@@ -31,6 +31,8 @@ model Order {
   total           Float
   paymentMethod   String
   paymentStatus   String
+  status          String      @default("Processing")
+  tracking        String?
   createdAt       DateTime    @default(now())
   items           OrderItem[]
 }
@@ -78,4 +80,16 @@ model User {
   name      String
   role      String   // 'Admin' or 'Customer'
   createdAt DateTime @default(now())
+}
+
+model Faq {
+  id        Int      @id @default(autoincrement())
+  question  String   @db.Text
+  answer    String   @db.Text
+  createdAt DateTime @default(now())
+}
+
+model Setting {
+  key   String @id
+  value String @db.Text
 }

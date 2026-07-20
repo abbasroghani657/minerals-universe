@@ -4,10 +4,13 @@ import { use, useEffect, useState } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { ShoppingBag, ArrowLeft } from 'lucide-react';
+import { useCart } from '@/context/CartContext';
+import { formatPrice } from '@/utils/price';
 
 export default function CategoryPage({ params }: { params: Promise<{ name: string }> }) {
   const resolvedParams = use(params);
   const router = useRouter();
+  const { currency } = useCart();
   const [mounted, setMounted] = useState(false);
   const categoryName = decodeURIComponent(resolvedParams.name).replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
   
@@ -71,7 +74,7 @@ export default function CategoryPage({ params }: { params: Promise<{ name: strin
             </div>
             <div className="product-info">
               <h3 className="heading-serif" style={{ fontSize: '18px', color: '#1a5c4a', margin: '0 0 8px 0', fontWeight: 600 }}>{product.name}</h3>
-              <p style={{ color: '#555', fontWeight: 500, fontSize: '15px', margin: 0 }}>PKR {product.priceNum.toLocaleString()}</p>
+              <p style={{ color: '#555', fontWeight: 500, fontSize: '15px', margin: 0 }}>{formatPrice(product.priceNum, currency)}</p>
               <div className="btn-teal-outline">
                 <ShoppingBag size={16} /> View Details
               </div>

@@ -8,3 +8,27 @@ export function parsePrice(priceStr: string | number | undefined | null): number
   
   return isNaN(parsed) ? 0 : parsed;
 }
+
+export function formatPrice(priceUSD: number, currency: string = 'USD $'): string {
+  let rate = 1.0;
+  let symbol = '$';
+  
+  const c = currency || 'USD $';
+  
+  if (c.startsWith('EUR')) {
+    rate = 0.92;
+    symbol = '€';
+  } else if (c.startsWith('GBP')) {
+    rate = 0.78;
+    symbol = '£';
+  } else if (c.startsWith('AED')) {
+    rate = 3.67;
+    symbol = 'AED ';
+  } else if (c.startsWith('PKR')) {
+    rate = 280.0;
+    symbol = 'PKR ';
+  }
+
+  const converted = Math.round(priceUSD * rate);
+  return `${symbol}${converted.toLocaleString()}`;
+}

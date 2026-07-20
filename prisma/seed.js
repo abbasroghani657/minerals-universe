@@ -317,6 +317,37 @@ async function main() {
     });
   }
 
+  console.log('Seeding FAQs...');
+  const faqs = [
+    { question: 'Are your gemstones natural and untreated?', answer: 'All our gemstones are 100% natural. We clearly disclose the treatment status of each stone in the product listing and certification. Untreated stones are specifically labelled and priced accordingly.' },
+    { question: 'Do you provide certificates for your stones?', answer: 'Yes. We offer certificates from internationally recognized laboratories including GIA, AGL, and Gübelin. Certificate options are indicated on each product page.' },
+    { question: 'How long does international shipping take?', answer: 'Standard insured shipping takes 7–14 business days internationally. Express DHL/FedEx (3–5 days) is available at an additional charge. All shipments are fully insured and tracked.' },
+    { question: 'Can I request a specific stone or custom order?', answer: 'Absolutely. Our custom order service lets you specify stone type, carat weight, color, origin preference, and budget. Use our Custom Order form or contact us on WhatsApp.' },
+    { question: 'What payment methods do you accept?', answer: 'We accept Visa, Mastercard, PayPal, Western Union, and direct bank transfer. All online transactions are SSL-encrypted.' }
+  ];
+  for (const faq of faqs) {
+    const existing = await prisma.faq.findFirst({ where: { question: faq.question } });
+    if (!existing) {
+      await prisma.faq.create({ data: faq });
+    }
+  }
+
+  console.log('Seeding settings...');
+  const settings = [
+    { key: 'instagramUrl', value: 'https://www.instagram.com/mineralsuniverse_' },
+    { key: 'tiktokUrl', value: 'https://www.tiktok.com/@mineralsuniverse1?_r=1&_t=ZN-95hIvZ38Z30' },
+    { key: 'youtubeUrl', value: 'https://youtube.com/@mineralsuniverse?si=8xemeeSlWzqPvsAA' },
+    { key: 'ebayUrl', value: 'https://www.ebay.com/usr/mineralsuniverse' },
+    { key: 'whatsappNumber', value: '923001581210' }
+  ];
+  for (const setting of settings) {
+    await prisma.setting.upsert({
+      where: { key: setting.key },
+      update: { value: setting.value },
+      create: { key: setting.key, value: setting.value }
+    });
+  }
+
   console.log('Database seeded successfully!');
 }
 

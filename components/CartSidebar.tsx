@@ -4,9 +4,10 @@ import { useEffect, useRef } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useCart } from '@/context/CartContext';
+import { formatPrice } from '@/utils/price';
 
 export default function CartSidebar() {
-  const { isCartOpen, closeCart, cartItems, cartCount, updateQuantity, removeFromCart } = useCart();
+  const { isCartOpen, closeCart, cartItems, cartCount, updateQuantity, removeFromCart, currency } = useCart();
   const sidebarRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
 
@@ -98,7 +99,7 @@ export default function CartSidebar() {
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <h4 style={{ margin: '0 0 8px 0', fontSize: '14px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.name}</h4>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <span style={{ fontWeight: 600, color: 'var(--teal-dark)' }}>PKR {item.price.toLocaleString()}</span>
+                      <span style={{ fontWeight: 600, color: 'var(--teal-dark)' }}>{formatPrice(item.price, currency)}</span>
                       <div style={{ display: 'flex', alignItems: 'center', border: '1px solid var(--border)', borderRadius: '4px' }}>
                         <button onClick={() => updateQuantity(item.id, -1)} style={{ padding: '4px 8px', background: 'none', border: 'none', cursor: 'pointer' }} aria-label="Decrease quantity">-</button>
                         <span style={{ padding: '0 8px', fontSize: '14px', width: '24px', textAlign: 'center' }}>{item.quantity}</span>
@@ -119,7 +120,7 @@ export default function CartSidebar() {
           <div style={{ padding: '24px', borderTop: '1px solid var(--border)', background: 'var(--bg)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '16px', fontSize: '18px', fontWeight: 600 }}>
               <span>Subtotal</span>
-              <span style={{ color: 'var(--teal-dark)' }}>PKR {subtotal.toLocaleString()}</span>
+              <span style={{ color: 'var(--teal-dark)' }}>{formatPrice(subtotal, currency)}</span>
             </div>
             <button onClick={handleCheckout} className="btn-teal" style={{ width: '100%', padding: '16px', fontSize: '16px' }}>
               Proceed to Checkout
