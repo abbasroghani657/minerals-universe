@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState, useEffect } from 'react';
-import { LayoutDashboard, Package, ShoppingCart, MessageSquare, Mail, LogOut } from 'lucide-react';
+import { LayoutDashboard, Package, ShoppingCart, MessageSquare, Mail, LogOut, HelpCircle, Settings } from 'lucide-react';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -53,6 +53,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     { name: 'Orders', href: '/admin/orders', icon: ShoppingCart },
     { name: 'Reviews', href: '/admin/reviews', icon: MessageSquare },
     { name: 'Inquiries', href: '/admin/inquiries', icon: Mail },
+    { name: 'FAQs', href: '/admin/faqs', icon: HelpCircle },
+    { name: 'Settings', href: '/admin/settings', icon: Settings },
   ];
 
   return (
