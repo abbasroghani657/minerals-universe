@@ -1,5 +1,4 @@
-import fs from 'fs/promises';
-import path from 'path';
+import prisma from './prisma';
 
 export interface SavedOrder {
   id: string;
@@ -14,40 +13,62 @@ export interface SavedOrder {
   createdAt: string;
 }
 
-const DATA_DIR = path.join(process.cwd(), 'data');
-const ORDERS_FILE = path.join(DATA_DIR, 'orders.json');
-
 export async function saveOrder(order: SavedOrder): Promise<void> {
   try {
-    // Ensure data directory exists
-    try {
-      await fs.access(DATA_DIR);
-    } catch {
-      await fs.mkdir(DATA_DIR, { recursive: true });
-    }
-
-    // Read existing orders
-    let orders: SavedOrder[] = [];
-    try {
-      const raw = await fs.readFile(ORDERS_FILE, 'utf8');
-      orders = JSON.parse(raw);
-    } catch {
-      orders = [];
-    }
-
-    orders.push(order);
-    await fs.writeFile(ORDERS_FILE, JSON.stringify(orders, null, 2), 'utf8');
+    await prisma.order.create({
+      data: {
+        id: order.id,
+        customerName: order.customerName,
+        customerEmail: order.customerEmail,
+        customerPhone: order.customerPhone,
+        shippingAddress: order.shippingAddress,
+        total: order.total,
+        paymentMethod: order.paymentMethod,
+        paymentStatus: order.paymentStatus,
+        createdAt: new Date(order.createdAt),
+        items: {
+          create: order.items.map(item => ({
+            name: item.name,
+            quantity: item.quantity,
+            price: item.price
+          }))
+        }
+      }
+    });
   } catch (err) {
-    // Log but do not throw — order save failure must not fail the customer transaction
-    console.error('[saveOrder] Failed to write order to disk:', err);
+    console.error('[saveOrder] Failed to save order to MySQL:', err);
   }
 }
 
 export async function getAllOrders(): Promise<SavedOrder[]> {
   try {
-    const raw = await fs.readFile(ORDERS_FILE, 'utf8');
-    return JSON.parse(raw);
-  } catch {
+    const dbOrders = await prisma.order.findMany({
+      include: {
+        items: true
+      },
+      orderBy: {
+        createdAt: 'desc'
+      }
+    });
+
+    return dbOrders.map(o => ({
+      id: o.id,
+      customerName: o.customerName,
+      customerEmail: o.customerEmail,
+      customerPhone: o.customerPhone,
+      shippingAddress: o.shippingAddress,
+      total: Number(o.total),
+      paymentMethod: o.paymentMethod,
+      paymentStatus: o.paymentStatus,
+      createdAt: o.createdAt.toISOString(),
+      items: o.items.map(item => ({
+        name: item.name,
+        quantity: item.quantity,
+        price: Number(item.price)
+      }))
+    }));
+  } catch (err) {
+    console.error('[getAllOrders] Failed to get orders from MySQL:', err);
     return [];
   }
 }
