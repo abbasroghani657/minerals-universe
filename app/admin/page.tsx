@@ -63,10 +63,26 @@ export default function AdminDashboard() {
     { title: 'New Inquiries', value: String(inquiriesCount), icon: Clock, color: '#c94438', bg: '#fdf2f2' },
   ];
 
-  const formatPrice = (p: string | number) => {
-    if (typeof p === 'number') return `PKR ${p.toLocaleString()}`;
+  const formatPrice = (p: string | number, paymentMethod?: string) => {
+    if (typeof p === 'number') {
+      const pm = (paymentMethod || '').toUpperCase();
+      if (pm.includes('USD') || pm.includes('$')) {
+        return `$${p.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+      }
+      if (pm.includes('EUR') || pm.includes('€')) {
+        return `€${p.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+      }
+      if (pm.includes('GBP') || pm.includes('£')) {
+        return `£${p.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+      }
+      if (pm.includes('AED')) {
+        return `AED ${p.toLocaleString()}`;
+      }
+      return `PKR ${p.toLocaleString()}`;
+    }
     return p;
   };
+
 
   const formatDate = (dateStr: string) => {
     try {
@@ -136,7 +152,8 @@ export default function AdminDashboard() {
                       {order.status || 'Processing'}
                     </span>
                   </td>
-                  <td style={{ padding: '16px 0', fontSize: '14px', fontWeight: 600, color: '#333' }}>{formatPrice(order.total)}</td>
+                  <td style={{ padding: '16px 0', fontSize: '14px', fontWeight: 600, color: '#333' }}>{formatPrice(order.total, order.paymentMethod)}</td>
+
                 </tr>
               ))}
             </tbody>

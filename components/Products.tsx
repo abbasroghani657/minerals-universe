@@ -24,7 +24,7 @@ export default function Products() {
     }
     fetchHomeProducts();
   }, []);
-  const { addToCart, wishlist, toggleWishlist, currency } = useCart();
+  const { addToCart, wishlist, toggleWishlist, currency, exchangeRates } = useCart();
   const [added, setAdded] = useState<Set<number>>(new Set());
   const router = useRouter();
 
@@ -75,10 +75,11 @@ export default function Products() {
                   <div className="stars">★★★★★</div>
                   <div className="price-row">
                     {parsePrice(product.original) > 0 && (
-                      <span className="price-original">{formatPrice(parsePrice(product.original), currency)}</span>
+                      <span className="price-original">{formatPrice(parsePrice(product.original), currency, exchangeRates)}</span>
                     )}
-                    <span className="price-sale">{formatPrice(product.priceNum, currency)}</span>
+                    <span className="price-sale">{formatPrice(product.priceNum, currency, exchangeRates)}</span>
                   </div>
+
                   <button
                     className={`add-btn${added.has(product.id) ? ' added' : ''}`}
                     onClick={(e) => { e.stopPropagation(); handleAddToCart(product); }}

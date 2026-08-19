@@ -17,16 +17,37 @@ export async function GET() {
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { customerName, customerEmail, customerPhone, shippingAddress, items, total, paymentMethod, card } = body;
+    const { 
+      customerName, 
+      customerEmail, 
+      customerPhone, 
+      shippingAddress, 
+      items, 
+      total, 
+      totalUSD, 
+      currency = 'PKR', 
+      currencySymbol = 'PKR ', 
+      exchangeRate = 1.0, 
+      paymentMethod, 
+      card 
+    } = body;
 
-    if (!customerName || !customerEmail || !customerPhone || !shippingAddress || !items || !total || !paymentMethod) {
+    if (!customerName || !customerEmail || !customerPhone || !shippingAddress || !items || total == null || !paymentMethod) {
       return NextResponse.json({ success: false, error: 'Missing required order details' }, { status: 400 });
     }
 
     let finalPaymentStatus = 'Pending';
 
-    // Process payment using real Stripe sandbox credentials if raw card details are provided
-    if (card && card.number && card.expiry) {
+    // 1. Pakistani Bank Transfer / Raast / EasyPaisa
+    if (paymentMethod.includes('Bank Transfer') || paymentMethod.includes('Raast') || paymentMethod.includes('EasyPaisa')) {
+      finalPaymentStatus = 'Pending Verification';
+    } 
+    // 2. Cash on Delivery
+    else if (paymentMethod.includes('Cash on Delivery') || paymentMethod.includes('COD')) {
+      finalPaymentStatus = 'Pending Delivery (COD)';
+    } 
+    // 3. Credit / Debit Card (Stripe)
+    else if (card && card.number && card.expiry) {
       try {
         const expParts = card.expiry.split('/');
         const expMonth = parseInt(expParts[0]?.trim(), 10);
@@ -43,10 +64,12 @@ export async function POST(req: Request) {
           },
         });
 
-        // Create and confirm payment intent immediately (server-side sandbox checkout)
-        const amountInCents = Math.round(total * 100);
+        // Charge in USD cents (or native currency)
+        const usdAmount = typeof totalUSD === 'number' && totalUSD > 0 ? totalUSD : (total / (exchangeRate || 1));
+        const amountInCents = Math.round(usdAmount * 100);
+
         const paymentIntent = await stripe.paymentIntents.create({
-          amount: amountInCents,
+          amount: Math.max(50, amountInCents),
           currency: 'usd',
           payment_method: paymentMethodObj.id,
           confirm: true,
@@ -64,7 +87,6 @@ export async function POST(req: Request) {
         return NextResponse.json({ success: false, error: stripeErr.message || 'Payment processing failed.' }, { status: 400 });
       }
     } else {
-      // Fallback/standard completion status (such as manual orders or mock checkout)
       finalPaymentStatus = 'Paid';
     }
 
@@ -77,7 +99,11 @@ export async function POST(req: Request) {
       shippingAddress,
       items,
       total: Number(total),
-      paymentMethod,
+      totalUSD: totalUSD ? Number(totalUSD) : undefined,
+      currency,
+      currencySymbol,
+      exchangeRate: Number(exchangeRate),
+      paymentMethod: `${paymentMethod} (${currency})`,
       paymentStatus: finalPaymentStatus,
       status: 'Processing',
       createdAt: new Date().toISOString(),
@@ -85,6 +111,7 @@ export async function POST(req: Request) {
 
     await saveOrder(orderData);
 
+    // Send confirmation email
     try {
       await sendOrderConfirmationEmail({
         orderId,
@@ -93,8 +120,10 @@ export async function POST(req: Request) {
         customerPhone,
         shippingAddress,
         items,
-        total,
-        paymentMethod,
+        total: Number(total),
+        currencySymbol,
+        currency,
+        paymentMethod: `${paymentMethod} (${currency})`,
       });
     } catch (emailErr) {
       console.error('[POST /api/orders] Failed to send order confirmation email:', emailErr);

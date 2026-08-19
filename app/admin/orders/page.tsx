@@ -27,10 +27,26 @@ export default function AdminOrders() {
     loadOrders();
   }, []);
 
-  const formatPrice = (p: string | number) => {
-    if (typeof p === 'number') return `PKR ${p.toLocaleString()}`;
+  const formatPrice = (p: string | number, paymentMethod?: string) => {
+    if (typeof p === 'number') {
+      const pm = (paymentMethod || '').toUpperCase();
+      if (pm.includes('USD') || pm.includes('$')) {
+        return `$${p.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+      }
+      if (pm.includes('EUR') || pm.includes('€')) {
+        return `€${p.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+      }
+      if (pm.includes('GBP') || pm.includes('£')) {
+        return `£${p.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+      }
+      if (pm.includes('AED')) {
+        return `AED ${p.toLocaleString()}`;
+      }
+      return `PKR ${p.toLocaleString()}`;
+    }
     return p;
   };
+
 
   const formatDate = (dateStr: string) => {
     try {
@@ -149,7 +165,8 @@ export default function AdminOrders() {
                 </td>
                 <td style={{ padding: '16px 0', fontSize: '14px', color: '#666' }}>{formatDate(o.createdAt)}</td>
                 <td style={{ padding: '16px 0', fontSize: '14px', color: '#333' }}>{o.items?.length || 0} items</td>
-                <td style={{ padding: '16px 0', fontSize: '14px', fontWeight: 600, color: '#333' }}>{formatPrice(o.total)}</td>
+                <td style={{ padding: '16px 0', fontSize: '14px', fontWeight: 600, color: '#333' }}>{formatPrice(o.total, o.paymentMethod)}</td>
+
                 <td style={{ padding: '16px 0' }}>
                   <span style={{ 
                     padding: '4px 10px', borderRadius: '20px', fontSize: '12px', fontWeight: 600,
@@ -236,13 +253,14 @@ export default function AdminOrders() {
                         <p style={{ margin: '0 0 4px', fontSize: '14px', fontWeight: 500, color: '#333' }}>{item.name}</p>
                         <p style={{ margin: 0, fontSize: '12px', color: '#888' }}>Qty: {item.quantity}</p>
                       </div>
-                      <span style={{ fontSize: '14px', fontWeight: 600, color: '#1a5c4a' }}>{formatPrice(item.price)}</span>
+                      <span style={{ fontSize: '14px', fontWeight: 600, color: '#1a5c4a' }}>{formatPrice(item.price, selectedOrder.paymentMethod)}</span>
                     </div>
                   ))}
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '16px', paddingTop: '16px', borderTop: '1px solid #ccc' }}>
                     <span style={{ fontSize: '15px', fontWeight: 600, color: '#333' }}>Total Paid</span>
-                    <span style={{ fontSize: '16px', fontWeight: 700, color: '#1a5c4a' }}>{formatPrice(selectedOrder.total)}</span>
+                    <span style={{ fontSize: '16px', fontWeight: 700, color: '#1a5c4a' }}>{formatPrice(selectedOrder.total, selectedOrder.paymentMethod)}</span>
                   </div>
+
                 </div>
 
                 <h3 style={{ fontSize: '15px', color: '#1a5c4a', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '16px', borderBottom: '1px solid #eee', paddingBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>

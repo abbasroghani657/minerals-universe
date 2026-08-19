@@ -1,10 +1,11 @@
 'use client';
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { DEFAULT_RATES, formatPrice as utilsFormatPrice, convertPrice as utilsConvertPrice, getCurrencyCode } from '@/utils/price';
 
 export interface CartItem {
   id: number;
   name: string;
-  price: number;
+  price: number; // Base price in USD
   quantity: number;
   img: string;
 }
@@ -14,8 +15,10 @@ interface CartContextType {
   wishlist: Set<number>;
   toast: string | null;
   isCartOpen: boolean;
-  cartCount: number; // derived from cartItems
+  cartCount: number;
   currency: string;
+  exchangeRates: Record<string, number>;
+  ratesLoading: boolean;
   setCurrency: (currency: string) => void;
   addToCart: (item: Omit<CartItem, 'quantity'> & { quantity?: number }) => void;
   removeFromCart: (id: number) => void;
@@ -24,6 +27,8 @@ interface CartContextType {
   toggleWishlist: (id: number) => void;
   openCart: () => void;
   closeCart: () => void;
+  formatPrice: (priceUSD: number) => string;
+  convertPrice: (priceUSD: number) => number;
 }
 
 const CartContext = createContext<CartContextType>({
@@ -33,6 +38,8 @@ const CartContext = createContext<CartContextType>({
   isCartOpen: false,
   cartCount: 0,
   currency: 'USD $',
+  exchangeRates: DEFAULT_RATES,
+  ratesLoading: true,
   setCurrency: () => {},
   addToCart: () => {},
   removeFromCart: () => {},
@@ -41,6 +48,8 @@ const CartContext = createContext<CartContextType>({
   toggleWishlist: () => {},
   openCart: () => {},
   closeCart: () => {},
+  formatPrice: (p) => `$${p}`,
+  convertPrice: (p) => p,
 });
 
 const defaultCartItems: CartItem[] = [
@@ -67,8 +76,28 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isHydrated, setIsHydrated] = useState(false);
   const [currency, setCurrencyState] = useState('USD $');
+  const [exchangeRates, setExchangeRates] = useState<Record<string, number>>(DEFAULT_RATES);
+  const [ratesLoading, setRatesLoading] = useState(true);
 
-  // Rehydrate on mount
+  // Fetch live exchange rates on startup
+  useEffect(() => {
+    async function loadRates() {
+      try {
+        const res = await fetch('/api/rates');
+        const data = await res.json();
+        if (data.success && data.rates) {
+          setExchangeRates(data.rates);
+        }
+      } catch (err) {
+        console.warn('[CartContext] Failed to load live exchange rates, using defaults:', err);
+      } finally {
+        setRatesLoading(false);
+      }
+    }
+    loadRates();
+  }, []);
+
+  // Rehydrate on mount & Auto-detect country/currency if not already set
   useEffect(() => {
     try {
       const storedCart = localStorage.getItem('minerals_universe_cart');
@@ -87,6 +116,17 @@ export function CartProvider({ children }: { children: ReactNode }) {
       const storedCurrency = localStorage.getItem('minerals_universe_currency');
       if (storedCurrency) {
         setCurrencyState(storedCurrency);
+      } else {
+        // Auto-detect user timezone / locale
+        try {
+          const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || '';
+          if (tz.includes('Karachi') || tz.includes('Pakistan')) {
+            setCurrencyState('PKR ₨');
+            localStorage.setItem('minerals_universe_currency', 'PKR ₨');
+          }
+        } catch {
+          // Keep USD $ as fallback
+        }
       }
     } catch (e) {
       console.error('Failed to load cart/wishlist from localStorage', e);
@@ -166,10 +206,19 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const cartCount = cartItems.reduce((acc, item) => acc + item.quantity, 0);
 
+  const formatPrice = (priceUSD: number) => {
+    return utilsFormatPrice(priceUSD, currency, exchangeRates);
+  };
+
+  const convertPrice = (priceUSD: number) => {
+    return utilsConvertPrice(priceUSD, currency, exchangeRates);
+  };
+
   return (
     <CartContext.Provider value={{
-      cartItems, wishlist, toast, isCartOpen, cartCount, currency, setCurrency,
-      addToCart, removeFromCart, updateQuantity, clearCart, toggleWishlist, openCart, closeCart
+      cartItems, wishlist, toast, isCartOpen, cartCount, currency, exchangeRates, ratesLoading,
+      setCurrency, addToCart, removeFromCart, updateQuantity, clearCart, toggleWishlist, openCart, closeCart,
+      formatPrice, convertPrice
     }}>
       {children}
       {/* Global Toast */}
@@ -197,3 +246,4 @@ export function CartProvider({ children }: { children: ReactNode }) {
 }
 
 export const useCart = () => useContext(CartContext);
+

@@ -10,8 +10,9 @@ import { formatPrice, parsePrice } from '@/utils/price';
 export default function ProductPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
   const router = useRouter();
-  const { addToCart, wishlist, toggleWishlist, currency } = useCart();
+  const { addToCart, wishlist, toggleWishlist, currency, exchangeRates } = useCart();
   const [product, setProduct] = useState<any>(null);
+
   const [added, setAdded] = useState(false);
   const [qty, setQty] = useState(1);
   const [activeTab, setActiveTab] = useState('description');
@@ -140,9 +141,10 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
           <h1 className="heading-serif" style={{ fontSize: '42px', color: '#1a5c4a', margin: '0 0 20px', lineHeight: 1.2 }}>{product.name}</h1>
           
           <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '30px' }}>
-            <span style={{ fontSize: '28px', color: '#1a5c4a', fontWeight: 700 }}>{formatPrice(product.priceNum, currency)}</span>
-            {parsePrice(product.original) > 0 && <span style={{ fontSize: '18px', color: '#888', textDecoration: 'line-through' }}>{formatPrice(parsePrice(product.original), currency)}</span>}
+            <span style={{ fontSize: '28px', color: '#1a5c4a', fontWeight: 700 }}>{formatPrice(product.priceNum, currency, exchangeRates)}</span>
+            {parsePrice(product.original) > 0 && <span style={{ fontSize: '18px', color: '#888', textDecoration: 'line-through' }}>{formatPrice(parsePrice(product.original), currency, exchangeRates)}</span>}
           </div>
+
 
           <p style={{ fontSize: '16px', lineHeight: 1.8, color: '#555', marginBottom: '40px' }}>
             {product.desc}
@@ -231,7 +233,8 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
               </div>
               <div className="product-info">
                 <h3 className="heading-serif" style={{ fontSize: '18px', color: '#1a5c4a', margin: '0 0 8px 0', fontWeight: 600 }}>{rp.name}</h3>
-                <p style={{ color: '#555', fontWeight: 500, fontSize: '15px', margin: 0 }}>{formatPrice(rp.priceNum, currency)}</p>
+                <p style={{ color: '#555', fontWeight: 500, fontSize: '15px', margin: 0 }}>{formatPrice(rp.priceNum, currency, exchangeRates)}</p>
+
                 <div className="btn-teal-outline">
                   <ShoppingBag size={16} /> View Details
                 </div>

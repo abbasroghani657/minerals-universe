@@ -6,8 +6,12 @@ export interface SavedOrder {
   customerEmail: string;
   customerPhone: string;
   shippingAddress: string;
-  items: Array<{ name: string; quantity: number; price: number }>;
+  items: Array<{ name: string; quantity: number; price: number; priceUSD?: number }>;
   total: number;
+  totalUSD?: number;
+  currency?: string;
+  currencySymbol?: string;
+  exchangeRate?: number;
   paymentMethod: string;
   paymentStatus: string;
   status?: string;
@@ -82,3 +86,4 @@ export async function getAllOrders(): Promise<SavedOrder[]> {
 export function generateOrderId(): string {
   return `ORD-${Math.floor(1000 + Math.random() * 9000)}`;
 }
+
