@@ -1,28 +1,35 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
+import { DEFAULT_SETTINGS } from '@/lib/defaultData';
 
 export async function GET(req: Request) {
-  try {
-    const { searchParams } = new URL(req.url);
-    const key = searchParams.get('key');
+  const { searchParams } = new URL(req.url);
+  const key = searchParams.get('key');
 
+  try {
     if (key) {
       const setting = await prisma.setting.findUnique({
         where: { key }
       });
-      return NextResponse.json({ success: true, key, value: setting ? setting.value : null });
+      return NextResponse.json({ success: true, key, value: setting ? setting.value : (DEFAULT_SETTINGS[key] || null) });
     }
 
     const settings = await prisma.setting.findMany();
-    const config = settings.reduce((acc: any, s) => {
-      acc[s.key] = s.value;
-      return acc;
-    }, {});
+    if (settings && settings.length > 0) {
+      const config = settings.reduce((acc: any, s) => {
+        acc[s.key] = s.value;
+        return acc;
+      }, {});
+      return NextResponse.json({ success: true, settings: { ...DEFAULT_SETTINGS, ...config } });
+    }
 
-    return NextResponse.json({ success: true, settings: config });
+    return NextResponse.json({ success: true, settings: DEFAULT_SETTINGS });
   } catch (err: any) {
-    console.error('[GET /api/settings]', err);
-    return NextResponse.json({ success: false, error: err.message }, { status: 500 });
+    console.warn('[GET /api/settings] Database not ready, using fallback settings:', err.message);
+    if (key) {
+      return NextResponse.json({ success: true, key, value: DEFAULT_SETTINGS[key] || null });
+    }
+    return NextResponse.json({ success: true, settings: DEFAULT_SETTINGS });
   }
 }
 

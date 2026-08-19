@@ -1,12 +1,13 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
+import { DEFAULT_REVIEWS } from '@/lib/defaultData';
 
 export async function GET(req: Request) {
-  try {
-    const { searchParams } = new URL(req.url);
-    const statusFilter = searchParams.get('status');
-    const productIdFilter = searchParams.get('productId');
+  const { searchParams } = new URL(req.url);
+  const statusFilter = searchParams.get('status');
+  const productIdFilter = searchParams.get('productId');
 
+  try {
     const whereClause: any = {};
     if (statusFilter) {
       whereClause.status = statusFilter;
@@ -20,10 +21,13 @@ export async function GET(req: Request) {
       orderBy: { createdAt: 'desc' }
     });
 
-    return NextResponse.json({ success: true, reviews });
+    if (reviews && reviews.length > 0) {
+      return NextResponse.json({ success: true, reviews });
+    }
+    return NextResponse.json({ success: true, reviews: DEFAULT_REVIEWS });
   } catch (err: any) {
-    console.error('[GET /api/reviews]', err);
-    return NextResponse.json({ success: false, error: err.message }, { status: 500 });
+    console.warn('[GET /api/reviews] Database not ready, using fallback reviews:', err.message);
+    return NextResponse.json({ success: true, reviews: DEFAULT_REVIEWS });
   }
 }
 

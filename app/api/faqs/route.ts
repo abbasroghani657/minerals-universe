@@ -1,15 +1,19 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
+import { DEFAULT_FAQS } from '@/lib/defaultData';
 
 export async function GET() {
   try {
     const faqs = await prisma.faq.findMany({
       orderBy: { id: 'asc' }
     });
-    return NextResponse.json({ success: true, faqs });
+    if (faqs && faqs.length > 0) {
+      return NextResponse.json({ success: true, faqs });
+    }
+    return NextResponse.json({ success: true, faqs: DEFAULT_FAQS });
   } catch (err: any) {
-    console.error('[GET /api/faqs]', err);
-    return NextResponse.json({ success: false, error: err.message }, { status: 500 });
+    console.warn('[GET /api/faqs] Database not ready, using fallback FAQs:', err.message);
+    return NextResponse.json({ success: true, faqs: DEFAULT_FAQS });
   }
 }
 

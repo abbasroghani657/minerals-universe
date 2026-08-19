@@ -1,33 +1,53 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
+import { DEFAULT_PRODUCTS } from '@/lib/defaultData';
 
 export async function GET(req: Request) {
-  try {
-    const { searchParams } = new URL(req.url);
-    const id = searchParams.get('id');
-    const category = searchParams.get('category');
+  const { searchParams } = new URL(req.url);
+  const id = searchParams.get('id');
+  const category = searchParams.get('category');
 
+  try {
     if (id) {
       const product = await prisma.product.findUnique({
         where: { id: Number(id) }
       });
-      return NextResponse.json({ success: true, product });
+      if (product) {
+        return NextResponse.json({ success: true, product });
+      }
+      const fallback = DEFAULT_PRODUCTS.find(p => p.id === Number(id));
+      return NextResponse.json({ success: true, product: fallback || null });
     }
 
     if (category) {
       const products = await prisma.product.findMany({
-        where: { cat: category }
+        where: { cat: { equals: category } }
       });
-      return NextResponse.json({ success: true, products });
+      if (products && products.length > 0) {
+        return NextResponse.json({ success: true, products });
+      }
+      const fallback = DEFAULT_PRODUCTS.filter(p => p.cat.toLowerCase() === category.toLowerCase());
+      return NextResponse.json({ success: true, products: fallback });
     }
 
     const products = await prisma.product.findMany({
       orderBy: { id: 'desc' }
     });
-    return NextResponse.json({ success: true, products });
+    if (products && products.length > 0) {
+      return NextResponse.json({ success: true, products });
+    }
+    return NextResponse.json({ success: true, products: DEFAULT_PRODUCTS });
   } catch (err: any) {
-    console.error('[GET /api/products]', err);
-    return NextResponse.json({ success: false, error: err.message }, { status: 500 });
+    console.warn('[GET /api/products] Database not ready, using fallback products:', err.message);
+    if (id) {
+      const fallback = DEFAULT_PRODUCTS.find(p => p.id === Number(id));
+      return NextResponse.json({ success: true, product: fallback || null });
+    }
+    if (category) {
+      const fallback = DEFAULT_PRODUCTS.filter(p => p.cat.toLowerCase() === category.toLowerCase());
+      return NextResponse.json({ success: true, products: fallback });
+    }
+    return NextResponse.json({ success: true, products: DEFAULT_PRODUCTS });
   }
 }
 
