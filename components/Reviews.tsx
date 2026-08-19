@@ -34,14 +34,19 @@ export default function Reviews() {
         const data = await res.json();
         if (data.success && data.reviews && data.reviews.length > 0) {
           // Format custom reviews to match the display schema
-          const formatted = data.reviews.map((r: any) => ({
-            initial: r.author.charAt(0).toUpperCase(),
-            name: r.author,
-            location: '🌍 Verified Buyer',
-            rating: r.rating,
-            text: r.text.startsWith('"') ? r.text : `"${r.text}"`,
-          }));
+          const formatted = data.reviews.map((r: any) => {
+            const authorName = r.author || r.name || 'Verified Buyer';
+            const reviewText = String(r.text || r.comment || '').trim();
+            return {
+              initial: (authorName.charAt(0) || 'V').toUpperCase(),
+              name: authorName,
+              location: r.location || '🌍 Verified Buyer',
+              rating: Number(r.rating) || 5,
+              text: reviewText.startsWith('"') ? reviewText : `"${reviewText}"`,
+            };
+          });
           setReviews([...formatted, ...initialReviews.filter(ir => !formatted.some((fr: any) => fr.name === ir.name))]);
+
         }
       } catch (err) {
         console.error('Failed to load approved reviews, using initial placeholders:', err);

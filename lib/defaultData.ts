@@ -187,7 +187,8 @@ export const DEFAULT_FAQS = [
 ];
 
 export const DEFAULT_REVIEWS = [
-  { id: 1, author: 'Tariq Mehmood', rating: 5, comment: 'Exceptional Aquamarine specimen! The clarity and cut exceeded my expectations. Fast delivery in Islamabad.', createdAt: '2026-02-10T10:00:00Z' },
-  { id: 2, author: 'Hamza Khan', rating: 5, comment: 'Purchased a Pink Tourmaline. Genuine stone with certificate verified. Highly recommended!', createdAt: '2026-02-12T14:00:00Z' },
-  { id: 3, author: 'Sarah Jenkins', rating: 5, comment: 'World-class gemstone seller. Payment was smooth and packaging was very secure.', createdAt: '2026-02-15T09:30:00Z' }
+  { id: 'REV-101', author: 'Tariq Mehmood', rating: 5, text: 'Exceptional Aquamarine specimen! The clarity and cut exceeded my expectations. Fast delivery in Islamabad.', comment: 'Exceptional Aquamarine specimen! The clarity and cut exceeded my expectations. Fast delivery in Islamabad.', product: 'Aquamarine', status: 'Approved', createdAt: '2026-02-10T10:00:00Z' },
+  { id: 'REV-102', author: 'Hamza Khan', rating: 5, text: 'Purchased a Pink Tourmaline. Genuine stone with certificate verified. Highly recommended!', comment: 'Purchased a Pink Tourmaline. Genuine stone with certificate verified. Highly recommended!', product: 'Tourmaline', status: 'Approved', createdAt: '2026-02-12T14:00:00Z' },
+  { id: 'REV-103', author: 'Sarah Jenkins', rating: 5, text: 'World-class gemstone seller. Payment was smooth and packaging was very secure.', comment: 'World-class gemstone seller. Payment was smooth and packaging was very secure.', product: 'Royal Blue Sapphire', status: 'Approved', createdAt: '2026-02-15T09:30:00Z' }
 ];
+
