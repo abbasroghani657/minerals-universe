@@ -52,25 +52,8 @@ const CartContext = createContext<CartContextType>({
   convertPrice: (p) => p,
 });
 
-const defaultCartItems: CartItem[] = [
-  {
-    id: 1,
-    name: 'Natural Aquamarine Emerald Cut — 4.8 Cts',
-    price: 385,
-    quantity: 1,
-    img: 'https://images.unsplash.com/photo-1617038220319-276d3cfab638?w=400&q=80'
-  },
-  {
-    id: 3,
-    name: 'Pink Tourmaline Cushion Cut — 6.1 Cts',
-    price: 740,
-    quantity: 2,
-    img: 'https://images.unsplash.com/photo-1599707367072-cd6ada2bc375?w=400&q=80'
-  }
-];
-
 export function CartProvider({ children }: { children: ReactNode }) {
-  const [cartItems, setCartItems] = useState<CartItem[]>(defaultCartItems);
+  const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [wishlist, setWishlist] = useState<Set<number>>(new Set());
   const [toast, setToast] = useState<string | null>(null);
   const [isCartOpen, setIsCartOpen] = useState(false);
@@ -101,16 +84,23 @@ export function CartProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     try {
       const storedCart = localStorage.getItem('minerals_universe_cart');
-      if (storedCart) {
-        const parsed = JSON.parse(storedCart);
-        if (parsed && parsed.length > 0) {
-          setCartItems(parsed);
-        }
+      if (storedCart !== null) {
+        try {
+          const parsed = JSON.parse(storedCart);
+          if (Array.isArray(parsed)) {
+            setCartItems(parsed);
+          }
+        } catch (e) {}
       }
       
       const storedWishlist = localStorage.getItem('minerals_universe_wishlist');
-      if (storedWishlist) {
-        setWishlist(new Set(JSON.parse(storedWishlist)));
+      if (storedWishlist !== null) {
+        try {
+          const parsedWish = JSON.parse(storedWishlist);
+          if (Array.isArray(parsedWish)) {
+            setWishlist(new Set(parsedWish));
+          }
+        } catch (e) {}
       }
 
       const storedCurrency = localStorage.getItem('minerals_universe_currency');
