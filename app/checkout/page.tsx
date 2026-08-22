@@ -168,6 +168,23 @@ export default function PremiumCheckoutPage() {
     setCardExpiry(val.substring(0, 7));
   };
 
+  function isValidLuhn(cardNumber: string): boolean {
+    const digits = cardNumber.replace(/\D/g, '');
+    if (digits.length < 13 || digits.length > 19) return false;
+    let sum = 0;
+    let shouldDouble = false;
+    for (let i = digits.length - 1; i >= 0; i--) {
+      let digit = parseInt(digits.charAt(i), 10);
+      if (shouldDouble) {
+        digit *= 2;
+        if (digit > 9) digit -= 9;
+      }
+      sum += digit;
+      shouldDouble = !shouldDouble;
+    }
+    return sum % 10 === 0;
+  }
+
   const validateForm = (): boolean => {
     if (!customer.customerName.trim()) {
       setFormError('⚠️ Please enter your Full Name.');
@@ -192,6 +209,12 @@ export default function PremiumCheckoutPage() {
         setFormError('⚠️ Invalid Card Number. Please enter a complete 15 or 16-digit Card Number.');
         return false;
       }
+
+      if (!isValidLuhn(rawCard)) {
+        setFormError('⚠️ Invalid Card Number. The card failed bank checksum validation. Please enter a real, bank-issued card.');
+        return false;
+      }
+
       if (!cardExpiry || cardExpiry.length < 5) {
         setFormError('⚠️ Please enter Card Expiry date in MM / YY format.');
         return false;
@@ -704,8 +727,7 @@ export default function PremiumCheckoutPage() {
                           intent: 'capture'
                         }}>
                           <PayPalButtons
-                            fundingSource="paypal"
-                            style={{ layout: 'vertical', color: 'gold', shape: 'rect', label: 'paypal' }}
+                            style={{ layout: 'vertical', color: 'gold', shape: 'rect' }}
                             disabled={isSubmitting}
                             createOrder={(data, actions) => {
                               return actions.order.create({
