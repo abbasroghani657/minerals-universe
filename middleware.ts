@@ -1,9 +1,8 @@
 import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
 
-// Protect the admin panel and the checkout screens
+// Protect the admin panel
 const isProtectedRoute = createRouteMatcher([
   '/admin(.*)',
-  '/checkout(.*)',
 ]);
 
 export default clerkMiddleware(async (auth, req) => {
