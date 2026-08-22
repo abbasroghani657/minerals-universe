@@ -4,6 +4,7 @@ import { usePathname } from 'next/navigation';
 import { FaWhatsapp } from 'react-icons/fa';
 import Header from './Header';
 import Footer from './Footer';
+import CartSidebar from './CartSidebar';
 
 export default function GlobalUI({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -44,6 +45,9 @@ export default function GlobalUI({ children }: { children: React.ReactNode }) {
         <FaWhatsapp size={34} color="#fff" />
         <span className="wa-tooltip">Chat with us on WhatsApp</span>
       </a>
+
+      {/* Cart Sidebar */}
+      <CartSidebar />
     </>
   );
 }
