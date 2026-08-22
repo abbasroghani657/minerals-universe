@@ -40,7 +40,16 @@ export async function POST(req: Request) {
 
     // 1. PayPal & Bank Card Payments
     if (paymentMethod.includes('PayPal') || paymentMethod.includes('Card')) {
-      finalPaymentStatus = body.paymentStatus || 'Paid (PayPal / Card)';
+      const hasTxnId = paymentMethod.includes('Txn:') || (body.paymentStatus && body.paymentStatus.includes('Txn:'));
+      
+      if (!hasTxnId) {
+        return NextResponse.json({ 
+          success: false, 
+          error: 'Fraud Alert: Valid Transaction ID required for Paid orders. Request rejected.' 
+        }, { status: 400 });
+      }
+      
+      finalPaymentStatus = body.paymentStatus || 'Paid (Unverified)';
     } else {
       finalPaymentStatus = 'Pending Verification';
     }
