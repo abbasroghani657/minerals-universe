@@ -38,68 +38,11 @@ export async function POST(req: Request) {
 
     let finalPaymentStatus = body.paymentStatus || 'Pending';
 
-    // 1. PayPal Checkout
-    if (paymentMethod.includes('PayPal')) {
-      finalPaymentStatus = body.paymentStatus || 'Paid (PayPal)';
-    }
-    // 2. Pakistani Bank Transfer / Raast / EasyPaisa
-    else if (paymentMethod.includes('Bank Transfer') || paymentMethod.includes('Raast') || paymentMethod.includes('EasyPaisa')) {
-      finalPaymentStatus = 'Pending Verification';
-    } 
-    // 3. Cash on Delivery
-    else if (paymentMethod.includes('Cash on Delivery') || paymentMethod.includes('COD')) {
-      finalPaymentStatus = 'Pending Delivery (COD)';
-    } 
-    // 4. Credit / Debit Card Payment
-    else if (card && card.number && card.expiry) {
-      const stripeKey = process.env.STRIPE_SECRET_KEY;
-      const isRealStripeKey = stripeKey && !stripeKey.includes('your_stripe') && (stripeKey.startsWith('sk_live_') || stripeKey.startsWith('sk_test_'));
-
-      if (isRealStripeKey) {
-        try {
-          const expParts = card.expiry.split('/');
-          const expMonth = parseInt(expParts[0]?.trim(), 10);
-          const expYear = parseInt('20' + expParts[1]?.trim(), 10);
-
-          // Create card payment method
-          const paymentMethodObj = await stripe.paymentMethods.create({
-            type: 'card',
-            card: {
-              number: card.number,
-              exp_month: expMonth,
-              exp_year: expYear,
-              cvc: card.cvv,
-            },
-          });
-
-          // Charge in USD cents (or native currency)
-          const usdAmount = typeof totalUSD === 'number' && totalUSD > 0 ? totalUSD : (total / (exchangeRate || 1));
-          const amountInCents = Math.round(usdAmount * 100);
-
-          const paymentIntent = await stripe.paymentIntents.create({
-            amount: Math.max(50, amountInCents),
-            currency: 'usd',
-            payment_method: paymentMethodObj.id,
-            confirm: true,
-            automatic_payment_methods: { enabled: true, allow_redirects: 'never' },
-            receipt_email: customerEmail,
-          });
-
-          if (paymentIntent.status === 'succeeded') {
-            finalPaymentStatus = 'Paid (Stripe)';
-          } else {
-            return NextResponse.json({ success: false, error: `Card transaction: ${paymentIntent.status}` }, { status: 400 });
-          }
-        } catch (stripeErr: any) {
-          console.error('[Stripe Charge Error]', stripeErr);
-          return NextResponse.json({ success: false, error: stripeErr.message || 'Payment processing failed.' }, { status: 400 });
-        }
-      } else {
-        // Direct Card Payment authorized & approved
-        finalPaymentStatus = 'Paid (Card Authorized)';
-      }
+    // 1. PayPal & Bank Card Payments
+    if (paymentMethod.includes('PayPal') || paymentMethod.includes('Card')) {
+      finalPaymentStatus = body.paymentStatus || 'Paid (PayPal / Card)';
     } else {
-      finalPaymentStatus = 'Paid';
+      finalPaymentStatus = 'Pending Verification';
     }
 
     const orderId = generateOrderId();
