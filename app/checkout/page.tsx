@@ -72,12 +72,47 @@ export default function PremiumCheckoutPage() {
   const currencySymbol = getCurrencySymbol(currency);
   const currentRate = getExchangeRate(currency, exchangeRates);
 
+function getCardBrand(num: string) {
+  const clean = num.replace(/\s+/g, '');
+  if (!clean) return { name: '', color: '#888', bg: '#f5f5f5', label: 'Accepted Cards', isDetected: false };
+  if (/^4/.test(clean)) {
+    return { name: 'Visa', color: '#1434CB', bg: '#eaf0ff', label: 'VISA', isDetected: true };
+  }
+  if (/^(5[1-5]|2[2-7])/.test(clean)) {
+    return { name: 'Mastercard', color: '#EB001B', bg: '#fff0ee', label: 'Mastercard', isDetected: true };
+  }
+  if (/^3[47]/.test(clean)) {
+    return { name: 'American Express', color: '#006FCF', bg: '#e6f3fc', label: 'AMEX', isDetected: true };
+  }
+  if (/^(6011|65|64[4-9])/.test(clean)) {
+    return { name: 'Discover', color: '#FF6000', bg: '#fff4eb', label: 'Discover', isDetected: true };
+  }
+  if (/^35/.test(clean)) {
+    return { name: 'JCB', color: '#00539B', bg: '#e6f1f9', label: 'JCB', isDetected: true };
+  }
+  if (/^62/.test(clean)) {
+    return { name: 'UnionPay', color: '#D9272E', bg: '#fdeeed', label: 'UnionPay', isDetected: true };
+  }
+  return { name: 'Card', color: '#666', bg: '#f0f0f0', label: 'Card', isDetected: false };
+}
+
   // ─── Formatters ───
   const handleCardNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value.replace(/\s+/g, '').replace(/[^0-9]/gi, '');
-    const formatted = val.match(/.{1,4}/g)?.join(' ') || val;
-    setCardNumber(formatted.substring(0, 19));
+    let formatted = val;
+    // Format Amex as 4-6-5
+    if (/^3[47]/.test(val)) {
+      const parts = [val.substring(0, 4), val.substring(4, 10), val.substring(10, 15)].filter(Boolean);
+      formatted = parts.join(' ');
+      setCardNumber(formatted.substring(0, 17));
+    } else {
+      // Format 4-4-4-4 for Visa/Mastercard/Discover
+      formatted = val.match(/.{1,4}/g)?.join(' ') || val;
+      setCardNumber(formatted.substring(0, 19));
+    }
   };
+
+  const detectedCard = getCardBrand(cardNumber);
 
   const handleExpiryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     let val = e.target.value.replace(/\s+/g, '').replace(/[^0-9/]/gi, '');
@@ -478,16 +513,37 @@ export default function PremiumCheckoutPage() {
                         <label style={{ ...labelBase, marginBottom: 0 }}>Card Number</label>
                         <span style={{ fontSize: '12px', color: '#888' }}>Visa • MasterCard • Amex • Discover</span>
                       </div>
-                      <input 
-                        type="text" 
-                        className="input-field" 
-                        style={inputBase} 
-                        value={cardNumber}
-                        onChange={handleCardNumberChange}
-                        placeholder="4532  ••••  ••••  ••••" 
-                        maxLength={19}
-                        required
-                      />
+                      <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                        <input 
+                          type="text" 
+                          className="input-field" 
+                          style={{ ...inputBase, paddingRight: detectedCard.isDetected ? '115px' : '45px' }} 
+                          value={cardNumber}
+                          onChange={handleCardNumberChange}
+                          placeholder="4532  ••••  ••••  ••••" 
+                          maxLength={19}
+                          required
+                        />
+                        <div style={{ position: 'absolute', right: '12px', display: 'flex', alignItems: 'center', pointerEvents: 'none' }}>
+                          {detectedCard.isDetected ? (
+                            <span style={{ 
+                              background: detectedCard.bg, 
+                              color: detectedCard.color, 
+                              padding: '4px 10px', 
+                              borderRadius: '4px', 
+                              fontWeight: 800, 
+                              fontSize: '12px', 
+                              letterSpacing: '0.5px',
+                              border: `1px solid ${detectedCard.color}40`,
+                              boxShadow: '0 2px 6px rgba(0,0,0,0.06)'
+                            }}>
+                              {detectedCard.label}
+                            </span>
+                          ) : (
+                            <CreditCard size={20} color="#aaa" />
+                          )}
+                        </div>
+                      </div>
                     </div>
 
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
