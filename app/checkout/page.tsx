@@ -616,7 +616,7 @@ function getCardBrand(num: string) {
                   ) : (
                     <div style={{ minHeight: '120px' }}>
                       <PayPalScriptProvider options={{ 
-                        clientId: process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID || 'test', 
+                        clientId: process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID || 'BAAk51QAzJlc_kltTZbbhUV03jzLZefyf7oT1OtIn-Kw9j74ijabIbeoCT2ARvl5gxuVyPCiHl2VebG9wo', 
                         currency: 'USD',
                         intent: 'capture'
                       }}>
