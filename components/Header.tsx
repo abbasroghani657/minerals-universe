@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth, UserButton } from '@clerk/nextjs';
 
 export default function Header() {
-  const { cartCount, wishlist, currency, setCurrency } = useCart();
+  const { cartCount, wishlist, currency, setCurrency, openCart } = useCart();
   const router = useRouter();
   const { isSignedIn, isLoaded } = useAuth();
   const [searchOpen, setSearchOpen] = useState(false);
@@ -112,7 +112,7 @@ export default function Header() {
             </button>
             <button
               title={`Cart (${cartCount})`}
-              onClick={() => router.push('/cart')}
+              onClick={() => openCart()}
               style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '18px', color: 'var(--muted)', position: 'relative', transition: 'color .2s' }}
               onMouseEnter={e => (e.currentTarget.style.color = 'var(--teal)')}
               onMouseLeave={e => (e.currentTarget.style.color = 'var(--muted)')}
