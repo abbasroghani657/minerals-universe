@@ -30,24 +30,44 @@ interface LastOrder {
 export default function OrderConfirmationPage() {
   const router = useRouter();
   const [order, setOrder] = useState<LastOrder | null>(null);
+  const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
-    const raw = sessionStorage.getItem('minerals_universe_last_order');
+    let raw = sessionStorage.getItem('minerals_universe_last_order');
     if (!raw) {
-      router.push('/');
-      return;
+      raw = localStorage.getItem('minerals_universe_last_order');
     }
-    try {
-      setOrder(JSON.parse(raw));
-    } catch {
-      router.push('/');
+    if (raw) {
+      try {
+        setOrder(JSON.parse(raw));
+      } catch (err) {
+        console.error('Failed to parse order receipt', err);
+      }
     }
-  }, [router]);
+    setIsLoaded(true);
+  }, []);
+
+  if (!isLoaded) {
+    return (
+      <div style={{ padding: '140px 20px', textAlign: 'center', color: '#888', fontSize: '16px' }}>
+        Loading order receipt…
+      </div>
+    );
+  }
 
   if (!order) {
     return (
-      <div style={{ padding: '140px 20px', textAlign: 'center', color: '#888', fontSize: '16px' }}>
-        Loading order details…
+      <div style={{ background: '#f8f7f5', minHeight: '100vh', padding: '140px 20px 80px', textAlign: 'center', fontFamily: "'DM Sans', sans-serif" }}>
+        <div style={{ maxWidth: '520px', margin: '0 auto', background: '#fff', borderRadius: '12px', padding: '36px', boxShadow: '0 4px 24px rgba(0,0,0,0.06)' }}>
+          <CheckCircle2 size={48} color="#1a5c4a" style={{ margin: '0 auto 16px' }} />
+          <h2 style={{ fontSize: '22px', fontWeight: 700, margin: '0 0 10px', color: '#1a1a1a' }}>Order Successfully Received</h2>
+          <p style={{ fontSize: '14px', color: '#666', marginBottom: '24px', lineHeight: 1.6 }}>
+            Thank you for your purchase with Minerals Universe! A confirmation email has been dispatched to your inbox.
+          </p>
+          <Link href="/shop" style={{ display: 'inline-block', background: '#1a5c4a', color: '#fff', padding: '12px 28px', borderRadius: '6px', fontWeight: 600, textDecoration: 'none' }}>
+            Explore More Gemstones
+          </Link>
+        </div>
       </div>
     );
   }

@@ -88,6 +88,8 @@ export default function PremiumCheckoutPage() {
     setMounted(true);
   }, []);
 
+  const [isNavigatingToConfirmation, setIsNavigatingToConfirmation] = useState(false);
+
   // Sync Card Name with Full Name
   useEffect(() => {
     if (!cardName && customer.customerName) {
@@ -95,12 +97,15 @@ export default function PremiumCheckoutPage() {
     }
   }, [customer.customerName, cardName]);
 
-  // Empty cart guard
+  // Empty cart guard (only redirect if user lands on checkout with empty cart, never on successful payment)
   useEffect(() => {
-    if (mounted && cartItems.length === 0) router.push('/');
-  }, [mounted, cartItems, router]);
+    if (mounted && !isNavigatingToConfirmation && cartItems.length === 0) {
+      router.push('/');
+    }
+  }, [mounted, cartItems.length, isNavigatingToConfirmation, router]);
 
-  if (!mounted || cartItems.length === 0) return null;
+  if (!mounted) return null;
+  if (!isNavigatingToConfirmation && cartItems.length === 0) return null;
 
   // Base total in USD
   const subtotalUSD = cartItems.reduce((acc, item) => acc + item.price * item.quantity, 0);
@@ -111,29 +116,29 @@ export default function PremiumCheckoutPage() {
   const currencySymbol = getCurrencySymbol(currency);
   const currentRate = getExchangeRate(currency, exchangeRates);
 
-function getCardBrand(num: string) {
-  const clean = num.replace(/\s+/g, '');
-  if (!clean) return { name: '', color: '#888', bg: '#f5f5f5', label: 'Accepted Cards', isDetected: false };
-  if (/^4/.test(clean)) {
-    return { name: 'Visa', color: '#1434CB', bg: '#eaf0ff', label: 'VISA', isDetected: true };
+  function getCardBrand(num: string) {
+    const clean = num.replace(/\s+/g, '');
+    if (!clean) return { name: '', color: '#888', bg: '#f5f5f5', label: 'Accepted Cards', isDetected: false };
+    if (/^4/.test(clean)) {
+      return { name: 'Visa', color: '#1434CB', bg: '#eaf0ff', label: 'VISA', isDetected: true };
+    }
+    if (/^(5[1-5]|2[2-7])/.test(clean)) {
+      return { name: 'Mastercard', color: '#EB001B', bg: '#fff0ee', label: 'Mastercard', isDetected: true };
+    }
+    if (/^3[47]/.test(clean)) {
+      return { name: 'American Express', color: '#006FCF', bg: '#e6f3fc', label: 'AMEX', isDetected: true };
+    }
+    if (/^(6011|65|64[4-9])/.test(clean)) {
+      return { name: 'Discover', color: '#FF6000', bg: '#fff4eb', label: 'Discover', isDetected: true };
+    }
+    if (/^35/.test(clean)) {
+      return { name: 'JCB', color: '#00539B', bg: '#e6f1f9', label: 'JCB', isDetected: true };
+    }
+    if (/^62/.test(clean)) {
+      return { name: 'UnionPay', color: '#D9272E', bg: '#fdeeed', label: 'UnionPay', isDetected: true };
+    }
+    return { name: 'Card', color: '#666', bg: '#f0f0f0', label: 'Card', isDetected: false };
   }
-  if (/^(5[1-5]|2[2-7])/.test(clean)) {
-    return { name: 'Mastercard', color: '#EB001B', bg: '#fff0ee', label: 'Mastercard', isDetected: true };
-  }
-  if (/^3[47]/.test(clean)) {
-    return { name: 'American Express', color: '#006FCF', bg: '#e6f3fc', label: 'AMEX', isDetected: true };
-  }
-  if (/^(6011|65|64[4-9])/.test(clean)) {
-    return { name: 'Discover', color: '#FF6000', bg: '#fff4eb', label: 'Discover', isDetected: true };
-  }
-  if (/^35/.test(clean)) {
-    return { name: 'JCB', color: '#00539B', bg: '#e6f1f9', label: 'JCB', isDetected: true };
-  }
-  if (/^62/.test(clean)) {
-    return { name: 'UnionPay', color: '#D9272E', bg: '#fdeeed', label: 'UnionPay', isDetected: true };
-  }
-  return { name: 'Card', color: '#666', bg: '#f0f0f0', label: 'Card', isDetected: false };
-}
 
   // ─── Formatters ───
   const handleCardNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -164,22 +169,54 @@ function getCardBrand(num: string) {
   };
 
   const validateForm = (): boolean => {
-    if (!customer.customerName.trim() || !customer.customerEmail.trim() || !customer.customerPhone.trim() || !customer.shippingAddress.trim()) {
-      setFormError('Please fill out all delivery details (Full Name, Email, Phone, Shipping Address) first.');
+    if (!customer.customerName.trim()) {
+      setFormError('⚠️ Please enter your Full Name.');
       return false;
     }
+    if (!customer.customerEmail.trim() || !customer.customerEmail.includes('@')) {
+      setFormError('⚠️ Please enter a valid Email Address (e.g. yourname@example.com).');
+      return false;
+    }
+    if (!customer.customerPhone.trim() || customer.customerPhone.trim().length < 7) {
+      setFormError('⚠️ Please enter a valid Mobile Phone Number.');
+      return false;
+    }
+    if (!customer.shippingAddress.trim() || customer.shippingAddress.trim().length < 10) {
+      setFormError('⚠️ Please enter a complete Delivery Address (Street, City, Postal Code, Country).');
+      return false;
+    }
+
     if (paymentMethod === 'card') {
       const rawCard = cardNumber.replace(/\s/g, '');
-      if (rawCard.length < 15) {
-        setFormError('Please enter a valid 16-digit Card Number.');
+      if (rawCard.length < 15 || rawCard.length > 19) {
+        setFormError('⚠️ Invalid Card Number. Please enter a complete 15 or 16-digit Card Number.');
         return false;
       }
       if (!cardExpiry || cardExpiry.length < 5) {
-        setFormError('Please enter card expiry date (MM / YY).');
+        setFormError('⚠️ Please enter Card Expiry date in MM / YY format.');
         return false;
       }
-      if (!cardCvv || cardCvv.length < 3) {
-        setFormError('Please enter a valid 3 or 4-digit CVV security code.');
+
+      const [monthStr, yearStr] = cardExpiry.split('/').map(s => s.trim());
+      const month = parseInt(monthStr, 10);
+      const year = parseInt('20' + yearStr, 10);
+
+      if (isNaN(month) || month < 1 || month > 12) {
+        setFormError('⚠️ Invalid Expiry Month. Month must be between 01 and 12.');
+        return false;
+      }
+
+      const now = new Date();
+      const currentYear = now.getFullYear();
+      const currentMonth = now.getMonth() + 1;
+
+      if (isNaN(year) || year < currentYear || (year === currentYear && month < currentMonth)) {
+        setFormError('⚠️ Card is expired. Please enter an active card with future expiry date.');
+        return false;
+      }
+
+      if (!cardCvv || cardCvv.length < 3 || cardCvv.length > 4) {
+        setFormError('⚠️ Invalid CVV. Please enter the 3 or 4-digit security code from your card.');
         return false;
       }
     }
@@ -212,7 +249,7 @@ function getCardBrand(num: string) {
         currency: currencyCode,
         currencySymbol: currencySymbol,
         exchangeRate: currentRate,
-        paymentMethod: 'Credit / Debit Card (Visa/Mastercard)',
+        paymentMethod: `Credit / Debit Card (${detectedCard.name || 'Visa/Mastercard'})`,
         card: {
           number: cardNumber.replace(/\s/g, ''),
           expiry: cardExpiry,
@@ -231,11 +268,17 @@ function getCardBrand(num: string) {
         throw new Error(data.error || 'Payment card authorization failed.');
       }
 
-      sessionStorage.setItem('minerals_universe_last_order', JSON.stringify({
+      setIsNavigatingToConfirmation(true);
+      const orderReceipt = JSON.stringify({
         orderId: data.orderId,
-        paymentStatus: 'Paid (Card)',
+        paymentStatus: 'Paid (Card Authorized)',
         ...orderPayload,
-      }));
+      });
+
+      sessionStorage.setItem('minerals_universe_last_order', orderReceipt);
+      try {
+        localStorage.setItem('minerals_universe_last_order', orderReceipt);
+      } catch (e) {}
 
       clearCart();
       router.push('/order-confirmation');
@@ -717,10 +760,16 @@ function getCardBrand(num: string) {
                                 throw new Error(resData.error || 'Failed to record order.');
                               }
 
-                              sessionStorage.setItem('minerals_universe_last_order', JSON.stringify({
+                              setIsNavigatingToConfirmation(true);
+                              const orderReceipt = JSON.stringify({
                                 orderId: resData.orderId,
                                 ...orderPayload,
-                              }));
+                              });
+
+                              sessionStorage.setItem('minerals_universe_last_order', orderReceipt);
+                              try {
+                                localStorage.setItem('minerals_universe_last_order', orderReceipt);
+                              } catch (e) {}
 
                               clearCart();
                               router.push('/order-confirmation');
