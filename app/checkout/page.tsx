@@ -8,6 +8,45 @@ import { Lock, Package, FileCheck, ShieldCheck, ArrowRight, CreditCard, CheckCir
 import { formatPrice, convertPrice, getCurrencyCode, getCurrencySymbol, getExchangeRate } from '@/utils/price';
 import { PayPalScriptProvider, PayPalButtons } from '@paypal/react-paypal-js';
 
+import React, { Component, ReactNode, ErrorInfo } from 'react';
+
+// ─── PayPal Error Boundary (Prevents any page crash) ─────────────────────────
+interface ErrorBoundaryProps {
+  children: ReactNode;
+  fallback?: ReactNode;
+}
+
+interface ErrorBoundaryState {
+  hasError: boolean;
+  error?: Error;
+}
+
+class PayPalErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
+  public state: ErrorBoundaryState = { hasError: false };
+
+  public static getDerivedStateFromError(error: Error): ErrorBoundaryState {
+    return { hasError: true, error };
+  }
+
+  public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+    console.error('[PayPal Error Boundary Caught]', error, errorInfo);
+  }
+
+  public render() {
+    if (this.state.hasError) {
+      return (
+        <div style={{ padding: '16px', background: '#fff9e6', border: '1px solid #fae69e', borderRadius: '8px', color: '#8a6400', fontSize: '13.5px' }}>
+          <p style={{ margin: '0 0 8px', fontWeight: 700 }}>⚠️ PayPal Connection Notice</p>
+          <p style={{ margin: '0 0 10px' }}>
+            PayPal is currently initializing or restricted in your region. You can pay seamlessly right now using any <strong>Debit or Credit Card</strong> in the Card tab!
+          </p>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 // ─── Theme Colors ─────────────────────────────────────────────────────────────
 const EMERALD = '#1a5c4a';
 const STONE = '#f8f7f5';
@@ -614,49 +653,32 @@ function getCardBrand(num: string) {
                       👉 Please fill your <strong>Shipping Address</strong> in Step 1 to enable PayPal.
                     </div>
                   ) : (
-                    <div style={{ minHeight: '120px' }}>
-                      <PayPalScriptProvider options={{ 
-                        clientId: process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID || 'BAAk51QAzJlc_kltTZbbhUV03jzLZefyf7oT1OtIn-Kw9j74ijabIbeoCT2ARvl5gxuVyPCiHl2VebG9wo', 
-                        currency: 'USD',
-                        intent: 'capture'
-                      }}>
-                        <PayPalButtons
-                          fundingSource="paypal"
-                          style={{ layout: 'vertical', color: 'gold', shape: 'rect', label: 'paypal' }}
-                          disabled={isSubmitting}
-                          createOrder={(data, actions) => {
-                            const nameParts = customer.customerName.trim().split(' ');
-                            const firstName = nameParts[0] || 'Customer';
-                            const lastName = nameParts.slice(1).join(' ') || 'Customer';
-
-                            return actions.order.create({
-                              intent: 'CAPTURE',
-                              payer: {
-                                email_address: customer.customerEmail,
-                                name: {
-                                  given_name: firstName,
-                                  surname: lastName,
-                                },
-                              },
-                              purchase_units: [
-                                {
-                                  description: `Minerals Universe Gemstones (${cartItems.length} items)`,
-                                  amount: {
-                                    currency_code: 'USD',
-                                    value: subtotalUSD.toFixed(2),
-                                  },
-                                  shipping: {
-                                    name: { full_name: customer.customerName },
-                                    address: {
-                                      address_line_1: customer.shippingAddress,
-                                      country_code: 'US',
+                    <PayPalErrorBoundary>
+                      <div style={{ minHeight: '120px' }}>
+                        <PayPalScriptProvider options={{ 
+                          clientId: process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID || 'BAAk51QAzJlc_kltTZbbhUV03jzLZefyf7oT1OtIn-Kw9j74ijabIbeoCT2ARvl5gxuVyPCiHl2VebG9wo', 
+                          currency: 'USD',
+                          intent: 'capture'
+                        }}>
+                          <PayPalButtons
+                            fundingSource="paypal"
+                            style={{ layout: 'vertical', color: 'gold', shape: 'rect', label: 'paypal' }}
+                            disabled={isSubmitting}
+                            createOrder={(data, actions) => {
+                              return actions.order.create({
+                                intent: 'CAPTURE',
+                                purchase_units: [
+                                  {
+                                    description: `Minerals Universe Gemstones Order (${cartItems.length} items)`,
+                                    amount: {
+                                      currency_code: 'USD',
+                                      value: subtotalUSD.toFixed(2),
                                     },
                                   },
-                                },
-                              ],
-                            });
-                          }}
-                          onApprove={async (data, actions) => {
+                                ],
+                              });
+                            }}
+                            onApprove={async (data, actions) => {
                             if (!actions.order) return;
                             setIsSubmitting(true);
                             setFormError(null);
@@ -716,6 +738,7 @@ function getCardBrand(num: string) {
                         />
                       </PayPalScriptProvider>
                     </div>
+                    </PayPalErrorBoundary>
                   )}
                 </div>
               )}
