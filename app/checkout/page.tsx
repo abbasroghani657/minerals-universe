@@ -4,11 +4,11 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { useCart } from '@/context/CartContext';
-import { Lock, Package, FileCheck, CreditCard, Building, ShieldCheck, Truck, ArrowRight, CheckCircle2 } from 'lucide-react';
+import { Lock, Package, FileCheck, ShieldCheck, ArrowRight, CheckCircle2, Globe } from 'lucide-react';
 import { formatPrice, convertPrice, getCurrencyCode, getCurrencySymbol, getExchangeRate } from '@/utils/price';
 import { PayPalScriptProvider, PayPalButtons } from '@paypal/react-paypal-js';
 
-// ─── Constants & Styles ────────────────────────────────────────────────────────
+// ─── Theme Colors ─────────────────────────────────────────────────────────────
 const EMERALD = '#1a5c4a';
 const STONE = '#f8f7f5';
 const GOLD = '#c5a059';
@@ -20,20 +20,9 @@ interface CustomerDetails {
   shippingAddress: string;
 }
 
-interface BankSettings {
-  bankName: string;
-  accountTitle: string;
-  accountNumber: string;
-  iban: string;
-  raastId: string;
-  easyPaisaNumber: string;
-  jazzCashNumber: string;
-  paymentInstructions: string;
-}
-
 export default function PremiumCheckoutPage() {
   const router = useRouter();
-  const { cartItems, clearCart, currency, exchangeRates, ratesLoading } = useCart();
+  const { cartItems, clearCart, currency, exchangeRates } = useCart();
   const [mounted, setMounted] = useState(false);
   
   const [formError, setFormError] = useState<string | null>(null);
@@ -46,62 +35,9 @@ export default function PremiumCheckoutPage() {
     shippingAddress: '',
   });
 
-  // Payment method: 'paypal' | 'bank_transfer' | 'card' | 'cod'
-  const [paymentMethod, setPaymentMethod] = useState<'paypal' | 'bank_transfer' | 'card' | 'cod'>('paypal');
-
-  // Admin Bank details loaded from settings
-  const [bankSettings, setBankSettings] = useState<BankSettings>({
-    bankName: 'Meezan Bank Limited',
-    accountTitle: 'Minerals Universe / Zaheer Abbas',
-    accountNumber: '',
-    iban: '',
-    raastId: '',
-    easyPaisaNumber: '',
-    jazzCashNumber: '',
-    paymentInstructions: 'Please transfer the exact converted amount to our account and send the screenshot/receipt on WhatsApp along with your Order ID for immediate dispatch verification.',
-  });
-
-  // Custom Card State
-  const [cardNumber, setCardNumber] = useState('');
-  const [cardExpiry, setCardExpiry] = useState('');
-  const [cardCvv, setCardCvv] = useState('');
-
   useEffect(() => {
     setMounted(true);
-
-    // Fetch store bank details
-    async function loadSettings() {
-      try {
-        const res = await fetch('/api/settings');
-        const data = await res.json();
-        if (data.success && data.settings) {
-          setBankSettings({
-            bankName: data.settings.bankName || 'Meezan Bank Limited',
-            accountTitle: data.settings.accountTitle || 'Minerals Universe / Zaheer Abbas',
-            accountNumber: data.settings.accountNumber || '',
-            iban: data.settings.iban || '',
-            raastId: data.settings.raastId || '',
-            easyPaisaNumber: data.settings.easyPaisaNumber || '',
-            jazzCashNumber: data.settings.jazzCashNumber || '',
-            paymentInstructions: data.settings.paymentInstructions || 'Please transfer the exact converted PKR total to our account and send the screenshot on WhatsApp for instant confirmation.',
-          });
-        }
-      } catch (err) {
-        console.error('Failed to load store settings:', err);
-      }
-    }
-    loadSettings();
   }, []);
-
-  // Set default payment method according to currency
-  useEffect(() => {
-    const code = getCurrencyCode(currency);
-    if (code === 'PKR') {
-      setPaymentMethod('bank_transfer');
-    } else {
-      setPaymentMethod('paypal');
-    }
-  }, [currency]);
 
   // Empty cart guard
   useEffect(() => {
@@ -119,107 +55,21 @@ export default function PremiumCheckoutPage() {
   const currencySymbol = getCurrencySymbol(currency);
   const currentRate = getExchangeRate(currency, exchangeRates);
 
-  // ─── Formatters ───
-  const handleCardNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const val = e.target.value.replace(/\s+/g, '').replace(/[^0-9]/gi, '');
-    const formatted = val.match(/.{1,4}/g)?.join(' ') || val;
-    setCardNumber(formatted.substring(0, 19));
-  };
-
-  const handleExpiryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    let val = e.target.value.replace(/\s+/g, '').replace(/[^0-9/]/gi, '');
-    if (val.length === 2 && !val.includes('/') && cardExpiry.length < 3) {
-      val += ' / ';
-    } else if (val.length === 2 && cardExpiry.length === 5) {
-      val = val.substring(0, 1);
-    }
-    setCardExpiry(val.substring(0, 7));
-  };
-
   const validateForm = (): boolean => {
     if (!customer.customerName.trim() || !customer.customerEmail.trim() || !customer.customerPhone.trim() || !customer.shippingAddress.trim()) {
-      setFormError('Please fill out all customer details (Name, Email, Phone, Address) before proceeding.');
+      setFormError('Please fill out all delivery details (Full Name, Email, Phone, Shipping Address) before paying.');
       return false;
-    }
-    if (paymentMethod === 'card') {
-      if (!cardNumber || cardNumber.replace(/\s/g, '').length < 15 || !cardExpiry || !cardCvv) {
-        setFormError('Please enter valid credit/debit card details.');
-        return false;
-      }
     }
     setFormError(null);
     return true;
   };
 
-  const handlePlaceOrder = async (e: React.FormEvent) => {
-    if (e && e.preventDefault) e.preventDefault();
-    if (!validateForm()) return;
-    
-    setIsSubmitting(true);
-    setFormError(null);
-
-    let paymentMethodName = 'Direct Pakistani Bank Transfer / Raast / EasyPaisa';
-    if (paymentMethod === 'card') paymentMethodName = 'Debit / Credit Card (Stripe)';
-    if (paymentMethod === 'cod') paymentMethodName = 'Cash on Delivery (COD)';
-
-    try {
-      const orderPayload = {
-        customerName: customer.customerName,
-        customerEmail: customer.customerEmail,
-        customerPhone: customer.customerPhone,
-        shippingAddress: customer.shippingAddress,
-        items: cartItems.map(i => ({
-          name: i.name,
-          quantity: i.quantity,
-          priceUSD: i.price,
-          price: convertPrice(i.price, currency, exchangeRates),
-        })),
-        totalUSD: subtotalUSD,
-        total: convertedTotal,
-        currency: currencyCode,
-        currencySymbol: currencySymbol,
-        exchangeRate: currentRate,
-        paymentMethod: paymentMethodName,
-        card: paymentMethod === 'card' ? {
-          number: cardNumber.replace(/\s/g, ''),
-          expiry: cardExpiry,
-          cvv: cardCvv,
-        } : undefined,
-      };
-
-      const res = await fetch('/api/orders', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(orderPayload),
-      });
-
-      const data = await res.json();
-      if (!res.ok || !data.success) {
-        throw new Error(data.error || 'Failed to place order.');
-      }
-
-      sessionStorage.setItem('minerals_universe_last_order', JSON.stringify({
-        orderId: data.orderId,
-        bankSettings,
-        ...orderPayload,
-      }));
-      
-      clearCart();
-      router.push('/order-confirmation');
-    } catch (err: any) {
-      console.error('[handlePlaceOrder]', err);
-      setFormError(err.message || 'Payment processing failed. Please try again.');
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  // ─── Styles ───
+  // ─── Input Styles ───
   const inputBase = {
     width: '100%',
     padding: '14px 16px',
     border: '1px solid #e2dfd8',
-    borderRadius: '4px',
+    borderRadius: '6px',
     fontSize: '15px',
     fontFamily: "'DM Sans', sans-serif",
     outline: 'none',
@@ -231,11 +81,11 @@ export default function PremiumCheckoutPage() {
   const labelBase = {
     display: 'block',
     fontSize: '13px',
-    fontWeight: 500,
+    fontWeight: 600,
     marginBottom: '8px',
-    color: '#555',
+    color: '#444',
     textTransform: 'uppercase' as const,
-    letterSpacing: '1px',
+    letterSpacing: '0.8px',
     fontFamily: "'DM Sans', sans-serif",
   };
 
@@ -256,132 +106,62 @@ export default function PremiumCheckoutPage() {
           margin: 0 auto;
           display: grid;
           grid-template-columns: 1.2fr 1fr;
-          gap: 60px;
+          gap: 50px;
         }
         .heading-serif {
           font-family: 'Cormorant Garamond', serif;
         }
         .page-title {
-          font-size: 42px;
+          font-size: 40px;
           color: ${EMERALD};
-          margin-bottom: 40px;
-          font-weight: 500;
+          margin-bottom: 36px;
+          font-weight: 600;
           text-align: center;
         }
         .section-card {
           background: #fff;
-          border-radius: 8px;
-          padding: 40px;
+          border-radius: 10px;
+          padding: 36px;
           border: 1px solid #e8e6e1;
-          margin-bottom: 30px;
+          margin-bottom: 26px;
+          box-shadow: 0 2px 12px rgba(0,0,0,0.02);
         }
         .section-title {
-          font-size: 26px;
+          font-size: 24px;
           color: ${EMERALD};
-          margin-bottom: 24px;
+          margin-bottom: 22px;
           border-bottom: 1px solid #eee;
-          padding-bottom: 16px;
+          padding-bottom: 14px;
+          display: flex;
+          align-items: center;
+          gap: 10px;
         }
         .input-field:focus {
           border-color: ${EMERALD} !important;
-          box-shadow: 0 0 0 1px ${EMERALD};
-        }
-        .payment-tabs {
-          display: flex;
-          gap: 10px;
-          margin-bottom: 24px;
-          flex-wrap: wrap;
-        }
-        .payment-tab {
-          flex: 1;
-          min-width: 160px;
-          padding: 16px 14px;
-          text-align: center;
-          cursor: pointer;
-          border: 2px solid #e2dfd8;
-          border-radius: 6px;
-          font-family: 'DM Sans', sans-serif;
-          font-size: 14px;
-          font-weight: 600;
-          transition: all 0.2s ease;
-          background: #fff;
-          color: #555;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          gap: 6px;
-        }
-        .payment-tab.active {
-          background: #f0faf8;
-          color: ${EMERALD};
-          border-color: ${EMERALD};
-          box-shadow: 0 4px 12px rgba(26,92,74,0.1);
-        }
-        .btn-submit {
-          width: 100%;
-          background: ${EMERALD};
-          color: #fff;
-          padding: 18px;
-          border: none;
-          border-radius: 4px;
-          font-size: 16px;
-          font-weight: 600;
-          letter-spacing: 1px;
-          text-transform: uppercase;
-          cursor: pointer;
-          font-family: 'DM Sans', sans-serif;
-          transition: background 0.3s;
-          margin-top: 24px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 10px;
-        }
-        .btn-submit:hover {
-          background: #144638;
-        }
-        .btn-submit:disabled {
-          opacity: 0.6;
-          cursor: not-allowed;
+          box-shadow: 0 0 0 3px rgba(26,92,74,0.1);
         }
         .order-summary-card {
           background: #fff;
-          border-radius: 8px;
-          padding: 40px;
+          border-radius: 10px;
+          padding: 36px;
           border: 1px solid #e8e6e1;
           position: sticky;
-          top: 100px;
-        }
-        .bank-info-box {
-          background: #f9fbfb;
-          border: 1px solid #c7e3dd;
-          border-radius: 8px;
-          padding: 24px;
-          margin-top: 16px;
-        }
-        .bank-row {
-          display: flex;
-          justify-content: space-between;
-          padding: 8px 0;
-          border-bottom: 1px dashed #d5e8e3;
-          font-size: 14px;
-        }
-        .bank-row:last-child {
-          border-bottom: none;
+          top: 90px;
+          box-shadow: 0 4px 20px rgba(0,0,0,0.03);
         }
         .trust-box {
-          margin-top: 30px;
-          padding: 20px;
+          margin-top: 26px;
+          padding: 18px 20px;
           background: #fdfaf5;
           border: 1px solid #f2ead3;
-          border-radius: 4px;
+          border-radius: 6px;
         }
         .trust-item {
           display: flex;
           align-items: center;
           gap: 12px;
-          margin-bottom: 12px;
-          font-size: 14px;
+          margin-bottom: 10px;
+          font-size: 13.5px;
           color: #555;
         }
         .trust-item:last-child { margin-bottom: 0; }
@@ -390,7 +170,7 @@ export default function PremiumCheckoutPage() {
         .badges-container {
           display: flex;
           gap: 10px;
-          margin-top: 24px;
+          margin-top: 22px;
           justify-content: space-between;
         }
         .cert-badge {
@@ -398,15 +178,15 @@ export default function PremiumCheckoutPage() {
           flex-direction: column;
           align-items: center;
           text-align: center;
-          gap: 8px;
+          gap: 6px;
           flex: 1;
-          padding: 16px 10px;
+          padding: 14px 8px;
           background: #fff;
           border: 1px solid #e8e6e1;
-          border-radius: 4px;
+          border-radius: 6px;
         }
         .cert-badge span {
-          font-size: 11px;
+          font-size: 10.5px;
           font-weight: 700;
           text-transform: uppercase;
           letter-spacing: 0.5px;
@@ -414,334 +194,195 @@ export default function PremiumCheckoutPage() {
         }
         
         @media (max-width: 900px) {
-          .checkout-container { grid-template-columns: 1fr; gap: 40px; }
+          .checkout-container { grid-template-columns: 1fr; gap: 30px; }
           .order-summary-card { position: static; }
         }
       `}} />
 
       <div className="premium-checkout">
-        <h1 className="heading-serif page-title">Secure Checkout</h1>
+        <h1 className="heading-serif page-title">Global Secure Checkout</h1>
 
         <div className="checkout-container">
-          {/* ── LEFT COLUMN ── */}
+          {/* ── LEFT COLUMN: Shipping & PayPal Gateway ── */}
           <div>
-            {/* Customer Details */}
+            
+            {/* Step 1: Customer Delivery Details */}
             <div className="section-card">
-              <h2 className="heading-serif section-title">1. Customer Details</h2>
-              <div style={{ display: 'grid', gap: '20px' }}>
+              <h2 className="heading-serif section-title">
+                <span>1. Delivery & Contact Details</span>
+              </h2>
+
+              <div style={{ display: 'grid', gap: '18px' }}>
                 <div>
                   <label style={labelBase}>Full Name *</label>
-                  <input type="text" className="input-field" style={inputBase} value={customer.customerName}
+                  <input 
+                    type="text" 
+                    className="input-field" 
+                    style={inputBase} 
+                    value={customer.customerName}
                     onChange={e => setCustomer({ ...customer, customerName: e.target.value })}
-                    placeholder="Enter your full name" required />
+                    placeholder="e.g. Alexander Wright" 
+                    required 
+                  />
                 </div>
                 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
                   <div>
                     <label style={labelBase}>Email Address *</label>
-                    <input type="email" className="input-field" style={inputBase} value={customer.customerEmail}
+                    <input 
+                      type="email" 
+                      className="input-field" 
+                      style={inputBase} 
+                      value={customer.customerEmail}
                       onChange={e => setCustomer({ ...customer, customerEmail: e.target.value })}
-                      placeholder="email@example.com" required />
-                    <p style={{ margin: '6px 0 0', fontSize: '12px', color: '#888' }}>Confirmation invoice will be sent here.</p>
+                      placeholder="alexander@example.com" 
+                      required 
+                    />
+                    <p style={{ margin: '6px 0 0', fontSize: '11.5px', color: '#777' }}>Official purchase certificate & tracking invoice sent here.</p>
                   </div>
                   <div>
-                    <label style={labelBase}>Phone / WhatsApp Number *</label>
-                    <input type="tel" className="input-field" style={inputBase} value={customer.customerPhone}
+                    <label style={labelBase}>Phone / WhatsApp *</label>
+                    <input 
+                      type="tel" 
+                      className="input-field" 
+                      style={inputBase} 
+                      value={customer.customerPhone}
                       onChange={e => setCustomer({ ...customer, customerPhone: e.target.value })}
-                      placeholder="+92 300 0000000" required />
+                      placeholder="+1 (555) 000-0000" 
+                      required 
+                    />
                   </div>
                 </div>
 
                 <div>
-                  <label style={labelBase}>Full Shipping Address *</label>
-                  <textarea rows={3} className="input-field" style={{ ...inputBase, resize: 'vertical' }} value={customer.shippingAddress}
+                  <label style={labelBase}>Complete Shipping Address *</label>
+                  <textarea 
+                    rows={3} 
+                    className="input-field" 
+                    style={{ ...inputBase, resize: 'vertical' }} 
+                    value={customer.shippingAddress}
                     onChange={e => setCustomer({ ...customer, shippingAddress: e.target.value })}
-                    placeholder="House/Street, Area, City, Province/State, Country, Postal Code" required />
+                    placeholder="Street Address, Apartment/Suite, City, State/Province, Postal Code, Country" 
+                    required 
+                  />
                 </div>
               </div>
             </div>
 
-            {/* Payment Method */}
+            {/* Step 2: PayPal Global Payment Gateway */}
             <div className="section-card">
-              <h2 className="heading-serif section-title">2. Choose Payment Method</h2>
+              <h2 className="heading-serif section-title">
+                <ShieldCheck size={22} color={EMERALD} />
+                <span>2. Payment via PayPal & International Cards</span>
+              </h2>
 
               {formError && (
-                <div style={{ background: '#fdf2f2', color: '#c94438', padding: '16px', borderRadius: '4px', fontSize: '14px', marginBottom: '24px', border: '1px solid #f5c6cb' }}>
+                <div style={{ background: '#fdf2f2', color: '#c94438', padding: '14px 16px', borderRadius: '6px', fontSize: '13.5px', marginBottom: '20px', border: '1px solid #f5c6cb' }}>
                   ⚠️ {formError}
                 </div>
               )}
 
-              {/* Payment Tabs */}
-              <div className="payment-tabs">
-                <div 
-                  className={`payment-tab ${paymentMethod === 'paypal' ? 'active' : ''}`}
-                  onClick={() => setPaymentMethod('paypal')}
-                >
-                  <ShieldCheck size={20} />
-                  <span>PayPal & International Cards</span>
+              {/* Verified PayPal Guarantee Box */}
+              <div style={{ background: '#f0faf8', border: '1px solid #cce8e2', borderRadius: '8px', padding: '18px 22px', marginBottom: '22px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: EMERALD, fontWeight: 700, fontSize: '15px', marginBottom: '6px' }}>
+                  <Lock size={16} /> 256-Bit Encrypted International Gateway
                 </div>
-
-                <div 
-                  className={`payment-tab ${paymentMethod === 'bank_transfer' ? 'active' : ''}`}
-                  onClick={() => setPaymentMethod('bank_transfer')}
-                >
-                  <Building size={20} />
-                  <span>Pakistani Bank / Raast / EasyPaisa</span>
-                </div>
-
-                <div 
-                  className={`payment-tab ${paymentMethod === 'card' ? 'active' : ''}`}
-                  onClick={() => setPaymentMethod('card')}
-                >
-                  <CreditCard size={20} />
-                  <span>Credit / Debit Card (Stripe)</span>
-                </div>
-
-                <div 
-                  className={`payment-tab ${paymentMethod === 'cod' ? 'active' : ''}`}
-                  onClick={() => setPaymentMethod('cod')}
-                >
-                  <Truck size={20} />
-                  <span>Cash on Delivery</span>
-                </div>
+                <p style={{ margin: 0, fontSize: '13.5px', color: '#555', lineHeight: '1.6' }}>
+                  All orders are charged securely in USD (<strong>${subtotalUSD.toFixed(2)} USD</strong>). You can pay seamlessly using your <strong>PayPal Balance</strong> or any international <strong>Visa, MasterCard, American Express, or Discover</strong> card.
+                </p>
               </div>
 
-              {/* ── TAB 1: PayPal Express Checkout ── */}
-              {paymentMethod === 'paypal' && (
-                <div style={{ marginTop: '16px' }}>
-                  <div style={{ background: '#f0f7f5', border: '1px solid #c7e3dd', borderRadius: '8px', padding: '16px 20px', marginBottom: '20px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: EMERALD, fontWeight: 700, fontSize: '15px', marginBottom: '6px' }}>
-                      <ShieldCheck size={18} /> Official PayPal Global Checkout (UK Verified)
-                    </div>
-                    <p style={{ margin: 0, fontSize: '13px', color: '#555', lineHeight: '1.6' }}>
-                      Pay securely worldwide using your <strong>PayPal Balance, PayPal Credit</strong>, or any international <strong>Visa, MasterCard, or American Express</strong> card. Direct & instant processing in USD (<strong>${subtotalUSD.toFixed(2)} USD</strong>).
-                    </p>
-                  </div>
+              {/* Customer Warning if fields empty */}
+              {(!customer.customerName.trim() || !customer.customerEmail.trim() || !customer.customerPhone.trim() || !customer.shippingAddress.trim()) ? (
+                <div style={{ background: '#fffaf0', border: '1px solid #f3ebd8', borderRadius: '6px', padding: '16px', fontSize: '14px', color: '#8a6400', textAlign: 'center' }}>
+                  👉 Please enter your <strong>Name, Email, Phone, and Address</strong> above to unlock the PayPal payment buttons.
+                </div>
+              ) : (
+                <div style={{ minHeight: '140px' }}>
+                  <PayPalScriptProvider options={{ 
+                    clientId: process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID || 'test', 
+                    currency: 'USD',
+                    intent: 'capture'
+                  }}>
+                    <PayPalButtons
+                      style={{ layout: 'vertical', color: 'gold', shape: 'rect', label: 'pay' }}
+                      disabled={isSubmitting}
+                      createOrder={(data, actions) => {
+                        return actions.order.create({
+                          intent: 'CAPTURE',
+                          purchase_units: [
+                            {
+                              description: `Minerals Universe Gemstones Order (${cartItems.length} items)`,
+                              amount: {
+                                currency_code: 'USD',
+                                value: subtotalUSD.toFixed(2),
+                              },
+                            },
+                          ],
+                        });
+                      }}
+                      onApprove={async (data, actions) => {
+                        if (!actions.order) return;
+                        setIsSubmitting(true);
+                        setFormError(null);
+                        try {
+                          const details = await actions.order.capture();
+                          const txnId = details?.id || data.orderID;
 
-                  {(!customer.customerName.trim() || !customer.customerEmail.trim() || !customer.customerPhone.trim() || !customer.shippingAddress.trim()) ? (
-                    <div style={{ background: '#fff9e6', border: '1px solid #fae69e', borderRadius: '6px', padding: '14px 16px', fontSize: '13.5px', color: '#916800' }}>
-                      ℹ️ Please complete your <strong>Customer Details & Shipping Address</strong> in Step 1 above to activate the PayPal button.
-                    </div>
-                  ) : (
-                    <div style={{ minHeight: '130px', marginTop: '10px' }}>
-                      <PayPalScriptProvider options={{ 
-                        clientId: process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID || 'test', 
-                        currency: 'USD',
-                        intent: 'capture'
-                      }}>
-                        <PayPalButtons
-                          style={{ layout: 'vertical', color: 'gold', shape: 'rect', label: 'pay' }}
-                          disabled={isSubmitting}
-                          createOrder={(data, actions) => {
-                            return actions.order.create({
-                              intent: 'CAPTURE',
-                              purchase_units: [
-                                {
-                                  description: `Minerals Universe Gemstones (${cartItems.length} items)`,
-                                  amount: {
-                                    currency_code: 'USD',
-                                    value: subtotalUSD.toFixed(2),
-                                  },
-                                },
-                              ],
-                            });
-                          }}
-                          onApprove={async (data, actions) => {
-                            if (!actions.order) return;
-                            setIsSubmitting(true);
-                            setFormError(null);
-                            try {
-                              const details = await actions.order.capture();
-                              const txnId = details?.id || data.orderID;
+                          const orderPayload = {
+                            customerName: customer.customerName,
+                            customerEmail: customer.customerEmail,
+                            customerPhone: customer.customerPhone,
+                            shippingAddress: customer.shippingAddress,
+                            items: cartItems.map(i => ({
+                              name: i.name,
+                              quantity: i.quantity,
+                              priceUSD: i.price,
+                              price: convertPrice(i.price, currency, exchangeRates),
+                            })),
+                            totalUSD: subtotalUSD,
+                            total: convertedTotal,
+                            currency: currencyCode,
+                            currencySymbol: currencySymbol,
+                            exchangeRate: currentRate,
+                            paymentMethod: `PayPal Express (Txn: ${txnId})`,
+                            paymentStatus: `Paid (PayPal - ${txnId})`,
+                          };
 
-                              const orderPayload = {
-                                customerName: customer.customerName,
-                                customerEmail: customer.customerEmail,
-                                customerPhone: customer.customerPhone,
-                                shippingAddress: customer.shippingAddress,
-                                items: cartItems.map(i => ({
-                                  name: i.name,
-                                  quantity: i.quantity,
-                                  priceUSD: i.price,
-                                  price: convertPrice(i.price, currency, exchangeRates),
-                                })),
-                                totalUSD: subtotalUSD,
-                                total: convertedTotal,
-                                currency: currencyCode,
-                                currencySymbol: currencySymbol,
-                                exchangeRate: currentRate,
-                                paymentMethod: `PayPal Express (Txn: ${txnId})`,
-                                paymentStatus: `Paid (PayPal - ${txnId})`,
-                              };
+                          const res = await fetch('/api/orders', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(orderPayload),
+                          });
 
-                              const res = await fetch('/api/orders', {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify(orderPayload),
-                              });
+                          const resData = await res.json();
+                          if (!res.ok || !resData.success) {
+                            throw new Error(resData.error || 'Failed to record order.');
+                          }
 
-                              const resData = await res.json();
-                              if (!res.ok || !resData.success) {
-                                throw new Error(resData.error || 'Failed to record order.');
-                              }
+                          sessionStorage.setItem('minerals_universe_last_order', JSON.stringify({
+                            orderId: resData.orderId,
+                            ...orderPayload,
+                          }));
 
-                              sessionStorage.setItem('minerals_universe_last_order', JSON.stringify({
-                                orderId: resData.orderId,
-                                bankSettings,
-                                ...orderPayload,
-                              }));
-
-                              clearCart();
-                              router.push('/order-confirmation');
-                            } catch (err: any) {
-                              console.error('[PayPal Error]', err);
-                              setFormError(err.message || 'PayPal capture failed. Please try again.');
-                            } finally {
-                              setIsSubmitting(false);
-                            }
-                          }}
-                          onError={(err) => {
-                            console.error('[PayPal SDK Error]', err);
-                            setFormError('PayPal payment encountered an error or was cancelled.');
-                          }}
-                        />
-                      </PayPalScriptProvider>
-                    </div>
-                  )}
+                          clearCart();
+                          router.push('/order-confirmation');
+                        } catch (err: any) {
+                          console.error('[PayPal Error]', err);
+                          setFormError(err.message || 'PayPal capture failed. Please try again.');
+                        } finally {
+                          setIsSubmitting(false);
+                        }
+                      }}
+                      onError={(err) => {
+                        console.error('[PayPal SDK Error]', err);
+                        setFormError('PayPal payment was cancelled or encountered an issue. Please try again.');
+                      }}
+                    />
+                  </PayPalScriptProvider>
                 </div>
               )}
 
-              <form onSubmit={handlePlaceOrder}>
-                
-                {/* ── TAB 2: Pakistani Direct Bank Transfer ── */}
-                {paymentMethod === 'bank_transfer' && (
-                  <div className="bank-info-box">
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: EMERALD, fontWeight: 700, fontSize: '16px', marginBottom: '14px' }}>
-                      <Building size={18} /> Official Pakistani Beneficiary Details
-                    </div>
-                    <p style={{ margin: '0 0 16px', fontSize: '13px', color: '#555', lineHeight: '1.6' }}>
-                      Please transfer the exact converted amount <strong>{formatPrice(subtotalUSD, currency, exchangeRates)}</strong> to the official account below:
-                    </p>
-
-                    <div className="bank-row">
-                      <span style={{ color: '#666' }}>Bank Name:</span>
-                      <strong style={{ color: '#222' }}>{bankSettings.bankName || 'Meezan Bank Limited'}</strong>
-                    </div>
-                    <div className="bank-row">
-                      <span style={{ color: '#666' }}>Account Title:</span>
-                      <strong style={{ color: '#222' }}>{bankSettings.accountTitle || 'Minerals Universe / Zaheer Abbas'}</strong>
-                    </div>
-                    {bankSettings.accountNumber && (
-                      <div className="bank-row">
-                        <span style={{ color: '#666' }}>Account Number:</span>
-                        <strong style={{ color: EMERALD, letterSpacing: '0.5px' }}>{bankSettings.accountNumber}</strong>
-                      </div>
-                    )}
-                    {bankSettings.iban && (
-                      <div className="bank-row">
-                        <span style={{ color: '#666' }}>IBAN:</span>
-                        <strong style={{ color: EMERALD, fontSize: '13px' }}>{bankSettings.iban}</strong>
-                      </div>
-                    )}
-                    {bankSettings.raastId && (
-                      <div className="bank-row">
-                        <span style={{ color: '#666' }}>Raast ID:</span>
-                        <strong style={{ color: '#222' }}>{bankSettings.raastId}</strong>
-                      </div>
-                    )}
-                    {bankSettings.easyPaisaNumber && (
-                      <div className="bank-row">
-                        <span style={{ color: '#666' }}>EasyPaisa:</span>
-                        <strong style={{ color: '#222' }}>{bankSettings.easyPaisaNumber}</strong>
-                      </div>
-                    )}
-                    {bankSettings.jazzCashNumber && (
-                      <div className="bank-row">
-                        <span style={{ color: '#666' }}>JazzCash:</span>
-                        <strong style={{ color: '#222' }}>{bankSettings.jazzCashNumber}</strong>
-                      </div>
-                    )}
-
-                    <div style={{ marginTop: '16px', padding: '12px', background: '#eaf4f2', borderRadius: '6px', fontSize: '12px', color: '#1a5c4a', display: 'flex', gap: '8px' }}>
-                      <CheckCircle2 size={18} style={{ flexShrink: 0 }} />
-                      <span>{bankSettings.paymentInstructions}</span>
-                    </div>
-                  </div>
-                )}
-
-                {/* ── TAB 3: Card / Stripe ── */}
-                {paymentMethod === 'card' && (
-                  <div style={{ display: 'grid', gap: '20px', marginTop: '16px' }}>
-                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center', color: '#1a5c4a', background: '#e8f3f0', padding: '12px 16px', borderRadius: '4px', fontSize: '14px', fontWeight: 600 }}>
-                      <Lock size={16} /> 256-Bit Encrypted Card Payment via Stripe Gateway
-                    </div>
-                    <div>
-                      <label style={labelBase}>Card Number</label>
-                      <input 
-                        type="text" 
-                        className="input-field" 
-                        style={inputBase} 
-                        value={cardNumber}
-                        onChange={handleCardNumberChange}
-                        placeholder="0000 0000 0000 0000" 
-                        maxLength={19}
-                      />
-                    </div>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
-                      <div>
-                        <label style={labelBase}>Expiry Date</label>
-                        <input 
-                          type="text" 
-                          className="input-field" 
-                          style={inputBase} 
-                          value={cardExpiry}
-                          onChange={handleExpiryChange}
-                          placeholder="MM / YY" 
-                          maxLength={7}
-                        />
-                      </div>
-                      <div>
-                        <label style={labelBase}>CVV / CVC</label>
-                        <input 
-                          type="password" 
-                          className="input-field" 
-                          style={inputBase} 
-                          value={cardCvv}
-                          onChange={(e) => setCardCvv(e.target.value.replace(/[^0-9]/g, '').substring(0, 4))}
-                          placeholder="123" 
-                          maxLength={4}
-                        />
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* ── TAB 4: Cash on Delivery ── */}
-                {paymentMethod === 'cod' && (
-                  <div style={{ background: '#fcfcfc', border: '1px solid #e8e6e1', borderRadius: '8px', padding: '20px', marginTop: '16px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: EMERALD, fontWeight: 700, fontSize: '15px', marginBottom: '8px' }}>
-                      <Truck size={18} /> Cash on Delivery (Pakistan Domestic Orders)
-                    </div>
-                    <p style={{ margin: 0, fontSize: '13px', color: '#666', lineHeight: '1.6' }}>
-                      You can pay the full amount of <strong>{formatPrice(subtotalUSD, currency, exchangeRates)}</strong> in cash to the courier upon delivery at your doorstep. We will call you on your phone to confirm your order before dispatch.
-                    </p>
-                  </div>
-                )}
-
-                {paymentMethod !== 'paypal' && (
-                  <button type="submit" className="btn-submit" disabled={isSubmitting}>
-                    {isSubmitting ? (
-                      'Processing Order...'
-                    ) : (
-                      <>
-                        <span>Place Order • {formatPrice(subtotalUSD, currency, exchangeRates)}</span>
-                        <ArrowRight size={18} />
-                      </>
-                    )}
-                  </button>
-                )}
-
-              </form>
             </div>
           </div>
 
@@ -750,14 +391,14 @@ export default function PremiumCheckoutPage() {
             <div className="order-summary-card">
               <h2 className="heading-serif section-title">Order Summary</h2>
 
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', marginBottom: '30px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '18px', marginBottom: '26px' }}>
                 {cartItems.map(item => (
-                  <div key={item.id} style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
-                    <div style={{ width: '70px', height: '70px', background: '#f5f5f5', borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', position: 'relative' }}>
+                  <div key={item.id} style={{ display: 'flex', gap: '14px', alignItems: 'center' }}>
+                    <div style={{ width: '64px', height: '64px', background: '#f5f5f5', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', position: 'relative', flexShrink: 0 }}>
                       {item.img ? (
-                        <Image src={item.img} alt={item.name} width={70} height={70} style={{ objectFit: 'cover' }} unoptimized />
+                        <Image src={item.img} alt={item.name} width={64} height={64} style={{ objectFit: 'cover' }} unoptimized />
                       ) : (
-                        <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke={GOLD} strokeWidth="1.5">
+                        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke={GOLD} strokeWidth="1.5">
                           <polygon points="12 2 2 7 12 22 22 7 12 2"></polygon>
                           <polyline points="2 7 12 7 22 7"></polyline>
                           <polyline points="12 22 12 7"></polyline>
@@ -765,8 +406,8 @@ export default function PremiumCheckoutPage() {
                       )}
                     </div>
                     <div style={{ flex: 1 }}>
-                      <p className="heading-serif" style={{ margin: '0 0 4px', fontSize: '17px', fontWeight: 600 }}>{item.name}</p>
-                      <p style={{ margin: 0, fontSize: '13px', color: '#777' }}>Qty: {item.quantity} • Authentic Gem</p>
+                      <p className="heading-serif" style={{ margin: '0 0 3px', fontSize: '16px', fontWeight: 600 }}>{item.name}</p>
+                      <p style={{ margin: 0, fontSize: '12.5px', color: '#777' }}>Qty: {item.quantity} • 100% Natural Certified</p>
                     </div>
                     <span style={{ fontWeight: 600, fontSize: '15px', color: EMERALD }}>
                       {formatPrice(item.price * item.quantity, currency, exchangeRates)}
@@ -775,66 +416,62 @@ export default function PremiumCheckoutPage() {
                 ))}
               </div>
 
-              {/* Currency & Live Rate Indicator */}
-              <div style={{ background: '#f4fbf9', border: '1px solid #d4ede6', borderRadius: '6px', padding: '12px 16px', marginBottom: '20px', fontSize: '12px', color: '#1a5c4a', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span>Selected Currency: <strong>{currencyCode} ({currencySymbol.trim()})</strong></span>
+              {/* Currency & Live Conversion Indicator */}
+              <div style={{ background: '#f4fbf9', border: '1px solid #d4ede6', borderRadius: '6px', padding: '12px 14px', marginBottom: '18px', fontSize: '12px', color: '#1a5c4a', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span>Selected: <strong>{currencyCode} ({currencySymbol.trim()})</strong></span>
                 {currencyCode !== 'USD' && (
-                  <span>Live Rate: 1 USD ≈ {currentRate.toFixed(2)} {currencyCode}</span>
+                  <span>Rate: 1 USD ≈ {currentRate.toFixed(2)} {currencyCode}</span>
                 )}
               </div>
 
               {/* Totals */}
-              <div style={{ borderTop: '1px solid #eee', borderBottom: '1px solid #eee', padding: '20px 0', marginBottom: '20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px', color: '#555' }}>
-                  <span>Base Total (USD)</span>
+              <div style={{ borderTop: '1px solid #eee', borderBottom: '1px solid #eee', padding: '18px 0', marginBottom: '18px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px', color: '#555', fontSize: '14px' }}>
+                  <span>Subtotal</span>
                   <span>${subtotalUSD.toFixed(2)} USD</span>
                 </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px', color: '#555' }}>
-                  <span>Converted Subtotal</span>
-                  <span style={{ fontWeight: 600 }}>{formatPrice(subtotalUSD, currency, exchangeRates)}</span>
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', color: '#555' }}>
-                  <span>Shipping</span>
-                  <span style={{ color: EMERALD, fontWeight: 600 }}>Free Worldwide Tracked Delivery</span>
+                <div style={{ display: 'flex', justifyContent: 'space-between', color: '#555', fontSize: '14px' }}>
+                  <span>Insured Global Shipping</span>
+                  <span style={{ color: EMERALD, fontWeight: 600 }}>FREE Worldwide Delivery</span>
                 </div>
               </div>
 
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span className="heading-serif" style={{ fontSize: '22px', fontWeight: 600 }}>Total Payable</span>
-                <span className="heading-serif" style={{ fontSize: '28px', color: EMERALD, fontWeight: 700 }}>
-                  {formatPrice(subtotalUSD, currency, exchangeRates)}
+                <span className="heading-serif" style={{ fontSize: '20px', fontWeight: 600 }}>Total Payable</span>
+                <span className="heading-serif" style={{ fontSize: '26px', color: EMERALD, fontWeight: 700 }}>
+                  ${subtotalUSD.toFixed(2)} USD
                 </span>
               </div>
 
               {/* Trust Box */}
               <div className="trust-box">
                 <div className="trust-item">
-                  <span className="gold-icon" style={{ display: 'flex' }}><Lock size={18} /></span>
-                  <span>Payment is 100% verified & encrypted.</span>
+                  <span className="gold-icon" style={{ display: 'flex' }}><Lock size={16} /></span>
+                  <span>Direct PayPal Buyer Protection & Encryption.</span>
                 </div>
                 <div className="trust-item">
-                  <span className="gold-icon" style={{ display: 'flex' }}><Package size={18} /></span>
-                  <span>Insured dispatch with official tracking.</span>
+                  <span className="gold-icon" style={{ display: 'flex' }}><Package size={16} /></span>
+                  <span>Insured air courier with live tracking.</span>
                 </div>
                 <div className="trust-item">
-                  <span className="gold-icon" style={{ display: 'flex' }}><FileCheck size={18} /></span>
-                  <span>Authenticity certificate included with every stone.</span>
+                  <span className="gold-icon" style={{ display: 'flex' }}><FileCheck size={16} /></span>
+                  <span>Official gemological certificate included.</span>
                 </div>
               </div>
 
-              {/* Badges */}
+              {/* Cert Badges */}
               <div className="badges-container">
                 <div className="cert-badge">
-                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={GOLD} strokeWidth="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={GOLD} strokeWidth="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
                   <span>GIA Verified</span>
                 </div>
                 <div className="cert-badge">
-                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={GOLD} strokeWidth="2"><circle cx="12" cy="12" r="10"></circle><path d="M12 16v-4"></path><path d="M12 8h.01"></path></svg>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={GOLD} strokeWidth="2"><circle cx="12" cy="12" r="10"></circle><path d="M12 16v-4"></path><path d="M12 8h.01"></path></svg>
                   <span>Lab Tested</span>
                 </div>
                 <div className="cert-badge">
-                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={GOLD} strokeWidth="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
-                  <span>Ethically Sourced</span>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={GOLD} strokeWidth="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+                  <span>Ethical Sourcing</span>
                 </div>
               </div>
 
