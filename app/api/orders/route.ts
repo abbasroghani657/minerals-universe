@@ -36,13 +36,17 @@ export async function POST(req: Request) {
       return NextResponse.json({ success: false, error: 'Missing required order details' }, { status: 400 });
     }
 
-    let finalPaymentStatus = 'Pending';
+    let finalPaymentStatus = body.paymentStatus || 'Pending';
 
-    // 1. Pakistani Bank Transfer / Raast / EasyPaisa
-    if (paymentMethod.includes('Bank Transfer') || paymentMethod.includes('Raast') || paymentMethod.includes('EasyPaisa')) {
+    // 1. PayPal Checkout
+    if (paymentMethod.includes('PayPal')) {
+      finalPaymentStatus = body.paymentStatus || 'Paid (PayPal)';
+    }
+    // 2. Pakistani Bank Transfer / Raast / EasyPaisa
+    else if (paymentMethod.includes('Bank Transfer') || paymentMethod.includes('Raast') || paymentMethod.includes('EasyPaisa')) {
       finalPaymentStatus = 'Pending Verification';
     } 
-    // 2. Cash on Delivery
+    // 3. Cash on Delivery
     else if (paymentMethod.includes('Cash on Delivery') || paymentMethod.includes('COD')) {
       finalPaymentStatus = 'Pending Delivery (COD)';
     } 

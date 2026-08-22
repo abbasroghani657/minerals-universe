@@ -6,6 +6,7 @@ import Image from 'next/image';
 import { useCart } from '@/context/CartContext';
 import { Lock, Package, FileCheck, CreditCard, Building, ShieldCheck, Truck, ArrowRight, CheckCircle2 } from 'lucide-react';
 import { formatPrice, convertPrice, getCurrencyCode, getCurrencySymbol, getExchangeRate } from '@/utils/price';
+import { PayPalScriptProvider, PayPalButtons } from '@paypal/react-paypal-js';
 
 // ─── Constants & Styles ────────────────────────────────────────────────────────
 const EMERALD = '#1a5c4a';
@@ -45,8 +46,8 @@ export default function PremiumCheckoutPage() {
     shippingAddress: '',
   });
 
-  // Payment method: 'bank_transfer' | 'card' | 'cod'
-  const [paymentMethod, setPaymentMethod] = useState<'bank_transfer' | 'card' | 'cod'>('bank_transfer');
+  // Payment method: 'paypal' | 'bank_transfer' | 'card' | 'cod'
+  const [paymentMethod, setPaymentMethod] = useState<'paypal' | 'bank_transfer' | 'card' | 'cod'>('paypal');
 
   // Admin Bank details loaded from settings
   const [bankSettings, setBankSettings] = useState<BankSettings>({
@@ -98,7 +99,7 @@ export default function PremiumCheckoutPage() {
     if (code === 'PKR') {
       setPaymentMethod('bank_transfer');
     } else {
-      setPaymentMethod('card');
+      setPaymentMethod('paypal');
     }
   }, [currency]);
 
@@ -473,6 +474,14 @@ export default function PremiumCheckoutPage() {
               {/* Payment Tabs */}
               <div className="payment-tabs">
                 <div 
+                  className={`payment-tab ${paymentMethod === 'paypal' ? 'active' : ''}`}
+                  onClick={() => setPaymentMethod('paypal')}
+                >
+                  <ShieldCheck size={20} />
+                  <span>PayPal & International Cards</span>
+                </div>
+
+                <div 
                   className={`payment-tab ${paymentMethod === 'bank_transfer' ? 'active' : ''}`}
                   onClick={() => setPaymentMethod('bank_transfer')}
                 >
@@ -485,7 +494,7 @@ export default function PremiumCheckoutPage() {
                   onClick={() => setPaymentMethod('card')}
                 >
                   <CreditCard size={20} />
-                  <span>Debit / Credit Card (Stripe)</span>
+                  <span>Credit / Debit Card (Stripe)</span>
                 </div>
 
                 <div 
@@ -497,9 +506,114 @@ export default function PremiumCheckoutPage() {
                 </div>
               </div>
 
+              {/* ── TAB 1: PayPal Express Checkout ── */}
+              {paymentMethod === 'paypal' && (
+                <div style={{ marginTop: '16px' }}>
+                  <div style={{ background: '#f0f7f5', border: '1px solid #c7e3dd', borderRadius: '8px', padding: '16px 20px', marginBottom: '20px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: EMERALD, fontWeight: 700, fontSize: '15px', marginBottom: '6px' }}>
+                      <ShieldCheck size={18} /> Official PayPal Global Checkout (UK Verified)
+                    </div>
+                    <p style={{ margin: 0, fontSize: '13px', color: '#555', lineHeight: '1.6' }}>
+                      Pay securely worldwide using your <strong>PayPal Balance, PayPal Credit</strong>, or any international <strong>Visa, MasterCard, or American Express</strong> card. Direct & instant processing in USD (<strong>${subtotalUSD.toFixed(2)} USD</strong>).
+                    </p>
+                  </div>
+
+                  {(!customer.customerName.trim() || !customer.customerEmail.trim() || !customer.customerPhone.trim() || !customer.shippingAddress.trim()) ? (
+                    <div style={{ background: '#fff9e6', border: '1px solid #fae69e', borderRadius: '6px', padding: '14px 16px', fontSize: '13.5px', color: '#916800' }}>
+                      ℹ️ Please complete your <strong>Customer Details & Shipping Address</strong> in Step 1 above to activate the PayPal button.
+                    </div>
+                  ) : (
+                    <div style={{ minHeight: '130px', marginTop: '10px' }}>
+                      <PayPalScriptProvider options={{ 
+                        clientId: process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID || 'test', 
+                        currency: 'USD',
+                        intent: 'capture'
+                      }}>
+                        <PayPalButtons
+                          style={{ layout: 'vertical', color: 'gold', shape: 'rect', label: 'pay' }}
+                          disabled={isSubmitting}
+                          createOrder={(data, actions) => {
+                            return actions.order.create({
+                              intent: 'CAPTURE',
+                              purchase_units: [
+                                {
+                                  description: `Minerals Universe Gemstones (${cartItems.length} items)`,
+                                  amount: {
+                                    currency_code: 'USD',
+                                    value: subtotalUSD.toFixed(2),
+                                  },
+                                },
+                              ],
+                            });
+                          }}
+                          onApprove={async (data, actions) => {
+                            if (!actions.order) return;
+                            setIsSubmitting(true);
+                            setFormError(null);
+                            try {
+                              const details = await actions.order.capture();
+                              const txnId = details?.id || data.orderID;
+
+                              const orderPayload = {
+                                customerName: customer.customerName,
+                                customerEmail: customer.customerEmail,
+                                customerPhone: customer.customerPhone,
+                                shippingAddress: customer.shippingAddress,
+                                items: cartItems.map(i => ({
+                                  name: i.name,
+                                  quantity: i.quantity,
+                                  priceUSD: i.price,
+                                  price: convertPrice(i.price, currency, exchangeRates),
+                                })),
+                                totalUSD: subtotalUSD,
+                                total: convertedTotal,
+                                currency: currencyCode,
+                                currencySymbol: currencySymbol,
+                                exchangeRate: currentRate,
+                                paymentMethod: `PayPal Express (Txn: ${txnId})`,
+                                paymentStatus: `Paid (PayPal - ${txnId})`,
+                              };
+
+                              const res = await fetch('/api/orders', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify(orderPayload),
+                              });
+
+                              const resData = await res.json();
+                              if (!res.ok || !resData.success) {
+                                throw new Error(resData.error || 'Failed to record order.');
+                              }
+
+                              sessionStorage.setItem('minerals_universe_last_order', JSON.stringify({
+                                orderId: resData.orderId,
+                                bankSettings,
+                                ...orderPayload,
+                              }));
+
+                              clearCart();
+                              router.push('/order-confirmation');
+                            } catch (err: any) {
+                              console.error('[PayPal Error]', err);
+                              setFormError(err.message || 'PayPal capture failed. Please try again.');
+                            } finally {
+                              setIsSubmitting(false);
+                            }
+                          }}
+                          onError={(err) => {
+                            console.error('[PayPal SDK Error]', err);
+                            setFormError('PayPal payment encountered an error or was cancelled.');
+                          }}
+                        />
+                      </PayPalScriptProvider>
+                    </div>
+                  )}
+                </div>
+              )}
+
               <form onSubmit={handlePlaceOrder}>
                 
-                {/* ── TAB 1: Pakistani Direct Bank Transfer ── */}
+                {/* ── TAB 2: Pakistani Direct Bank Transfer ── */}
                 {paymentMethod === 'bank_transfer' && (
                   <div className="bank-info-box">
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: EMERALD, fontWeight: 700, fontSize: '16px', marginBottom: '14px' }}>
@@ -555,7 +669,7 @@ export default function PremiumCheckoutPage() {
                   </div>
                 )}
 
-                {/* ── TAB 2: Card / Stripe ── */}
+                {/* ── TAB 3: Card / Stripe ── */}
                 {paymentMethod === 'card' && (
                   <div style={{ display: 'grid', gap: '20px', marginTop: '16px' }}>
                     <div style={{ display: 'flex', gap: '8px', alignItems: 'center', color: '#1a5c4a', background: '#e8f3f0', padding: '12px 16px', borderRadius: '4px', fontSize: '14px', fontWeight: 600 }}>
@@ -602,7 +716,7 @@ export default function PremiumCheckoutPage() {
                   </div>
                 )}
 
-                {/* ── TAB 3: Cash on Delivery ── */}
+                {/* ── TAB 4: Cash on Delivery ── */}
                 {paymentMethod === 'cod' && (
                   <div style={{ background: '#fcfcfc', border: '1px solid #e8e6e1', borderRadius: '8px', padding: '20px', marginTop: '16px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: EMERALD, fontWeight: 700, fontSize: '15px', marginBottom: '8px' }}>
@@ -614,16 +728,18 @@ export default function PremiumCheckoutPage() {
                   </div>
                 )}
 
-                <button type="submit" className="btn-submit" disabled={isSubmitting}>
-                  {isSubmitting ? (
-                    'Processing Order...'
-                  ) : (
-                    <>
-                      <span>Place Order • {formatPrice(subtotalUSD, currency, exchangeRates)}</span>
-                      <ArrowRight size={18} />
-                    </>
-                  )}
-                </button>
+                {paymentMethod !== 'paypal' && (
+                  <button type="submit" className="btn-submit" disabled={isSubmitting}>
+                    {isSubmitting ? (
+                      'Processing Order...'
+                    ) : (
+                      <>
+                        <span>Place Order • {formatPrice(subtotalUSD, currency, exchangeRates)}</span>
+                        <ArrowRight size={18} />
+                      </>
+                    )}
+                  </button>
+                )}
 
               </form>
             </div>
