@@ -28,9 +28,12 @@ class SafePayPalBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryStat
     if (this.state.hasError) {
       return (
         <div style={{ padding: '20px', background: '#fff9e6', border: '1px solid #fae69e', borderRadius: '8px', color: '#8a6400', fontSize: '13.5px', textAlign: 'center' }}>
-          <p style={{ margin: '0 0 8px', fontWeight: 700 }}>⚠️ International Payment Connection</p>
+          <p style={{ margin: '0 0 8px', fontWeight: 700 }}>⚠️ Payment System Error</p>
           <p style={{ margin: '0 0 14px', lineHeight: 1.5 }}>
-            Unable to connect to the bank network from your current connection. Please refresh or check your internet.
+            <strong>Error Details:</strong> {this.state.error?.message || "Unable to connect to the bank network."}
+          </p>
+          <p style={{ margin: '0 0 14px', lineHeight: 1.5, fontSize: '12px', color: '#a07800' }}>
+            If it says "client ID" error, your Client ID is invalid. If it says "network error", PayPal is blocked.
           </p>
           <button 
             type="button"
@@ -78,7 +81,7 @@ export default function PayPalCheckoutSection({
     <SafePayPalBoundary>
       <div style={{ minHeight: '140px' }}>
         <PayPalScriptProvider options={{ 
-          clientId: process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID || 'BAAk51QAzJlc_kltTZbbhUV03jzLZefyf7oT1OtIn-Kw9j74ijabIbeoCT2ARvl5gxuVyPCiHl2VebG9wo', 
+          clientId: process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID && process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID.length > 10 ? process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID : 'test', 
           currency: 'USD',
           intent: 'capture',
           components: 'buttons',

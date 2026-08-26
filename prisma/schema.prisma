@@ -1,25 +1,25 @@
-datasource db {
-  provider = "mysql"
-}
-
 generator client {
   provider = "prisma-client-js"
 }
 
+datasource db {
+  provider = "mysql"
+}
+
 model Product {
-  id           Int      @id @default(autoincrement())
-  img          String
-  cat          String
-  name         String
-  original     String?
-  sale         String
-  priceNum     Float
-  badge        String
-  stock        String?
-  desc         String   @db.Text
-  origin       String
-  treatment    String
-  cert         String
+  id        Int     @id @default(autoincrement())
+  img       String
+  cat       String
+  name      String
+  original  String?
+  sale      String
+  priceNum  Float
+  badge     String
+  stock     String?
+  desc      String  @db.Text
+  origin    String
+  treatment String
+  cert      String
 }
 
 model Order {
@@ -27,7 +27,7 @@ model Order {
   customerName    String
   customerEmail   String
   customerPhone   String
-  shippingAddress String     @db.Text
+  shippingAddress String      @db.Text
   total           Float
   paymentMethod   String
   paymentStatus   String
@@ -38,12 +38,14 @@ model Order {
 }
 
 model OrderItem {
-  id        Int    @id @default(autoincrement())
-  name      String
-  quantity  Int
-  price     Float
-  orderId   String
-  order     Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  id       Int    @id @default(autoincrement())
+  name     String
+  quantity Int
+  price    Float
+  orderId  String
+  order    Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId], map: "OrderItem_orderId_fkey")
 }
 
 model Inquiry {
@@ -51,11 +53,11 @@ model Inquiry {
   name           String
   email          String
   phone          String?
-  type           String   // 'General' or 'Custom Order'
+  type           String
   subject        String
   message        String   @db.Text
   createdAt      DateTime @default(now())
-  status         String   // 'Unread', 'Read', 'Replied'
+  status         String
   stoneType      String?
   caratWeight    String?
   preferredColor String?
@@ -70,7 +72,7 @@ model Review {
   productId Int?
   rating    Int
   text      String   @db.Text
-  status    String   // 'Pending', 'Approved', 'Rejected'
+  status    String
   createdAt DateTime @default(now())
 }
 
@@ -78,7 +80,7 @@ model User {
   id        String   @id @default(uuid())
   email     String   @unique
   name      String
-  role      String   // 'Admin' or 'Customer'
+  role      String
   createdAt DateTime @default(now())
 }
 
