@@ -109,7 +109,7 @@ export default function Header() {
             </button>
 
             <select
-              className="currency-select"
+              className="currency-select desktop-only-item"
               value={currency}
               onChange={e => setCurrency(e.target.value)}
             >
@@ -130,6 +130,7 @@ export default function Header() {
             </button>
             <button
               title={`Wishlist (${wishlist.size})`}
+              className="desktop-only-item"
               onClick={() => scrollTo('products')}
               style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '18px', color: wishlist.size > 0 ? '#c94438' : 'var(--muted)', transition: 'color .2s', position: 'relative' }}
             >
@@ -148,7 +149,7 @@ export default function Header() {
               <ShoppingCart size={20} style={{ display: 'block' }} />
               {cartCount > 0 && <span className="cart-badge">{cartCount}</span>}
             </button>
-            <div style={{ marginLeft: '12px', display: 'flex', alignItems: 'center', minWidth: '70px', justifyContent: 'center' }}>
+            <div className="desktop-only-item" style={{ marginLeft: '12px', display: 'flex', alignItems: 'center', minWidth: '70px', justifyContent: 'center' }}>
               <ClerkLoading>
                 <div style={{ width: '26px', height: '26px', borderRadius: '50%', border: '2px solid rgba(26,127,116,.2)', borderTopColor: 'var(--teal)', animation: 'spin 1s linear infinite' }}></div>
               </ClerkLoading>

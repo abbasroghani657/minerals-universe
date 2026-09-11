@@ -23,7 +23,7 @@ export default function About() {
             <div className="about-visual">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src="https://images.unsplash.com/photo-1548802673-380ab8ebc7b7?w=700&q=80"
+                src="/images/about/gemologist-lab.jpg"
                 alt="Gemstone collection"
                 style={{ width: '100%', height: '500px', objectFit: 'cover', borderRadius: '14px' }}
               />

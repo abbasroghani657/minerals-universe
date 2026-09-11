@@ -11,7 +11,7 @@ export const CATEGORY_TREE: Record<string, CategoryDefinition> = {
     name: 'Loose Gemstones',
     slug: 'loose-gemstones',
     description: '100% natural, precision-cut and faceted gemstones ready for fine jewelry crafting and investment portfolios.',
-    image: 'https://images.unsplash.com/photo-1617038220319-276d3cfab638?w=800&q=80',
+    image: '/images/products/aquamarine-round-gem.jpg',
     varieties: [
       'Aquamarine',
       'Emerald',
@@ -37,7 +37,7 @@ export const CATEGORY_TREE: Record<string, CategoryDefinition> = {
     name: 'Minerals & Crystals',
     slug: 'minerals-and-crystals',
     description: 'Museum-grade natural crystal specimens, mineral clusters, and geological marvels straight from origin mines.',
-    image: 'https://images.unsplash.com/photo-1551868041-3bfcabc0a86c?w=800&q=80',
+    image: '/images/products/clear-quartz-cluster.jpg',
     varieties: [
       'Quartz',
       'Fluorite',
@@ -59,7 +59,7 @@ export const CATEGORY_TREE: Record<string, CategoryDefinition> = {
     name: 'Polished Stones',
     slug: 'polished-stones',
     description: 'Hand-shaped cabochons, polished lapis lazuli, decorative spheres, and master artisan lapidary work.',
-    image: 'https://images.unsplash.com/photo-1599707367072-cd6ada2bc375?w=800&q=80',
+    image: '/images/bundles/lapis.jpg',
     varieties: [
       'Lapis Lazuli',
       'Rhodonite',

@@ -61,7 +61,7 @@ export const DEFAULT_PRODUCTS = [
   },
   {
     id: 6,
-    img: 'https://images.unsplash.com/photo-1548802673-380ab8ebc7b7?w=800&q=80',
+    img: '/images/products/aquamarine-round-gem.jpg',
     cat: 'Aquamarine',
     name: 'Ocean Blue Aquamarine Round — 2.5 Cts',
     original: null,
