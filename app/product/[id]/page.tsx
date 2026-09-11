@@ -4,7 +4,8 @@ import { use, useEffect, useState } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useCart } from '@/context/CartContext';
-import { ShieldCheck, Truck, PackageCheck, ArrowLeft, Heart, ShoppingBag } from 'lucide-react';
+import { ShieldCheck, Truck, PackageCheck, ArrowLeft, Heart, ShoppingBag, Award } from 'lucide-react';
+import { FaWhatsapp } from 'react-icons/fa';
 import { formatPrice, parsePrice } from '@/utils/price';
 
 export default function ProductPage({ params }: { params: Promise<{ id: string }> }) {
@@ -135,8 +136,20 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
 
         {/* Right: Product Details */}
         <div style={{ padding: '20px 0' }}>
-          <p style={{ color: '#1a5c4a', fontSize: '13px', letterSpacing: '1.5px', textTransform: 'uppercase', marginBottom: '12px', fontWeight: 700 }}>
-            Category: <span style={{ color: '#c5a059' }}>{product.cat}</span>
+          <p style={{ color: '#1a5c4a', fontSize: '12.5px', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '12px', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <span 
+              onClick={() => router.push(`/category/${encodeURIComponent((product.mainCat || 'Loose Gemstones').toLowerCase().replace(/ & /g, '-and-').replace(/ /g, '-'))}`)}
+              style={{ color: '#1a5c4a', cursor: 'pointer', textDecoration: 'underline' }}
+            >
+              {product.mainCat || 'Loose Gemstones'}
+            </span>
+            <span style={{ color: '#aaa' }}>/</span>
+            <span 
+              onClick={() => router.push(`/category/${encodeURIComponent(product.cat.toLowerCase().replace(/ /g, '-'))}`)}
+              style={{ color: '#c5a059', cursor: 'pointer', textDecoration: 'underline' }}
+            >
+              {product.cat}
+            </span>
           </p>
           <h1 className="heading-serif" style={{ fontSize: '42px', color: '#1a5c4a', margin: '0 0 20px', lineHeight: 1.2 }}>{product.name}</h1>
           
@@ -171,24 +184,104 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
             </button>
           </div>
 
-          <div className="perks-row">
-            <div className="perk">
-              <ShieldCheck size={28} />
-              <span>{product.cert}</span>
+                    {/* WhatsApp VIP Inquire & Daylight Video Request */}
+          <a
+            href={`https://wa.me/923001581210?text=${encodeURIComponent(
+              `Hello Minerals Universe, I am interested in inquiring about this gemstone specimen:\n\n` +
+              `💎 Item: ${product.name}\n` +
+              `📂 Category: ${product.cat}\n` +
+              `💰 Price: ${formatPrice(product.priceNum, currency, exchangeRates)}\n\n` +
+              `Could you please share daylight 4K videos, certificate details, and international shipping options?`
+            )}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: "10px",
+              width: "100%",
+              padding: "16px 24px",
+              background: "#25D366",
+              color: "#fff",
+              borderRadius: "4px",
+              textDecoration: "none",
+              fontWeight: 600,
+              fontSize: "15px",
+              letterSpacing: "0.5px",
+              margin: "0 0 24px 0",
+              boxShadow: "0 4px 16px rgba(37,211,102,0.25)",
+              transition: "all 0.3s"
+            }}
+          >
+            <FaWhatsapp size={22} /> Inquire / Request 4K Video via WhatsApp
+          </a>
+
+          {/* 4 Luxury International Trust Badges */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "14px", marginTop: "10px", paddingTop: "20px", borderTop: "1px solid #e8e6e1" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "10px", padding: "12px", background: "#faf9f7", borderRadius: "6px" }}>
+              <ShieldCheck size={24} color="#c5a059" />
+              <div>
+                <span style={{ fontSize: "12.5px", fontWeight: 600, color: "#333", display: "block" }}>100% Certified Natural</span>
+                <span style={{ fontSize: "11px", color: "#777" }}>{product.cert || "Authenticity Guaranteed"}</span>
+              </div>
             </div>
-            <div className="perk">
-              <Truck size={28} />
-              <span>Free Insured Shipping</span>
+            <div style={{ display: "flex", alignItems: "center", gap: "10px", padding: "12px", background: "#faf9f7", borderRadius: "6px" }}>
+              <Truck size={24} color="#c5a059" />
+              <div>
+                <span style={{ fontSize: "12.5px", fontWeight: 600, color: "#333", display: "block" }}>Worldwide Express</span>
+                <span style={{ fontSize: "11px", color: "#777" }}>DHL / FedEx Insured</span>
+              </div>
             </div>
-            <div className="perk">
-              <PackageCheck size={28} />
-              <span>Secure Packaging</span>
+            <div style={{ display: "flex", alignItems: "center", gap: "10px", padding: "12px", background: "#faf9f7", borderRadius: "6px" }}>
+              <PackageCheck size={24} color="#c5a059" />
+              <div>
+                <span style={{ fontSize: "12.5px", fontWeight: 600, color: "#333", display: "block" }}>Tamper-Proof Box</span>
+                <span style={{ fontSize: "11px", color: "#777" }}>Collector Packaging</span>
+              </div>
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: "10px", padding: "12px", background: "#faf9f7", borderRadius: "6px" }}>
+              <Award size={24} color="#c5a059" />
+              <div>
+                <span style={{ fontSize: "12.5px", fontWeight: 600, color: "#333", display: "block" }}>Mine-Direct Source</span>
+                <span style={{ fontSize: "11px", color: "#777" }}>Peshawar / Northern Mines</span>
+              </div>
             </div>
           </div>
         </div>
       </div>
 
       {/* Product Tabs */}
+      
+      {/* Google SEO JSON-LD Product Schema */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org/",
+            "@type": "Product",
+            "name": product.name,
+            "image": [product.img],
+            "description": product.desc,
+            "sku": `MU-${product.id}`,
+            "brand": {
+              "@type": "Brand",
+              "name": "Minerals Universe"
+            },
+            "offers": {
+              "@type": "Offer",
+              "priceCurrency": "USD",
+              "price": product.priceNum,
+              "availability": "https://schema.org/InStock",
+              "seller": {
+                "@type": "Organization",
+                "name": "Minerals Universe"
+              }
+            }
+          })
+        }}
+      />
+
       <div className="tabs-container">
         <div className="tabs-header">
           <button className={`tab-btn ${activeTab === 'description' ? 'active' : ''}`} onClick={() => setActiveTab('description')}>Description</button>

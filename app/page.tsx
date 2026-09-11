@@ -1,3 +1,4 @@
+import ScrollReveal from '@/components/ScrollReveal';
 import HeroSlider from '@/components/HeroSlider';
 import TrustBar from '@/components/TrustBar';
 import About from '@/components/About';
@@ -17,21 +18,20 @@ export default function Home() {
   return (
     <>
       <Loader />
-      <main>
-        <HeroSlider />
-        <TrustBar />
-        <About />
-        <Products />
-        <SpecsStrip />
-        <Categories />
-        <Bundles />
-        <CustomOrder />
-        <SourcingMap />
-        <InstagramGrid />
-        <Reviews />
-        <FAQ />
-        <Contact />
-      </main>
+      <ScrollReveal />
+      <HeroSlider />
+      <TrustBar />
+      <About />
+      <Products />
+      <SpecsStrip />
+      <Categories />
+      <Bundles />
+      <CustomOrder />
+      <SourcingMap />
+      <InstagramGrid />
+      <Reviews />
+      <FAQ />
+      <Contact />
     </>
   );
 }

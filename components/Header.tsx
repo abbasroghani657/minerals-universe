@@ -2,15 +2,17 @@
 import Link from 'next/link';
 import { useState, useRef, useEffect } from 'react';
 import { useCart } from '@/context/CartContext';
-import { Search, Heart, ShoppingCart } from 'lucide-react';
+import { Search, Heart, ShoppingCart, Menu } from 'lucide-react';
+import MobileNavDrawer from '@/components/MobileNavDrawer';
 import { useRouter } from 'next/navigation';
-import { useAuth, UserButton } from '@clerk/nextjs';
+import { useAuth, UserButton, ClerkLoaded, ClerkLoading } from '@clerk/nextjs';
 
 export default function Header() {
   const { cartCount, wishlist, currency, setCurrency, openCart } = useCart();
   const router = useRouter();
   const { isSignedIn, isLoaded } = useAuth();
   const [searchOpen, setSearchOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const searchRef = useRef<HTMLInputElement>(null);
 
@@ -29,15 +31,19 @@ export default function Header() {
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    if (searchQuery.trim()) {
-      const el = document.getElementById('products');
-      el?.scrollIntoView({ behavior: 'smooth' });
+    const query = searchQuery.trim();
+    if (query) {
+      router.push(`/shop?search=${encodeURIComponent(query)}`);
       setSearchOpen(false);
       setSearchQuery('');
     }
   };
 
   const scrollTo = (id: string) => {
+    if (window.location.pathname !== '/') {
+      router.push(`/#${id}`);
+      return;
+    }
     document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
   };
 
@@ -49,30 +55,42 @@ export default function Header() {
           <nav>
             <div className="nav-item"><a href="/" className="active">Home</a></div>
             <div className="nav-item">
-              <Link href="/shop">Loose Gemstones ▾</Link>
+              <Link href="/category/loose-gemstones">Loose Gemstones ▾</Link>
               <div className="dropdown">
-                <Link href="/category/sapphire">Sapphire</Link><Link href="/category/ruby">Ruby</Link>
-                <Link href="/category/tourmaline">Tourmaline</Link><Link href="/category/topaz">Topaz</Link>
-                <Link href="/category/kunzite">Kunzite</Link><Link href="/category/emerald">Emerald</Link>
-                <Link href="/category/aquamarine">Aquamarine</Link><Link href="/category/garnet">Garnet</Link>
-                <Link href="/category/opals">Opals</Link><Link href="/category/peridot">Peridot</Link>
-                <Link href="/category/zircon">Zircon</Link><Link href="/category/morganite">Morganite</Link>
+                <Link href="/category/aquamarine">Aquamarine</Link>
+                <Link href="/category/emerald">Emerald</Link>
+                <Link href="/category/tourmaline">Tourmaline</Link>
+                <Link href="/category/sapphire">Sapphire</Link>
+                <Link href="/category/ruby">Ruby</Link>
+                <Link href="/category/topaz">Topaz</Link>
+                <Link href="/category/garnet">Garnet</Link>
+                <Link href="/category/spinel">Spinel</Link>
+                <Link href="/category/kunzite">Kunzite</Link>
+                <Link href="/category/peridot">Peridot</Link>
+                <Link href="/category/zircon">Zircon</Link>
+                <Link href="/category/morganite">Morganite</Link>
               </div>
             </div>
             <div className="nav-item">
-              <Link href="/shop">Minerals &amp; Crystals ▾</Link>
+              <Link href="/category/minerals-and-crystals">Minerals &amp; Crystals ▾</Link>
               <div className="dropdown">
-                <Link href="/category/quartz">Quartz</Link><Link href="/category/kyanite">Kyanite</Link>
-                <Link href="/category/fluorite">Fluorite</Link><Link href="/category/pyrite">Pyrite</Link>
-                <Link href="/category/selenite">Selenite</Link><Link href="/category/amethyst">Amethyst</Link>
+                <Link href="/category/quartz">Quartz</Link>
+                <Link href="/category/fluorite">Fluorite</Link>
+                <Link href="/category/pyrite">Pyrite</Link>
+                <Link href="/category/kyanite">Kyanite</Link>
+                <Link href="/category/selenite">Selenite</Link>
+                <Link href="/category/amethyst">Amethyst</Link>
               </div>
             </div>
             <div className="nav-item">
-              <Link href="/shop">Polished Stones ▾</Link>
+              <Link href="/category/polished-stones">Polished Stones ▾</Link>
               <div className="dropdown">
-                <Link href="/category/lapis-lazuli">Lapis Lazuli</Link><Link href="/category/rhodonite">Rhodonite</Link>
-                <Link href="/category/tremolite">Tremolite</Link><Link href="/category/hackmanite">Hackmanite</Link>
-                <Link href="/category/calcite">Calcite</Link><Link href="/category/afghanite">Afghanite</Link>
+                <Link href="/category/lapis-lazuli">Lapis Lazuli</Link>
+                <Link href="/category/rhodonite">Rhodonite</Link>
+                <Link href="/category/tremolite">Tremolite</Link>
+                <Link href="/category/hackmanite">Hackmanite</Link>
+                <Link href="/category/calcite">Calcite</Link>
+                <Link href="/category/afghanite">Afghanite</Link>
               </div>
             </div>
             <div className="nav-item"><a href="#about">About Us</a></div>
@@ -80,6 +98,16 @@ export default function Header() {
             <div className="nav-item"><a href="#contact">Contact Us</a></div>
           </nav>
           <div className="header-icons">
+            {/* Mobile Hamburger Button */}
+            <button
+              className="mobile-hamburger-btn"
+              onClick={() => setMobileMenuOpen(true)}
+              title="Open Navigation Menu"
+              aria-label="Open Navigation Menu"
+            >
+              <Menu size={22} />
+            </button>
+
             <select
               className="currency-select"
               value={currency}
@@ -120,31 +148,46 @@ export default function Header() {
               <ShoppingCart size={20} style={{ display: 'block' }} />
               {cartCount > 0 && <span className="cart-badge">{cartCount}</span>}
             </button>
-            <div style={{ marginLeft: '12px', display: 'flex', alignItems: 'center' }}>
-              {isLoaded && !isSignedIn && (
-                <Link
-                  href="/sign-in"
-                  style={{
-                    fontSize: '13px',
-                    fontWeight: 600,
-                    color: 'var(--teal)',
-                    border: '1px solid var(--teal)',
-                    borderRadius: '4px',
-                    padding: '6px 12px',
-                    textDecoration: 'none',
-                    transition: 'all 0.2s',
-                  }}
-                >
-                  Sign In
-                </Link>
-              )}
-              {isLoaded && isSignedIn && (
-                <UserButton />
-              )}
+            <div style={{ marginLeft: '12px', display: 'flex', alignItems: 'center', minWidth: '70px', justifyContent: 'center' }}>
+              <ClerkLoading>
+                <div style={{ width: '26px', height: '26px', borderRadius: '50%', border: '2px solid rgba(26,127,116,.2)', borderTopColor: 'var(--teal)', animation: 'spin 1s linear infinite' }}></div>
+              </ClerkLoading>
+              <ClerkLoaded>
+                {!isSignedIn ? (
+                  <Link
+                    href="/sign-in"
+                    style={{
+                      fontSize: '13px',
+                      fontWeight: 600,
+                      color: 'var(--teal)',
+                      border: '1px solid var(--teal)',
+                      borderRadius: '4px',
+                      padding: '6px 12px',
+                      textDecoration: 'none',
+                      transition: 'all 0.2s',
+                    }}
+                  >
+                    Sign In
+                  </Link>
+                ) : (
+                  <UserButton />
+                )}
+              </ClerkLoaded>
             </div>
           </div>
         </div>
       </header>
+
+            {/* Mobile Slide-Over Navigation Drawer */}
+      <MobileNavDrawer
+        isOpen={mobileMenuOpen}
+        onClose={() => setMobileMenuOpen(false)}
+        cartCount={cartCount}
+        wishlistCount={wishlist.size}
+        currency={currency}
+        setCurrency={setCurrency}
+        isSignedIn={isSignedIn}
+      />
 
       {/* Search Modal */}
       {searchOpen && (
@@ -184,7 +227,11 @@ export default function Header() {
               {['Sapphire', 'Tourmaline', 'Emerald', 'Ruby', 'Aquamarine', 'Garnet'].map(term => (
                 <button
                   key={term}
-                  onClick={() => { setSearchQuery(term); scrollTo('products'); setSearchOpen(false); }}
+                  onClick={() => { 
+                    router.push(`/shop?search=${encodeURIComponent(term)}`); 
+                    setSearchOpen(false); 
+                    setSearchQuery('');
+                  }}
                   style={{
                     background: 'var(--teal-pale)', color: 'var(--teal-dark)', border: 'none',
                     borderRadius: '20px', padding: '6px 14px', fontSize: '12px',

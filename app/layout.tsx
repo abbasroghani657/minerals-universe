@@ -14,19 +14,24 @@ export const metadata: Metadata = {
     description: 'Authentic gemstones, minerals, and crystals sourced directly from the world\'s finest geological regions.',
     type: 'website',
   },
+  icons: {
+    icon: '/icon.svg',
+    shortcut: '/icon.svg',
+    apple: '/icon.svg',
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <ClerkProvider>
-      <html lang="en">
+      <html lang="en" suppressHydrationWarning>
         <head>
           <link
             href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Poppins:wght@300;400;500;600&display=swap"
             rel="stylesheet"
           />
         </head>
-        <body>
+        <body suppressHydrationWarning>
           <CartProvider>
             <GlobalUI>{children}</GlobalUI>
           </CartProvider>

@@ -1,11 +1,13 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { DEFAULT_PRODUCTS } from '@/lib/defaultData';
+import { inferMainCategory, isPrimaryCategory, normalizeCategory, CATEGORY_TREE, getVarietiesForMain } from '@/utils/categories';
 
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
   const id = searchParams.get('id');
   const category = searchParams.get('category');
+  const mainCategory = searchParams.get('mainCategory');
 
   try {
     if (id) {
@@ -19,33 +21,59 @@ export async function GET(req: Request) {
       return NextResponse.json({ success: true, product: fallback || null });
     }
 
-    if (category) {
+    // 1. Filter by explicit Main Category (e.g. "Loose Gemstones", "Minerals & Crystals", "Polished Stones")
+    const targetMain = mainCategory || (category && isPrimaryCategory(category) ? category : null);
+
+    if (targetMain) {
+      const normTarget = normalizeCategory(targetMain);
+      const matchedMainName = Object.keys(CATEGORY_TREE).find(k => normalizeCategory(k) === normTarget) || targetMain;
+      const childVarieties = getVarietiesForMain(matchedMainName);
+
       const products = await prisma.product.findMany({
-        where: { cat: { equals: category } }
+        where: {
+          OR: [
+            { mainCat: matchedMainName },
+            { mainCat: { contains: matchedMainName } },
+            { cat: matchedMainName },
+            { cat: { in: childVarieties } }
+          ]
+        },
+        orderBy: { id: 'desc' }
       });
-      if (products && products.length > 0) {
-        return NextResponse.json({ success: true, products });
-      }
-      const fallback = DEFAULT_PRODUCTS.filter(p => p.cat.toLowerCase() === category.toLowerCase());
-      return NextResponse.json({ success: true, products: fallback });
+
+      return NextResponse.json({ success: true, products: products || [] });
     }
 
+    // 2. Filter by specific Gemstone / Mineral variety (e.g. "Emerald", "Aquamarine", "Quartz")
+    if (category) {
+      const catTrimmed = category.trim();
+      const products = await prisma.product.findMany({
+        where: {
+          OR: [
+            { cat: catTrimmed },
+            { cat: catTrimmed.toLowerCase() },
+            { cat: catTrimmed.charAt(0).toUpperCase() + catTrimmed.slice(1).toLowerCase() }
+          ]
+        },
+        orderBy: { id: 'desc' }
+      });
+      return NextResponse.json({ success: true, products: products || [] });
+    }
+
+    // 3. Return all products
     const products = await prisma.product.findMany({
       orderBy: { id: 'desc' }
     });
+
     if (products && products.length > 0) {
       return NextResponse.json({ success: true, products });
     }
     return NextResponse.json({ success: true, products: DEFAULT_PRODUCTS });
   } catch (err: any) {
-    console.warn('[GET /api/products] Database not ready, using fallback products:', err.message);
+    console.warn('[GET /api/products] Database issue, using fallback data:', err.message);
     if (id) {
       const fallback = DEFAULT_PRODUCTS.find(p => p.id === Number(id));
       return NextResponse.json({ success: true, product: fallback || null });
-    }
-    if (category) {
-      const fallback = DEFAULT_PRODUCTS.filter(p => p.cat.toLowerCase() === category.toLowerCase());
-      return NextResponse.json({ success: true, products: fallback });
     }
     return NextResponse.json({ success: true, products: DEFAULT_PRODUCTS });
   }
@@ -54,24 +82,29 @@ export async function GET(req: Request) {
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { name, cat, priceNum, sale, desc, origin, treatment, cert, img, stock, badge } = body;
+    const { name, mainCat, cat, priceNum, original, sale, desc, origin, treatment, cert, img, stock, badge } = body;
 
-    if (!name || !cat || !priceNum || !img) {
-      return NextResponse.json({ success: false, error: 'Missing required product fields' }, { status: 400 });
+    if (!name || !cat || priceNum === undefined || priceNum === null || !img) {
+      return NextResponse.json({ success: false, error: 'Missing required product fields (Title, Category, Price, or Image)' }, { status: 400 });
     }
+
+    const resolvedMainCat = mainCat ? mainCat.trim() : inferMainCategory(cat.trim());
+    const parsedPrice = Number(priceNum);
 
     const newProduct = await prisma.product.create({
       data: {
-        name,
-        cat,
-        priceNum: Number(priceNum),
-        sale: sale || `PKR ${priceNum}`,
+        name: name.trim(),
+        mainCat: resolvedMainCat,
+        cat: cat.trim(),
+        priceNum: parsedPrice,
+        original: original ? String(original) : null,
+        sale: sale || `$${parsedPrice.toLocaleString()}`,
         desc: desc || '',
-        origin: origin || 'Unknown',
-        treatment: treatment || 'None',
-        cert: cert || 'None',
-        img,
-        stock: stock ? String(stock) : null,
+        origin: origin || 'Pakistan',
+        treatment: treatment || '100% Natural, Unheated',
+        cert: cert || 'Authentic Gem',
+        img: img.trim(),
+        stock: stock ? String(stock) : 'In Stock',
         badge: badge || '',
       }
     });
@@ -86,25 +119,30 @@ export async function POST(req: Request) {
 export async function PUT(req: Request) {
   try {
     const body = await req.json();
-    const { id, name, cat, priceNum, sale, desc, origin, treatment, cert, img, stock, badge } = body;
+    const { id, name, mainCat, cat, priceNum, original, sale, desc, origin, treatment, cert, img, stock, badge } = body;
 
     if (!id) {
       return NextResponse.json({ success: false, error: 'Missing product ID' }, { status: 400 });
     }
 
+    const resolvedMainCat = mainCat ? mainCat.trim() : (cat ? inferMainCategory(cat.trim()) : undefined);
+    const parsedPrice = priceNum !== undefined ? Number(priceNum) : undefined;
+
     const updatedProduct = await prisma.product.update({
       where: { id: Number(id) },
       data: {
-        name,
-        cat,
-        priceNum: priceNum ? Number(priceNum) : undefined,
-        sale,
+        name: name ? name.trim() : undefined,
+        mainCat: resolvedMainCat,
+        cat: cat ? cat.trim() : undefined,
+        priceNum: parsedPrice,
+        original: original !== undefined ? (original ? String(original) : null) : undefined,
+        sale: sale || (parsedPrice !== undefined ? `$${parsedPrice.toLocaleString()}` : undefined),
         desc,
         origin,
         treatment,
         cert,
-        img,
-        stock: stock ? String(stock) : null,
+        img: img ? img.trim() : undefined,
+        stock: stock !== undefined ? (stock ? String(stock) : null) : undefined,
         badge,
       }
     });

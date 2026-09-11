@@ -5,9 +5,10 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useCart } from '@/context/CartContext';
 import { Trash2, ArrowRight } from 'lucide-react';
+import { formatPrice } from '@/utils/price';
 
 export default function CartPage() {
-  const { cartItems, updateQuantity, removeFromCart, cartCount } = useCart();
+  const { cartItems, updateQuantity, removeFromCart, cartCount, currency, exchangeRates } = useCart();
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
 
@@ -58,8 +59,8 @@ export default function CartPage() {
           <div style={{ fontSize: '48px', marginBottom: '24px' }}>🛒</div>
           <h2 className="heading-serif" style={{ fontSize: '28px', color: '#1a5c4a', marginBottom: '16px' }}>Your cart is empty</h2>
           <p style={{ color: '#666', marginBottom: '32px' }}>Explore our collection of premium gemstones and minerals to find something you love.</p>
-          <button onClick={() => router.push('/#categories')} className="btn-teal" style={{ maxWidth: '250px', margin: '0 auto' }}>
-            Continue Shopping
+          <button onClick={() => router.push('/shop')} className="btn-teal" style={{ maxWidth: '280px', margin: '0 auto' }}>
+            Explore Collection
           </button>
         </div>
       ) : (
@@ -76,7 +77,7 @@ export default function CartPage() {
                       <Trash2 size={20} />
                     </button>
                   </div>
-                  <p style={{ color: '#1a5c4a', fontWeight: 600, fontSize: '16px', margin: '0' }}>PKR {item.price.toLocaleString()}</p>
+                  <p style={{ color: '#1a5c4a', fontWeight: 600, fontSize: '16px', margin: '0' }}>{formatPrice(item.price, currency, exchangeRates)}</p>
                   
                   <div className="qty-controls">
                     <button onClick={() => updateQuantity(item.id, -1)} className="qty-btn" aria-label="Decrease quantity">-</button>
@@ -95,7 +96,7 @@ export default function CartPage() {
               
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '16px', color: '#555' }}>
                 <span>Subtotal</span>
-                <span>PKR {subtotal.toLocaleString()}</span>
+                <span>{formatPrice(subtotal, currency, exchangeRates)}</span>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '24px', color: '#555' }}>
                 <span>Shipping</span>
@@ -104,7 +105,7 @@ export default function CartPage() {
               
               <div style={{ borderTop: '1px solid #eee', paddingTop: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
                 <span className="heading-serif" style={{ fontSize: '20px', fontWeight: 600 }}>Estimated Total</span>
-                <span className="heading-serif" style={{ fontSize: '24px', color: '#1a5c4a', fontWeight: 700 }}>PKR {subtotal.toLocaleString()}</span>
+                <span className="heading-serif" style={{ fontSize: '24px', color: '#1a5c4a', fontWeight: 700 }}>{formatPrice(subtotal, currency, exchangeRates)}</span>
               </div>
 
               <button onClick={() => router.push('/checkout')} className="btn-teal">

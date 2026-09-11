@@ -9,6 +9,7 @@ datasource db {
 model Product {
   id        Int     @id @default(autoincrement())
   img       String
+  mainCat   String?
   cat       String
   name      String
   original  String?
@@ -94,4 +95,19 @@ model Faq {
 model Setting {
   key   String @id
   value String @db.Text
+}
+
+model Bundle {
+  id          Int      @id @default(autoincrement())
+  name        String
+  description String?  @db.Text
+  badge       String?  @default("Special Offer")
+  originalUSD Float
+  saleUSD     Float
+  imgs        String   @db.Text
+  items       String?  @db.Text
+  stock       String?  @default("In Stock")
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }

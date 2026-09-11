@@ -1,10 +1,11 @@
-'use client';
+﻿'use client';
 
 import { usePathname } from 'next/navigation';
 import { FaWhatsapp } from 'react-icons/fa';
 import Header from './Header';
 import Footer from './Footer';
 import CartSidebar from './CartSidebar';
+import AnnouncementBar from './AnnouncementBar';
 
 export default function GlobalUI({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -27,10 +28,8 @@ export default function GlobalUI({ children }: { children: React.ReactNode }) {
 
   return (
     <>
-      {/* Announcement Bar */}
-      <div className="announcement">
-        ✦ FREE WORLDWIDE SHIPPING ON ORDERS OVER $100 &nbsp;✦&nbsp; 100% NATURAL &amp; CERTIFIED
-      </div>
+      {/* Modern Animated Announcement Bar */}
+      <AnnouncementBar />
       
       <Header />
       

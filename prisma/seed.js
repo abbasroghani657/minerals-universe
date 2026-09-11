@@ -291,6 +291,11 @@ async function main() {
   console.log('Seeding users...');
   const users = [
     {
+      email: 'abbasroghani869@gmail.com',
+      name: 'Zaheer Abbas (Admin)',
+      role: 'Admin'
+    },
+    {
       email: 'drtoolofficial@gmail.com',
       name: 'Admin Demo User',
       role: 'Admin'

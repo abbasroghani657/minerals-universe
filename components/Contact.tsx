@@ -86,7 +86,7 @@ export default function Contact() {
           <div>
             <div className="contact-info-card">
               <h3>Minerals Universe</h3>
-              <div className="info-row"><span>📍</span><p>Shop no 2 Hamid Gems Chamber, Shah Qabool Street, Namak Mandi, Peshawar, Pakistan</p></div>
+              <div className="info-row"><span>📍</span><p>Office # F23 second floor Asghar gemstones market namak mandi Peshawar Pakistan</p></div>
               <div className="info-row"><span>📞</span><p><a href="tel:+923001581210" style={{ color: 'var(--body)', textDecoration: 'none' }}>+92 300 158 1210</a></p></div>
               <div className="info-row"><span>📧</span><p><a href="mailto:info@mineralsuniverse.com" style={{ color: 'var(--body)', textDecoration: 'none' }}>info@mineralsuniverse.com</a></p></div>
               <div className="info-row"><span>🕐</span><p>Mon–Sat: 9:00 AM – 7:00 PM PKT<br />Sunday: 11:00 AM – 5:00 PM</p></div>

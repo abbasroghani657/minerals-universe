@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <defs>
+    <linearGradient id="gemBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#144638"/>
+      <stop offset="50%" stop-color="#1a5c4a"/>
+      <stop offset="100%" stop-color="#0f3429"/>
+    </linearGradient>
+    <linearGradient id="goldFacets" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fae8b4"/>
+      <stop offset="50%" stop-color="#c5a059"/>
+      <stop offset="100%" stop-color="#8c6a28"/>
+    </linearGradient>
+    <linearGradient id="crystalShine" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.8"/>
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0.1"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background Circle with subtle border -->
+  <circle cx="32" cy="32" r="30" fill="url(#gemBg)" stroke="#c5a059" stroke-width="2"/>
+
+  <!-- Faceted Gemstone / Crystal Geometry -->
+  <!-- Top Table -->
+  <polygon points="24,20 40,20 46,26 18,26" fill="#fae8b4" opacity="0.95"/>
+  
+  <!-- Upper Left Facet -->
+  <polygon points="18,26 24,20 12,26" fill="#c5a059" opacity="0.8"/>
+  
+  <!-- Upper Right Facet -->
+  <polygon points="40,20 46,26 52,26" fill="#c5a059" opacity="0.8"/>
+  
+  <!-- Center Main Pavilion -->
+  <polygon points="18,26 46,26 32,48" fill="url(#goldFacets)"/>
+  
+  <!-- Side Left Pavilion -->
+  <polygon points="12,26 18,26 32,48" fill="#8c6a28" opacity="0.9"/>
+  
+  <!-- Side Right Pavilion -->
+  <polygon points="46,26 52,26 32,48" fill="#a47d32" opacity="0.95"/>
+
+  <!-- Inner Sparkle Highlights -->
+  <polygon points="26,26 38,26 32,44" fill="url(#crystalShine)"/>
+  
+  <!-- 4-point Diamond Sparkle -->
+  <path d="M 44,14 Q 44,18 40,18 Q 44,18 44,22 Q 44,18 48,18 Q 44,18 44,14 Z" fill="#ffffff"/>
+  <circle cx="44" cy="18" r="1" fill="#fff"/>
+</svg>

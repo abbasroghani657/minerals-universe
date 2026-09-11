@@ -1,26 +1,28 @@
 'use client';
+import Link from 'next/link';
 import { FaInstagram, FaTiktok, FaYoutube, FaEbay } from 'react-icons/fa';
 
 export default function Footer() {
-  const scrollToTop = () => window.scrollTo({ top: 0, behavior: 'smooth' });
+  const scrollToTop = () => {
+    if (typeof window !== 'undefined') {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
 
   const infoLinks = [
-    { label: 'About Us', href: '#about' },
-    { label: 'FAQ', href: '#faq' },
-    { label: 'Privacy Policy', href: '#contact' },
-    { label: 'Payment Info', href: '#contact' },
-    { label: 'Shipping Policy', href: '#contact' },
+    { label: 'About Us', href: '/#about' },
+    { label: 'All Gemstones', href: '/shop' },
+    { label: 'FAQ', href: '/#faq' },
+    { label: 'Customer Reviews', href: '/#reviews' },
+    { label: 'Contact Us', href: '/#contact' },
   ];
 
   const supportLinks = [
-    { label: 'My Account', href: '#contact' },
-    { label: 'Checkout', href: '#products' },
-    { label: 'Cart', href: '#products' },
-    { label: 'Track Order', href: '#contact' },
-    { label: 'Reviews', href: '#reviews' },
-    { label: 'Wishlist', href: '#products' },
-    { label: 'Custom Order', href: '#custom-order' },
-    { label: 'Contact Us', href: '#contact' },
+    { label: 'View Cart', href: '/cart' },
+    { label: 'Checkout', href: '/checkout' },
+    { label: 'Shop Catalog', href: '/shop' },
+    { label: 'Custom Order', href: '/#custom-order' },
+    { label: 'Admin Portal', href: '/admin' },
   ];
 
   return (
@@ -39,7 +41,7 @@ export default function Footer() {
                 <p style={{ color: 'rgba(255,255,255,.5)', fontSize: '13px', marginBottom: '5px' }}>
                   📧 <a href="mailto:info@mineralsuniverse.com" style={{ color: 'rgba(255,255,255,.5)', textDecoration: 'none' }}>info@mineralsuniverse.com</a>
                 </p>
-                <p style={{ color: 'rgba(255,255,255,.5)', fontSize: '13px' }}>📍 Namak Mandi, Peshawar, Pakistan</p>
+                <p style={{ color: 'rgba(255,255,255,.5)', fontSize: '13px', lineHeight: '1.5' }}>📍 Office # F23 second floor Asghar gemstones market namak mandi Peshawar Pakistan</p>
               </div>
               <div className="social-row">
                 <a className="social-btn" href="https://www.instagram.com/mineralsuniverse_" target="_blank" rel="noopener" title="Instagram"
@@ -56,7 +58,7 @@ export default function Footer() {
               <h4>Information</h4>
               <ul className="footer-links">
                 {infoLinks.map(item => (
-                  <li key={item.label}><a href={item.href}>{item.label}</a></li>
+                  <li key={item.label}><Link href={item.href}>{item.label}</Link></li>
                 ))}
               </ul>
             </div>
@@ -64,7 +66,7 @@ export default function Footer() {
               <h4>Customer Support</h4>
               <ul className="footer-links">
                 {supportLinks.map(item => (
-                  <li key={item.label}><a href={item.href}>{item.label}</a></li>
+                  <li key={item.label}><Link href={item.href}>{item.label}</Link></li>
                 ))}
               </ul>
             </div>

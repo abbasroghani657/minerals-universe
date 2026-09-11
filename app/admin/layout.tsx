@@ -1,12 +1,14 @@
-'use client';
+﻿'use client';
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState, useEffect } from 'react';
-import { LayoutDashboard, Package, ShoppingCart, MessageSquare, Mail, LogOut, HelpCircle, Settings } from 'lucide-react';
+import { useClerk } from '@clerk/nextjs';
+import { LayoutDashboard, Package, ShoppingCart, MessageSquare, Mail, LogOut, HelpCircle, Settings, Users, Layers } from 'lucide-react';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const { signOut } = useClerk();
   const [role, setRole] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -50,7 +52,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const navItems = [
     { name: 'Dashboard', href: '/admin', icon: LayoutDashboard },
     { name: 'Products', href: '/admin/products', icon: Package },
+    { name: 'Complete Sets', href: '/admin/bundles', icon: Layers },
     { name: 'Orders', href: '/admin/orders', icon: ShoppingCart },
+    { name: 'Users', href: '/admin/users', icon: Users },
     { name: 'Reviews', href: '/admin/reviews', icon: MessageSquare },
     { name: 'Inquiries', href: '/admin/inquiries', icon: Mail },
     { name: 'FAQs', href: '/admin/faqs', icon: HelpCircle },
@@ -93,12 +97,15 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </nav>
 
         <div style={{ padding: '24px', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
-          <button style={{
-            display: 'flex', alignItems: 'center', gap: '10px', width: '100%',
-            padding: '12px', background: 'rgba(255,255,255,0.05)', border: 'none',
-            color: '#fff', borderRadius: '4px', cursor: 'pointer', transition: 'background 0.2s',
-            fontSize: '14px', fontWeight: 500
-          }}>
+          <button 
+            onClick={() => signOut({ redirectUrl: '/' })}
+            style={{
+              display: 'flex', alignItems: 'center', gap: '10px', width: '100%',
+              padding: '12px', background: 'rgba(255,255,255,0.05)', border: 'none',
+              color: '#fff', borderRadius: '4px', cursor: 'pointer', transition: 'background 0.2s',
+              fontSize: '14px', fontWeight: 500
+            }}
+          >
             <LogOut size={16} /> Logout
           </button>
         </div>

@@ -1,29 +1,100 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Save, Settings, Building, CreditCard, ShieldCheck } from 'lucide-react';
+import { 
+  Save, 
+  Settings, 
+  Building, 
+  ShieldCheck, 
+  Image as ImageIcon, 
+  Upload, 
+  CheckCircle2, 
+  Loader2, 
+  RotateCcw, 
+  ChevronDown, 
+  ChevronUp, 
+  ExternalLink,
+  Sparkles,
+  Eye,
+  EyeOff,
+  Maximize2,
+  Camera
+} from 'lucide-react';
 import { FaTiktok, FaEbay, FaWhatsapp, FaInstagram, FaYoutube } from 'react-icons/fa';
 
+const FACTORY_DEFAULTS: Record<string, string> = {
+  hero_banner_1: 'https://images.unsplash.com/photo-1551868041-3bfcabc0a86c?w=1600&q=80',
+  hero_tag_1: '✨ Featured Collection',
+  hero_title_1: "Polished Stones - Nature's Art, Perfected",
+  hero_desc_1: 'Handpicked specimens from around the world, curated for collectors and connoisseurs',
+  hero_cta_1: 'Shop Now',
+  hero_link_1: '#products',
+  hero_show_text_1: 'true',
+  hero_fit_1: 'cover',
+
+  hero_banner_2: 'https://images.unsplash.com/photo-1625750331870-624de6fd3452?w=1600&q=80',
+  hero_tag_2: '✨ New Arrivals',
+  hero_title_2: 'Natural Loose Gemstones - Rare & Certified',
+  hero_desc_2: 'Sapphires, Rubies, Tourmalines & more - directly sourced from premier mining regions',
+  hero_cta_2: 'Explore Collection',
+  hero_link_2: '#categories',
+  hero_show_text_2: 'true',
+  hero_fit_2: 'cover',
+
+  hero_banner_3: 'https://images.unsplash.com/photo-1519608487953-e999c86e7455?w=1600&q=80',
+  hero_tag_3: '✨ Collectors Edition',
+  hero_title_3: 'Minerals & Crystals - Sourced from the Earth',
+  hero_desc_3: "Authentic specimens for collectors and jewelers - from the world's finest geological formations",
+  hero_cta_3: 'View All',
+  hero_link_3: '#categories',
+  hero_show_text_3: 'true',
+  hero_fit_3: 'cover',
+  journey_img_1: '/images/journey/raw-emeralds-mine.jpg',
+  journey_caption_1: '✦ Direct Mine Sourcing — Raw Swat Emeralds',
+  journey_link_1: 'https://www.instagram.com',
+
+  journey_img_2: '/images/journey/aquamarine-inspection.jpg',
+  journey_caption_2: '✦ Gemological Quality Inspection & Crystal Grade',
+  journey_link_2: 'https://www.instagram.com',
+
+  journey_img_3: '/images/journey/dhl-luxury-packaging.jpg',
+  journey_caption_3: '✦ Luxury Safe Packaging & DHL Express Worldwide',
+  journey_link_3: 'https://www.instagram.com',
+
+  journey_img_4: '/images/journey/lapidary-cutting.jpg',
+  journey_caption_4: '✦ Master Lapidary Faceting & Precision Polishing',
+  journey_link_4: 'https://www.instagram.com',
+
+  journey_img_5: '/images/journey/mountain-mine-expedition.jpg',
+  journey_caption_5: '✦ Karakoram Mountain Geological Expedition',
+  journey_link_5: 'https://www.instagram.com',
+
+  journey_img_6: '/images/journey/faceted-gems-sunlight.jpg',
+  journey_caption_6: '✦ Natural Gem Lustre in Pure Direct Sunlight',
+  journey_link_6: 'https://www.instagram.com',
+
+};
+
 export default function AdminSettings() {
-  const [settings, setSettings] = useState({
+  const [settings, setSettings] = useState<Record<string, string>>({
     instagramUrl: '',
     tiktokUrl: '',
     youtubeUrl: '',
     ebayUrl: '',
     whatsappNumber: '',
-    // Pakistani Bank & Payment Details
-    bankName: '',
-    accountTitle: '',
-    accountNumber: '',
-    iban: '',
-    raastId: '',
-    easyPaisaNumber: '',
-    jazzCashNumber: '',
-    paymentInstructions: '',
+    ...FACTORY_DEFAULTS
   });
+
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+
+  const [uploadingSlot, setUploadingSlot] = useState<number | null>(null);
+  const [uploadFeedback, setUploadFeedback] = useState<Record<string, string>>({});
+  const [expandedTextSlot, setExpandedTextSlot] = useState<number | null>(null);
+  const [uploadingJourneySlot, setUploadingJourneySlot] = useState<number | null>(null);
+  const [journeyFeedback, setJourneyFeedback] = useState<Record<string, string>>({});
+
 
   useEffect(() => {
     async function loadSettings() {
@@ -31,24 +102,13 @@ export default function AdminSettings() {
         const res = await fetch('/api/settings');
         const data = await res.json();
         if (data.success && data.settings) {
-          setSettings({
-            instagramUrl: data.settings.instagramUrl || '',
-            tiktokUrl: data.settings.tiktokUrl || '',
-            youtubeUrl: data.settings.youtubeUrl || '',
-            ebayUrl: data.settings.ebayUrl || '',
-            whatsappNumber: data.settings.whatsappNumber || '',
-            bankName: data.settings.bankName || 'Meezan Bank Limited',
-            accountTitle: data.settings.accountTitle || 'Minerals Universe / Zaheer Abbas',
-            accountNumber: data.settings.accountNumber || '',
-            iban: data.settings.iban || '',
-            raastId: data.settings.raastId || '',
-            easyPaisaNumber: data.settings.easyPaisaNumber || '',
-            jazzCashNumber: data.settings.jazzCashNumber || '',
-            paymentInstructions: data.settings.paymentInstructions || 'Please transfer the exact converted PKR total to our account and send the screenshot/receipt on WhatsApp with your Order ID for instant dispatch.',
-          });
+          setSettings(prev => ({
+            ...prev,
+            ...data.settings,
+          }));
         }
-      } catch (err) {
-        console.error('Failed to load settings:', err);
+      } catch (e) {
+        console.error('Error loading settings', e);
       } finally {
         setLoading(false);
       }
@@ -56,11 +116,186 @@ export default function AdminSettings() {
     loadSettings();
   }, []);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    setSettings(prev => ({
-      ...prev,
-      [e.target.name]: e.target.value
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setSettings(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleToggleShowText = async (slotNum: number) => {
+    const key = `hero_show_text_${slotNum}`;
+    const currentVal = settings[key] !== 'false';
+    const nextVal = currentVal ? 'false' : 'true';
+    setSettings(prev => ({ ...prev, [key]: nextVal }));
+
+    await fetch('/api/settings', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ key, value: nextVal }),
+    });
+  };
+
+  const handleFitModeChange = async (slotNum: number, mode: string) => {
+    const key = `hero_fit_${slotNum}`;
+    setSettings(prev => ({ ...prev, [key]: mode }));
+
+    await fetch('/api/settings', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ key, value: mode }),
+    });
+  };
+
+  const handleBannerUpload = async (slotNumber: number, e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const key = `hero_banner_${slotNumber}`;
+    setUploadingSlot(slotNumber);
+    setUploadFeedback(prev => ({ ...prev, [key]: 'Optimizing & Saving (Zero Cropping)...' }));
+
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('type', 'cover');
+
+      const res = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData,
+      });
+
+      const data = await res.json();
+      if (data.success && data.url) {
+        setSettings(prev => ({ ...prev, [key]: data.url }));
+
+        await fetch('/api/settings', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ key, value: data.url }),
+        });
+
+        const kbSize = Math.round(data.size / 1024);
+        setUploadFeedback(prev => ({
+          ...prev,
+          [key]: `✓ Optimized (${kbSize} KB) & Saved Live!`,
+        }));
+      } else {
+        setUploadFeedback(prev => ({ ...prev, [key]: `Error: ${data.error || 'Upload failed'}` }));
+      }
+    } catch (err: any) {
+      setUploadFeedback(prev => ({ ...prev, [key]: 'Upload failed. Please try again.' }));
+    } finally {
+      setUploadingSlot(null);
+    }
+  };
+
+  const handleResetToDefault = async (slotNumber: number) => {
+    const key = `hero_banner_${slotNumber}`;
+    const defaultVal = FACTORY_DEFAULTS[key];
+    if (!defaultVal) return;
+
+    const confirmReset = window.confirm(`Reset Slide ${slotNumber} back to factory default cover image?`);
+    if (!confirmReset) return;
+
+    setSettings(prev => ({ ...prev, [key]: defaultVal }));
+    setUploadFeedback(prev => ({ ...prev, [key]: 'Resetting to default...' }));
+
+    try {
+      await fetch('/api/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ key, value: defaultVal }),
+      });
+      setUploadFeedback(prev => ({ ...prev, [key]: '✓ Restored factory default cover!' }));
+    } catch (err) {
+      setUploadFeedback(prev => ({ ...prev, [key]: 'Failed to reset. Try again.' }));
+    }
+  };
+
+  
+  const handleJourneyUpload = async (slotNumber: number, e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const key = `journey_img_${slotNumber}`;
+    setUploadingJourneySlot(slotNumber);
+    setJourneyFeedback(prev => ({ ...prev, [key]: 'Uploading image...' }));
+
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('type', 'general');
+
+      const res = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData,
+      });
+
+      const data = await res.json();
+      if (data.success && data.url) {
+        setSettings(prev => ({ ...prev, [key]: data.url }));
+
+        await fetch('/api/settings', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ key, value: data.url }),
+        });
+
+        setJourneyFeedback(prev => ({
+          ...prev,
+          [key]: '✓ Image uploaded & saved live!',
+        }));
+      } else {
+        setJourneyFeedback(prev => ({ ...prev, [key]: `Error: ${data.error || 'Upload failed'}` }));
+      }
+    } catch (err: any) {
+      setJourneyFeedback(prev => ({ ...prev, [key]: 'Upload failed. Please try again.' }));
+    } finally {
+      setUploadingJourneySlot(null);
+    }
+  };
+
+  const handleResetJourneyToDefault = async (slotNumber: number) => {
+    const imgKey = `journey_img_${slotNumber}`;
+    const capKey = `journey_caption_${slotNumber}`;
+    const linkKey = `journey_link_${slotNumber}`;
+    const defaultImg = FACTORY_DEFAULTS[imgKey];
+    const defaultCap = FACTORY_DEFAULTS[capKey];
+    const defaultLink = FACTORY_DEFAULTS[linkKey];
+    if (!defaultImg) return;
+
+    const confirmReset = window.confirm(`Reset Journey Slot ${slotNumber} back to default authentic photo & caption?`);
+    if (!confirmReset) return;
+
+    setSettings(prev => ({ 
+      ...prev, 
+      [imgKey]: defaultImg,
+      [capKey]: defaultCap,
+      [linkKey]: defaultLink,
     }));
+    setJourneyFeedback(prev => ({ ...prev, [imgKey]: 'Resetting to default...' }));
+
+    try {
+      await Promise.all([
+        fetch('/api/settings', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ key: imgKey, value: defaultImg }),
+        }),
+        fetch('/api/settings', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ key: capKey, value: defaultCap }),
+        }),
+        fetch('/api/settings', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ key: linkKey, value: defaultLink }),
+        })
+      ]);
+      setJourneyFeedback(prev => ({ ...prev, [imgKey]: '✓ Restored original museum photo!' }));
+    } catch (err) {
+      setJourneyFeedback(prev => ({ ...prev, [imgKey]: 'Failed to reset. Try again.' }));
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -69,20 +304,17 @@ export default function AdminSettings() {
     setMessage(null);
 
     try {
-      // Upsert each setting
-      const keys = Object.keys(settings) as Array<keyof typeof settings>;
-      for (const key of keys) {
+      for (const [key, value] of Object.entries(settings)) {
         await fetch('/api/settings', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ key, value: settings[key] }),
+          body: JSON.stringify({ key, value }),
         });
       }
-      setMessage('✓ Settings & Bank Details saved successfully!');
-      setTimeout(() => setMessage(null), 3500);
-    } catch (err) {
-      console.error('Failed to save settings:', err);
-      setMessage('⚠️ Error saving settings.');
+      setMessage('✅ All Settings, Banners & Display preferences successfully updated!');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } catch (e) {
+      setMessage('❌ Error saving settings. Please try again.');
     } finally {
       setSaving(false);
     }
@@ -92,77 +324,579 @@ export default function AdminSettings() {
     return <div style={{ padding: '40px', textAlign: 'center', color: '#1a5c4a', fontWeight: 600 }}>Loading Settings...</div>;
   }
 
-  const labelStyle = { display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', fontWeight: 600, color: '#555', marginBottom: '8px' };
-  const inputStyle = { width: '100%', padding: '12px', border: '1px solid #e8e6e1', borderRadius: '6px', outline: 'none' };
+  const inputStyle = {
+    width: '100%',
+    padding: '10px 14px',
+    border: '1px solid #d1d5db',
+    borderRadius: '4px',
+    fontSize: '14px',
+    outline: 'none',
+    boxSizing: 'border-box' as const,
+  };
+
+  const labelStyle = {
+    display: 'block',
+    fontSize: '12px',
+    fontWeight: 600,
+    color: '#374151',
+    marginBottom: '6px',
+    textTransform: 'uppercase' as const,
+    letterSpacing: '0.5px',
+  };
+
+  
+  const journeySlots = [
+    { num: 1, title: 'Slot 1: Mine Sourcing', badge: 'Raw Minerals', defaultDesc: 'Direct extraction of raw crystals at Swat/Karakoram mines' },
+    { num: 2, title: 'Slot 2: Quality Inspection', badge: 'Gemology Lab', defaultDesc: 'Jeweler torch and loupe optical purity examination' },
+    { num: 3, title: 'Slot 3: Luxury Packaging', badge: 'Global Delivery', defaultDesc: 'Velvet gift box, wax seal stamp, and DHL Express shipping' },
+    { num: 4, title: 'Slot 4: Lapidary Faceting', badge: 'Master Artistry', defaultDesc: 'Precision diamond-wheel cutting and polishing' },
+    { num: 5, title: 'Slot 5: Mountain Expedition', badge: 'Field Geology', defaultDesc: 'Rugged Karakoram peak prospecting and specimen discoveries' },
+    { num: 6, title: 'Slot 6: Sunlight Lustre', badge: 'Fire & Brilliance', defaultDesc: 'Natural sunlight test showing optical fire and color saturation' },
+  ];
+
+  const bannerSlots = [
+    { 
+      num: 1, 
+      label: 'Cover Slide 1', 
+      titleKey: 'hero_title_1', 
+      tagKey: 'hero_tag_1', 
+      descKey: 'hero_desc_1', 
+      ctaKey: 'hero_cta_1', 
+      linkKey: 'hero_link_1', 
+      showTextKey: 'hero_show_text_1',
+      fitKey: 'hero_fit_1',
+      defaultTitle: 'Polished Stones - Nature\'s Art, Perfected' 
+    },
+    { 
+      num: 2, 
+      label: 'Cover Slide 2', 
+      titleKey: 'hero_title_2', 
+      tagKey: 'hero_tag_2', 
+      descKey: 'hero_desc_2', 
+      ctaKey: 'hero_cta_2', 
+      linkKey: 'hero_link_2', 
+      showTextKey: 'hero_show_text_2',
+      fitKey: 'hero_fit_2',
+      defaultTitle: 'Natural Loose Gemstones - Rare & Certified' 
+    },
+    { 
+      num: 3, 
+      label: 'Cover Slide 3', 
+      titleKey: 'hero_title_3', 
+      tagKey: 'hero_tag_3', 
+      descKey: 'hero_desc_3', 
+      ctaKey: 'hero_cta_3', 
+      linkKey: 'hero_link_3', 
+      showTextKey: 'hero_show_text_3',
+      fitKey: 'hero_fit_3',
+      defaultTitle: 'Minerals & Crystals - Sourced from the Earth' 
+    },
+  ];
 
   return (
     <>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-        <h2 style={{ margin: 0, fontSize: '28px', color: '#333', fontFamily: "'Cormorant Garamond', serif" }}>Store Settings</h2>
+        <div>
+          <h1 style={{ fontFamily: 'Playfair Display, serif', fontSize: '28px', color: '#1a5c4a', margin: '0 0 6px' }}>
+            Store Settings & Cover Banners
+          </h1>
+          <p style={{ margin: 0, color: '#666', fontSize: '14px' }}>
+            Manage hero banners, image auto-optimization, display options, brand identity, and social channels.
+          </p>
+        </div>
       </div>
 
-      <div style={{ background: '#fff', borderRadius: '12px', border: '1px solid #e8e6e1', padding: '30px', boxShadow: '0 2px 10px rgba(0,0,0,0.02)', maxWidth: '850px' }}>
-        {message && (
-          <div style={{ background: message.startsWith('✓') ? '#d4edda' : '#fdf2f2', color: message.startsWith('✓') ? '#155724' : '#c94438', padding: '16px', borderRadius: '6px', fontSize: '14px', marginBottom: '24px', fontWeight: 500 }}>
-            {message}
-          </div>
-        )}
+      {message && (
+        <div style={{ padding: '14px 20px', borderRadius: '4px', marginBottom: '24px', background: message.startsWith('✅') ? '#e6f4ea' : '#fce8e6', color: message.startsWith('✅') ? '#137333' : '#c5221f', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '8px' }}>
+          {message}
+        </div>
+      )}
 
-        <form onSubmit={handleSubmit} style={{ display: 'grid', gap: '32px' }}>
+      <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: '8px', padding: '32px' }}>
+        <form onSubmit={handleSubmit} style={{ display: 'grid', gap: '40px' }}>
+
+          {/* SECTION 0: Hero Cover Banners CMS */}
+          <div style={{ background: '#f8fafc', padding: '24px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderBottom: '1px solid #e2e8f0', paddingBottom: '12px', marginBottom: '20px' }}>
+              <div>
+                <h3 style={{ fontSize: '18px', color: '#0f5c53', margin: '0 0 4px', display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 700 }}>
+                  <ImageIcon size={20} color="#0f5c53" /> Home Page Hero Cover Banners (3 Slides)
+                </h3>
+                <p style={{ fontSize: '13px', color: '#64748b', margin: 0 }}>
+                  <strong>Auto-Optimization Policy:</strong> Every photo is preserved in 100% completeness (no edges cut off), compressed to WebP under 200KB, with natural crystal-clear colors (zero dark green tint).
+                </p>
+              </div>
+              <a 
+                href="/" 
+                target="_blank" 
+                rel="noreferrer"
+                style={{ fontSize: '12px', color: '#0f5c53', display: 'flex', alignItems: 'center', gap: '4px', textDecoration: 'none', fontWeight: 600, background: '#e6f4ea', padding: '6px 12px', borderRadius: '4px' }}
+              >
+                View Live Home Page <ExternalLink size={12} />
+              </a>
+            </div>
+
+            <div style={{ display: 'grid', gap: '24px' }}>
+              {bannerSlots.map((slot) => {
+                const bannerKey = `hero_banner_${slot.num}`;
+                const currentUrl = settings[bannerKey] || '';
+                const isUploading = uploadingSlot === slot.num;
+                const feedback = uploadFeedback[bannerKey];
+                const isExpanded = expandedTextSlot === slot.num;
+                const showText = settings[slot.showTextKey] !== 'false';
+                const fitMode = settings[slot.fitKey] || 'cover';
+
+                return (
+                  <div key={slot.num} style={{ background: '#fff', border: '1px solid #cbd5e1', borderRadius: '8px', padding: '20px', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        <span style={{ background: '#0f5c53', color: '#fff', fontSize: '12px', fontWeight: 700, padding: '3px 10px', borderRadius: '12px' }}>
+                          Slide {slot.num}
+                        </span>
+                        <strong style={{ fontSize: '15px', color: '#1e293b' }}>
+                          {showText ? (settings[slot.titleKey] || slot.defaultTitle) : '(Clean Image Only - No Text)'}
+                        </strong>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => handleResetToDefault(slot.num)}
+                        style={{ fontSize: '11px', color: '#64748b', background: '#f1f5f9', border: 'none', padding: '4px 10px', borderRadius: '4px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}
+                        title="Revert back to original mineral image"
+                      >
+                        <RotateCcw size={12} /> Reset to Default
+                      </button>
+                    </div>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: '260px 1fr', gap: '20px', alignItems: 'start' }}>
+                      {/* Live Image Preview */}
+                      <div>
+                        <div style={{ 
+                          width: '100%', 
+                          height: '120px', 
+                          borderRadius: '6px', 
+                          overflow: 'hidden', 
+                          border: '1px solid #e2e8f0', 
+                          background: '#0a1a17',
+                          position: 'relative',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center'
+                        }}>
+                          {currentUrl ? (
+                            <img 
+                              src={currentUrl} 
+                              alt={`Slide ${slot.num} preview`}
+                              style={{ width: '100%', height: '100%', objectFit: fitMode === 'contain' ? 'contain' : 'cover' }}
+                            />
+                          ) : (
+                            <div style={{ color: '#94a3b8', fontSize: '12px' }}>No Image Set</div>
+                          )}
+                          <div style={{ position: 'absolute', bottom: '4px', right: '4px', background: 'rgba(0,0,0,0.7)', color: '#fff', fontSize: '10px', padding: '2px 6px', borderRadius: '3px' }}>
+                            {fitMode.toUpperCase()}
+                          </div>
+                        </div>
+
+                        {/* Fit Mode Selector */}
+                        <div style={{ marginTop: '8px', display: 'flex', gap: '6px' }}>
+                          <button
+                            type="button"
+                            onClick={() => handleFitModeChange(slot.num, 'cover')}
+                            style={{
+                              flex: 1,
+                              padding: '5px 8px',
+                              fontSize: '11px',
+                              fontWeight: 600,
+                              borderRadius: '4px',
+                              cursor: 'pointer',
+                              border: fitMode === 'cover' ? '1px solid #0f5c53' : '1px solid #cbd5e1',
+                              background: fitMode === 'cover' ? '#e6f4ea' : '#f8fafc',
+                              color: fitMode === 'cover' ? '#0f5c53' : '#64748b',
+                            }}
+                          >
+                            Full Width
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleFitModeChange(slot.num, 'contain')}
+                            style={{
+                              flex: 1,
+                              padding: '5px 8px',
+                              fontSize: '11px',
+                              fontWeight: 600,
+                              borderRadius: '4px',
+                              cursor: 'pointer',
+                              border: fitMode === 'contain' ? '1px solid #0f5c53' : '1px solid #cbd5e1',
+                              background: fitMode === 'contain' ? '#e6f4ea' : '#f8fafc',
+                              color: fitMode === 'contain' ? '#0f5c53' : '#64748b',
+                            }}
+                          >
+                            Fit No-Crop
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Controls */}
+                      <div>
+                        <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
+                          <label 
+                            style={{ 
+                              display: 'inline-flex', 
+                              alignItems: 'center', 
+                              gap: '8px', 
+                              padding: '9px 18px', 
+                              background: isUploading ? '#cbd5e1' : '#0f5c53', 
+                              color: '#fff', 
+                              borderRadius: '6px', 
+                              cursor: isUploading ? 'not-allowed' : 'pointer', 
+                              fontSize: '13px', 
+                              fontWeight: 600,
+                              boxShadow: '0 2px 4px rgba(15,92,83,0.2)'
+                            }}
+                          >
+                            {isUploading ? <Loader2 size={16} className="animate-spin" /> : <Upload size={16} />}
+                            {isUploading ? 'Optimizing & Saving...' : 'Upload New Cover Photo'}
+                            <input 
+                              type="file" 
+                              accept="image/*" 
+                              disabled={isUploading}
+                              onChange={(e) => handleBannerUpload(slot.num, e)} 
+                              style={{ display: 'none' }} 
+                            />
+                          </label>
+
+                          {/* Toggle to show/hide text on this slide */}
+                          <button
+                            type="button"
+                            onClick={() => handleToggleShowText(slot.num)}
+                            style={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '6px',
+                              padding: '9px 14px',
+                              background: showText ? '#f1f5f9' : '#fee2e2',
+                              color: showText ? '#334155' : '#b91c1c',
+                              border: '1px solid #cbd5e1',
+                              borderRadius: '6px',
+                              cursor: 'pointer',
+                              fontSize: '12px',
+                              fontWeight: 600
+                            }}
+                            title={showText ? 'Hide website text on this slide' : 'Show website text on this slide'}
+                          >
+                            {showText ? <Eye size={14} /> : <EyeOff size={14} />}
+                            {showText ? 'Text Enabled' : 'Text Hidden (Clean Image)'}
+                          </button>
+
+                          {showText && (
+                            <button
+                              type="button"
+                              onClick={() => setExpandedTextSlot(isExpanded ? null : slot.num)}
+                              style={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '6px',
+                                padding: '9px 14px',
+                                background: '#f8fafc',
+                                color: '#475569',
+                                border: '1px solid #cbd5e1',
+                                borderRadius: '6px',
+                                cursor: 'pointer',
+                                fontSize: '12px',
+                                fontWeight: 500
+                              }}
+                            >
+                              <Sparkles size={14} color="#0f5c53" />
+                              Customize Text & CTA
+                              {isExpanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                            </button>
+                          )}
+                        </div>
+
+                        {feedback && (
+                          <div style={{ 
+                            fontSize: '12px', 
+                            marginTop: '10px', 
+                            color: feedback.startsWith('✓') ? '#137333' : '#b91c1c', 
+                            background: feedback.startsWith('✓') ? '#e6f4ea' : '#fee2e2',
+                            padding: '6px 12px',
+                            borderRadius: '4px',
+                            fontWeight: 600, 
+                            display: 'inline-flex', 
+                            alignItems: 'center', 
+                            gap: '6px' 
+                          }}>
+                            {feedback.startsWith('✓') && <CheckCircle2 size={15} />}
+                            {feedback}
+                          </div>
+                        )}
+
+                        <div style={{ marginTop: '8px' }}>
+                          <input 
+                            name={bannerKey}
+                            type="text"
+                            value={currentUrl}
+                            onChange={handleChange}
+                            style={{ ...inputStyle, fontSize: '12px', color: '#64748b', background: '#f8fafc', padding: '6px 10px' }}
+                            placeholder="Or paste direct image URL (e.g. https://... or /uploads/...)"
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Expandable Slide Text Customizer */}
+                    {isExpanded && showText && (
+                      <div style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px dashed #e2e8f0', background: '#f8fafc', padding: '16px', borderRadius: '6px' }}>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '14px', marginBottom: '12px' }}>
+                          <div>
+                            <label style={labelStyle}>Badge / Tag</label>
+                            <input 
+                              name={slot.tagKey}
+                              type="text"
+                              value={settings[slot.tagKey] || ''}
+                              onChange={handleChange}
+                              style={inputStyle}
+                              placeholder="e.g. ✨ Featured Collection"
+                            />
+                          </div>
+                          <div>
+                            <label style={labelStyle}>Headline (Use " - " to accent second half)</label>
+                            <input 
+                              name={slot.titleKey}
+                              type="text"
+                              value={settings[slot.titleKey] || ''}
+                              onChange={handleChange}
+                              style={inputStyle}
+                              placeholder="e.g. Polished Stones - Nature's Art, Perfected"
+                            />
+                          </div>
+                        </div>
+
+                        <div style={{ marginBottom: '12px' }}>
+                          <label style={labelStyle}>Slide Description / Subtitle</label>
+                          <textarea 
+                            name={slot.descKey}
+                            rows={2}
+                            value={settings[slot.descKey] || ''}
+                            onChange={handleChange}
+                            style={{ ...inputStyle, resize: 'vertical' }}
+                            placeholder="Brief description of the collection..."
+                          />
+                        </div>
+
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '14px' }}>
+                          <div>
+                            <label style={labelStyle}>Button Text</label>
+                            <input 
+                              name={slot.ctaKey}
+                              type="text"
+                              value={settings[slot.ctaKey] || ''}
+                              onChange={handleChange}
+                              style={inputStyle}
+                              placeholder="e.g. Shop Now"
+                            />
+                          </div>
+                          <div>
+                            <label style={labelStyle}>Button Target URL / Section</label>
+                            <input 
+                              name={slot.linkKey}
+                              type="text"
+                              value={settings[slot.linkKey] || ''}
+                              onChange={handleChange}
+                              style={inputStyle}
+                              placeholder="e.g. #products or /categories/loose-gems"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
           
-          {/* SECTION 1: Pakistani Bank & Payment Methods */}
+          {/* SECTION 2: Follow Our Journey (Social Showcase & Instagram Gallery) */}
           <div>
-            <h3 style={{ fontSize: '16px', color: '#1a5c4a', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '20px', borderBottom: '1px solid #eee', paddingBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <Building size={18} /> Pakistani Admin Bank & Direct Payment Accounts
-            </h3>
-            <p style={{ fontSize: '13px', color: '#777', margin: '0 0 18px' }}>
-              These account details will be shown to customers on checkout when they select <strong>Direct Bank Transfer / Raast / EasyPaisa</strong>.
-            </p>
-
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid #eee', paddingBottom: '10px', marginBottom: '20px' }}>
               <div>
-                <label style={labelStyle}>Bank Name</label>
-                <input name="bankName" type="text" value={settings.bankName} onChange={handleChange} style={inputStyle} placeholder="e.g. Meezan Bank / HBL / Bank Alfalah" />
-              </div>
-              <div>
-                <label style={labelStyle}>Account Title (Beneficiary Name)</label>
-                <input name="accountTitle" type="text" value={settings.accountTitle} onChange={handleChange} style={inputStyle} placeholder="e.g. Zaheer Abbas / Minerals Universe" />
+                <h3 style={{ fontSize: '17px', color: '#1a5c4a', textTransform: 'uppercase', letterSpacing: '1px', margin: '0 0 4px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <Camera size={20} /> Follow Our Journey — Social Showcase Gallery (6 Slots)
+                </h3>
+                <p style={{ margin: 0, fontSize: '13px', color: '#666' }}>
+                  These 6 high-resolution photographs appear directly in the &ldquo;Follow Our Journey&rdquo; section on the storefront homepage. Each image builds international collector confidence by highlighting authentic mine sourcing, gem inspection, packaging, and cutting artistry.
+                </p>
               </div>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
-              <div>
-                <label style={labelStyle}>Account Number</label>
-                <input name="accountNumber" type="text" value={settings.accountNumber} onChange={handleChange} style={inputStyle} placeholder="e.g. 01020304050607" />
-              </div>
-              <div>
-                <label style={labelStyle}>IBAN (International Bank Account No.)</label>
-                <input name="iban" type="text" value={settings.iban} onChange={handleChange} style={inputStyle} placeholder="e.g. PK36MEZN0001020304050607" />
-              </div>
-            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: '20px' }}>
+              {journeySlots.map((slot) => {
+                const imgKey = `journey_img_${slot.num}`;
+                const capKey = `journey_caption_${slot.num}`;
+                const linkKey = `journey_link_${slot.num}`;
+                const currentImg = settings[imgKey] || FACTORY_DEFAULTS[imgKey];
+                const currentCaption = settings[capKey] || FACTORY_DEFAULTS[capKey] || '';
+                const currentLink = settings[linkKey] || FACTORY_DEFAULTS[linkKey] || '';
+                const isUploading = uploadingJourneySlot === slot.num;
+                const feedback = journeyFeedback[imgKey];
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px', marginBottom: '16px' }}>
-              <div>
-                <label style={labelStyle}><ShieldCheck size={16} color="#1a5c4a" /> Raast ID</label>
-                <input name="raastId" type="text" value={settings.raastId} onChange={handleChange} style={inputStyle} placeholder="e.g. 03001234567" />
-              </div>
-              <div>
-                <label style={labelStyle}>EasyPaisa Account</label>
-                <input name="easyPaisaNumber" type="text" value={settings.easyPaisaNumber} onChange={handleChange} style={inputStyle} placeholder="e.g. 03001234567" />
-              </div>
-              <div>
-                <label style={labelStyle}>JazzCash Account</label>
-                <input name="jazzCashNumber" type="text" value={settings.jazzCashNumber} onChange={handleChange} style={inputStyle} placeholder="e.g. 03001234567" />
-              </div>
-            </div>
+                return (
+                  <div 
+                    key={slot.num}
+                    style={{ 
+                      background: '#fafbfc', 
+                      border: '1px solid #e2e8f0', 
+                      borderRadius: '10px', 
+                      padding: '18px', 
+                      display: 'flex', 
+                      flexDirection: 'column', 
+                      gap: '14px',
+                      boxShadow: '0 1px 3px rgba(0,0,0,0.03)'
+                    }}
+                  >
+                    {/* Header */}
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <span style={{ fontWeight: 700, fontSize: '14px', color: '#0f5c53' }}>{slot.title}</span>
+                        <span style={{ fontSize: '11px', background: '#e6f4ea', color: '#137333', padding: '2px 8px', borderRadius: '12px', fontWeight: 600 }}>
+                          {slot.badge}
+                        </span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => handleResetJourneyToDefault(slot.num)}
+                        style={{
+                          background: 'none',
+                          border: 'none',
+                          color: '#6b7280',
+                          fontSize: '11px',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '3px',
+                          textDecoration: 'underline'
+                        }}
+                        title="Reset this slot to original high-res photo"
+                      >
+                        <RotateCcw size={11} /> Reset
+                      </button>
+                    </div>
 
-            <div>
-              <label style={labelStyle}>Payment Instructions for Customers</label>
-              <textarea name="paymentInstructions" rows={3} value={settings.paymentInstructions} onChange={handleChange} style={{ ...inputStyle, resize: 'vertical' }} placeholder="Instructions on how customer should transfer and share receipt..." />
+                    {/* Image Preview & Upload Controls */}
+                    <div style={{ display: 'flex', gap: '14px', alignItems: 'flex-start' }}>
+                      <div style={{
+                        width: '100px',
+                        height: '100px',
+                        borderRadius: '8px',
+                        overflow: 'hidden',
+                        flexShrink: 0,
+                        border: '2px solid #0f5c53',
+                        background: '#092e25',
+                        position: 'relative',
+                        boxShadow: '0 3px 8px rgba(0,0,0,0.1)'
+                      }}>
+                        {currentImg ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img 
+                            src={currentImg} 
+                            alt={currentCaption || `Slot ${slot.num}`}
+                            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                          />
+                        ) : (
+                          <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#999' }}>
+                            <ImageIcon size={24} />
+                          </div>
+                        )}
+                      </div>
+
+                      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                        <label 
+                          style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: '6px',
+                            background: isUploading ? '#94a3b8' : '#0f5c53',
+                            color: '#fff',
+                            padding: '8px 14px',
+                            borderRadius: '6px',
+                            fontSize: '12px',
+                            fontWeight: 600,
+                            cursor: isUploading ? 'not-allowed' : 'pointer',
+                            transition: 'background 0.2s',
+                            textAlign: 'center'
+                          }}
+                        >
+                          <Upload size={14} /> {isUploading ? 'Uploading...' : 'Upload New Photo'}
+                          <input 
+                            type="file" 
+                            accept="image/*" 
+                            disabled={isUploading}
+                            onChange={(e) => handleJourneyUpload(slot.num, e)}
+                            style={{ display: 'none' }} 
+                          />
+                        </label>
+                        <p style={{ margin: 0, fontSize: '11px', color: '#64748b', lineHeight: 1.3 }}>
+                          Square (1:1) or 4:5 vertical recommended. PNG, JPG, or WEBP.
+                        </p>
+                        {feedback && (
+                          <div style={{
+                            fontSize: '11px',
+                            color: feedback.startsWith('✓') ? '#047857' : '#b91c1c',
+                            fontWeight: 600
+                          }}>
+                            {feedback}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Direct Image Path / URL */}
+                    <div>
+                      <label style={labelStyle}>Image File Path or CDN URL</label>
+                      <input 
+                        type="text"
+                        name={imgKey}
+                        value={settings[imgKey] ?? FACTORY_DEFAULTS[imgKey] ?? ''}
+                        onChange={handleChange}
+                        placeholder="e.g. /images/journey/... or https://..."
+                        style={{ ...inputStyle, fontSize: '12px', padding: '8px 10px' }}
+                      />
+                    </div>
+
+                    {/* Display Caption */}
+                    <div>
+                      <label style={labelStyle}>Hover Caption (Storefront Title)</label>
+                      <input 
+                        type="text"
+                        name={capKey}
+                        value={settings[capKey] ?? FACTORY_DEFAULTS[capKey] ?? ''}
+                        onChange={handleChange}
+                        placeholder="e.g. ✦ Direct Mine Sourcing — Raw Swat Emeralds"
+                        style={{ ...inputStyle, fontSize: '13px', padding: '8px 10px' }}
+                      />
+                    </div>
+
+                    {/* Target Link */}
+                    <div>
+                      <label style={labelStyle}>Click Target URL (Instagram Post, Reel, or Store Link)</label>
+                      <input 
+                        type="url"
+                        name={linkKey}
+                        value={settings[linkKey] ?? FACTORY_DEFAULTS[linkKey] ?? ''}
+                        onChange={handleChange}
+                        placeholder="e.g. https://www.instagram.com/p/... or /shop"
+                        style={{ ...inputStyle, fontSize: '12px', padding: '8px 10px' }}
+                      />
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </div>
 
-          {/* SECTION 2: Social Networks & Contacts */}
+          {/* SECTION 3: Social Networks & Contacts */}
           <div>
             <h3 style={{ fontSize: '16px', color: '#1a5c4a', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '20px', borderBottom: '1px solid #eee', paddingBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
               <Settings size={18} /> Social Networks & Contacts
@@ -171,27 +905,27 @@ export default function AdminSettings() {
             <div style={{ display: 'grid', gap: '16px' }}>
               <div>
                 <label style={labelStyle}><FaInstagram size={16} color="#E1306C" /> Instagram Page URL</label>
-                <input name="instagramUrl" type="url" value={settings.instagramUrl} onChange={handleChange} style={inputStyle} placeholder="e.g. https://www.instagram.com/yourusername" />
+                <input name="instagramUrl" type="url" value={settings.instagramUrl || ''} onChange={handleChange} style={inputStyle} placeholder="e.g. https://www.instagram.com/yourusername" />
               </div>
 
               <div>
                 <label style={labelStyle}><FaTiktok size={16} color="#000000" /> TikTok Profile URL</label>
-                <input name="tiktokUrl" type="url" value={settings.tiktokUrl} onChange={handleChange} style={inputStyle} placeholder="e.g. https://www.tiktok.com/@yourusername" />
+                <input name="tiktokUrl" type="url" value={settings.tiktokUrl || ''} onChange={handleChange} style={inputStyle} placeholder="e.g. https://www.tiktok.com/@yourusername" />
               </div>
 
               <div>
                 <label style={labelStyle}><FaYoutube size={16} color="#FF0000" /> YouTube Channel URL</label>
-                <input name="youtubeUrl" type="url" value={settings.youtubeUrl} onChange={handleChange} style={inputStyle} placeholder="e.g. https://www.youtube.com/@yourchannel" />
+                <input name="youtubeUrl" type="url" value={settings.youtubeUrl || ''} onChange={handleChange} style={inputStyle} placeholder="e.g. https://www.youtube.com/@yourchannel" />
               </div>
 
               <div>
                 <label style={labelStyle}><FaEbay size={18} color="#333333" /> eBay Store URL</label>
-                <input name="ebayUrl" type="url" value={settings.ebayUrl} onChange={handleChange} style={inputStyle} placeholder="e.g. https://www.ebay.com/usr/yourstore" />
+                <input name="ebayUrl" type="url" value={settings.ebayUrl || ''} onChange={handleChange} style={inputStyle} placeholder="e.g. https://www.ebay.com/usr/yourstore" />
               </div>
 
               <div>
                 <label style={labelStyle}><FaWhatsapp size={16} color="#25D366" /> WhatsApp Contact Number (With Country Code)</label>
-                <input name="whatsappNumber" type="text" value={settings.whatsappNumber} onChange={handleChange} style={inputStyle} placeholder="e.g. 923001581210" />
+                <input name="whatsappNumber" type="text" value={settings.whatsappNumber || ''} onChange={handleChange} style={inputStyle} placeholder="e.g. 923001581210" />
                 <p style={{ margin: '6px 0 0', fontSize: '11px', color: '#888' }}>Do not include "+" or spaces (e.g. 923001581210 for Pakistan number).</p>
               </div>
             </div>
@@ -202,10 +936,10 @@ export default function AdminSettings() {
               type="submit" 
               disabled={saving}
               style={{ 
-                padding: '14px 32px', 
-                background: '#1a5c4a', 
+                padding: '14px 36px', 
+                background: '#0f5c53', 
                 border: 'none', 
-                borderRadius: '4px', 
+                borderRadius: '6px', 
                 cursor: 'pointer', 
                 fontSize: '15px', 
                 fontWeight: 600, 
@@ -213,7 +947,8 @@ export default function AdminSettings() {
                 display: 'flex', 
                 alignItems: 'center', 
                 gap: '8px',
-                opacity: saving ? 0.7 : 1
+                opacity: saving ? 0.7 : 1,
+                boxShadow: '0 2px 6px rgba(15,92,83,0.3)'
               }}
             >
               <Save size={18} /> {saving ? 'Saving...' : 'Save All Settings'}
@@ -225,4 +960,3 @@ export default function AdminSettings() {
     </>
   );
 }
-

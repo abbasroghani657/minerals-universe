@@ -21,10 +21,7 @@ export async function GET(req: Request) {
       orderBy: { createdAt: 'desc' }
     });
 
-    if (reviews && reviews.length > 0) {
-      return NextResponse.json({ success: true, reviews });
-    }
-    return NextResponse.json({ success: true, reviews: DEFAULT_REVIEWS });
+    return NextResponse.json({ success: true, reviews });
   } catch (err: any) {
     console.warn('[GET /api/reviews] Database not ready, using fallback reviews:', err.message);
     return NextResponse.json({ success: true, reviews: DEFAULT_REVIEWS });

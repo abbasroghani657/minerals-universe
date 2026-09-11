@@ -14,19 +14,32 @@ export async function GET() {
       return NextResponse.json({ success: false, error: 'No email found' }, { status: 400 });
     }
 
+    const lowerEmail = email.toLowerCase().trim();
+    const adminEmails = [
+      'abbasroghani869@gmail.com',
+      'drtoolofficial@gmail.com',
+      process.env.ADMIN_EMAIL?.toLowerCase().trim()
+    ].filter(Boolean);
+
+    const isAdmin = adminEmails.includes(lowerEmail);
+
     // Lookup user in database
     let dbUser = await prisma.user.findUnique({
-      where: { email }
+      where: { email: lowerEmail }
     });
 
-    // If new user, create their database record with the default 'Customer' role
     if (!dbUser) {
       dbUser = await prisma.user.create({
         data: {
-          email,
-          name: `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'User',
-          role: 'Customer'
+          email: lowerEmail,
+          name: `${user.firstName || ''} ${user.lastName || ''}`.trim() || (isAdmin ? 'Zaheer Abbas' : 'User'),
+          role: isAdmin ? 'Admin' : 'Customer'
         }
+      });
+    } else if (isAdmin && dbUser.role !== 'Admin') {
+      dbUser = await prisma.user.update({
+        where: { email: lowerEmail },
+        data: { role: 'Admin' }
       });
     }
 
