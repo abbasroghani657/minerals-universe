@@ -833,3 +833,140 @@ html, body {
     gap: 6px !important;
   }
 }
+
+
+/* =========================================================
+   LUXURY MOBILE E-COMMERCE POLISH (APP DOCK & 2-COL CARDS)
+   ========================================================= */
+
+.mobile-bottom-bar {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .mobile-bottom-bar {
+    display: flex;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 62px;
+    background: rgba(255, 255, 255, 0.96);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-top: 1px solid rgba(0, 0, 0, 0.08);
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.05);
+    z-index: 900;
+    align-items: center;
+    justify-content: space-around;
+    padding: 0 4px;
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  .bottom-bar-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    background: none;
+    border: none;
+    padding: 6px 12px;
+    color: #666;
+    text-decoration: none;
+    font-size: 11px;
+    font-weight: 500;
+    font-family: 'DM Sans', sans-serif;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .bottom-bar-item:active {
+    transform: scale(0.92);
+  }
+
+  .bottom-bar-item.active,
+  .bottom-bar-item:hover {
+    color: #1a5c4a;
+  }
+
+  .bottom-bar-badge {
+    position: absolute;
+    top: -6px;
+    right: -10px;
+    color: #fff;
+    font-size: 10px;
+    font-weight: 700;
+    border-radius: 10px;
+    padding: 1px 5px;
+    min-width: 16px;
+    height: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+    border: 1.5px solid #fff;
+  }
+
+  /* Offset floating WhatsApp button on mobile so it doesn't overlap bottom bar */
+  .wa-float {
+    bottom: 74px !important;
+    right: 16px !important;
+    width: 48px !important;
+    height: 48px !important;
+    font-size: 22px !important;
+    z-index: 850 !important;
+  }
+
+  /* Padding at bottom of body on mobile to ensure content isn't covered by bottom bar */
+  body {
+    padding-bottom: 64px;
+  }
+
+  /* Mobile Product Card Polish */
+  .product-card .product-info {
+    padding: 12px 10px !important;
+  }
+  .product-card h3 {
+    font-size: 13.5px !important;
+    line-height: 1.3 !important;
+    min-height: 36px !important;
+    margin-bottom: 6px !important;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .product-card .price-sale {
+    font-size: 15px !important;
+  }
+  .product-card .price-row {
+    margin-bottom: 10px !important;
+    gap: 6px !important;
+  }
+  .product-card .add-btn {
+    padding: 9px 8px !important;
+    font-size: 12px !important;
+    border-radius: 6px !important;
+    letter-spacing: 0.2px !important;
+  }
+  .product-card .stars {
+    font-size: 11px !important;
+    margin-bottom: 6px !important;
+  }
+  .product-card .wishlist-btn {
+    width: 32px !important;
+    height: 32px !important;
+    top: 8px !important;
+    right: 8px !important;
+  }
+
+  /* Mobile Section Headings & Spacing */
+  section {
+    padding: 44px 14px !important;
+  }
+  .section-title {
+    font-size: 28px !important;
+  }
+}

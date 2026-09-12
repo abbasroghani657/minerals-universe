@@ -6,6 +6,7 @@ import Header from './Header';
 import Footer from './Footer';
 import CartSidebar from './CartSidebar';
 import AnnouncementBar from './AnnouncementBar';
+import MobileBottomBar from './MobileBottomBar';
 
 export default function GlobalUI({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -47,6 +48,9 @@ export default function GlobalUI({ children }: { children: React.ReactNode }) {
 
       {/* Cart Sidebar */}
       <CartSidebar />
+
+      {/* Mobile App-Style Bottom Navigation Dock */}
+      <MobileBottomBar />
     </>
   );
 }

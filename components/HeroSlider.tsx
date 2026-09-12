@@ -18,7 +18,7 @@ const SLIDE_DEFAULTS = [
     defaultDesc: 'Handpicked specimens from around the world, curated for collectors and connoisseurs',
     defaultCta: 'Shop Now',
     defaultHref: '#products',
-    defaultBg: 'https://images.unsplash.com/photo-1551868041-3bfcabc0a86c?w=1600&q=80',
+    defaultBg: '/images/hero/luxury-gemstones-collection.jpg',
   },
   {
     id: 2,
@@ -36,7 +36,7 @@ const SLIDE_DEFAULTS = [
     defaultDesc: 'Sapphires, Rubies, Tourmalines & more - directly sourced from premier mining regions',
     defaultCta: 'Explore Collection',
     defaultHref: '#categories',
-    defaultBg: 'https://images.unsplash.com/photo-1625750331870-624de6fd3452?w=1600&q=80',
+    defaultBg: '/images/hero/aquamarine-crystal-matrix.jpg',
   },
   {
     id: 3,
@@ -54,7 +54,7 @@ const SLIDE_DEFAULTS = [
     defaultDesc: "Authentic specimens for collectors and jewelers - from the world's finest geological formations",
     defaultCta: 'View All',
     defaultHref: '#categories',
-    defaultBg: 'https://images.unsplash.com/photo-1519608487953-e999c86e7455?w=1600&q=80',
+    defaultBg: '/images/hero/faceted-gems-spectrum.jpg',
   },
 ];
 
