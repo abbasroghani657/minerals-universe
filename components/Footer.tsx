@@ -10,18 +10,21 @@ export default function Footer() {
   };
 
   const infoLinks = [
-    { label: 'About Us', href: '/#about' },
-    { label: 'All Gemstones', href: '/shop' },
+    { label: 'About Our Heritage', href: '/#about' },
+    { label: 'Gemstone Catalog', href: '/shop' },
+    { label: 'Private Wishlist', href: '/wishlist' },
     { label: 'FAQ', href: '/#faq' },
     { label: 'Customer Reviews', href: '/#reviews' },
-    { label: 'Contact Us', href: '/#contact' },
+    { label: 'Contact & Showroom', href: '/#contact' },
   ];
 
   const supportLinks = [
-    { label: 'View Cart', href: '/cart' },
-    { label: 'Checkout', href: '/checkout' },
-    { label: 'Shop Catalog', href: '/shop' },
-    { label: 'Custom Order', href: '/#custom-order' },
+    { label: 'View Cart & Bag', href: '/cart' },
+    { label: 'Secure Checkout', href: '/checkout' },
+    { label: 'Shipping & Delivery', href: '/shipping-policy' },
+    { label: 'Returns & 30-Day Guarantee', href: '/returns-refunds' },
+    { label: 'Privacy & Security', href: '/privacy-policy' },
+    { label: 'Terms of Acquisition', href: '/terms' },
     { label: 'Admin Portal', href: '/admin' },
   ];
 
@@ -81,7 +84,20 @@ export default function Footer() {
             <span className="pay-badge">🏦 Bank Transfer</span>
           </div>
           <div className="footer-bottom">
-            <p className="footer-copy">Copyright © 2025 Minerals Universe — All Rights Reserved | Powered by Minerals Universe</p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <p className="footer-copy" style={{ margin: 0 }}>
+                Copyright © 2025 Minerals Universe — All Rights Reserved | Powered by Minerals Universe
+              </p>
+              <div style={{ display: 'flex', gap: '14px', fontSize: '12px', color: 'rgba(255,255,255,0.4)', flexWrap: 'wrap' }}>
+                <Link href="/shipping-policy" style={{ color: 'rgba(255,255,255,0.5)', textDecoration: 'none' }}>Shipping Policy</Link>
+                <span>•</span>
+                <Link href="/returns-refunds" style={{ color: 'rgba(255,255,255,0.5)', textDecoration: 'none' }}>Returns &amp; Refunds</Link>
+                <span>•</span>
+                <Link href="/privacy-policy" style={{ color: 'rgba(255,255,255,0.5)', textDecoration: 'none' }}>Privacy Policy</Link>
+                <span>•</span>
+                <Link href="/terms" style={{ color: 'rgba(255,255,255,0.5)', textDecoration: 'none' }}>Terms of Service</Link>
+              </div>
+            </div>
             <button className="back-top" onClick={scrollToTop} title="Back to top">↑</button>
           </div>
         </div>

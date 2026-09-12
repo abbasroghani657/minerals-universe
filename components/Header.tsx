@@ -93,9 +93,9 @@ export default function Header() {
                 <Link href="/category/afghanite">Afghanite</Link>
               </div>
             </div>
-            <div className="nav-item"><a href="#about">About Us</a></div>
-            <div className="nav-item"><a href="#faq">FAQ</a></div>
-            <div className="nav-item"><a href="#contact">Contact Us</a></div>
+            <div className="nav-item"><Link href="/#about">About Us</Link></div>
+            <div className="nav-item"><Link href="/#faq">FAQ</Link></div>
+            <div className="nav-item"><Link href="/#contact">Contact Us</Link></div>
           </nav>
           <div className="header-icons">
             {/* Mobile Hamburger Button */}
@@ -128,17 +128,17 @@ export default function Header() {
             >
               <Search size={20} style={{ display: 'block' }} />
             </button>
-            <button
+            <Link
+              href="/wishlist"
               title={`Wishlist (${wishlist.size})`}
               className="desktop-only-item"
-              onClick={() => scrollTo('products')}
-              style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '18px', color: wishlist.size > 0 ? '#c94438' : 'var(--muted)', transition: 'color .2s', position: 'relative' }}
+              style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '18px', color: wishlist.size > 0 ? '#c94438' : 'var(--muted)', transition: 'color .2s', position: 'relative', display: 'flex', alignItems: 'center' }}
             >
               <Heart size={20} fill={wishlist.size > 0 ? 'currentColor' : 'none'} style={{ display: 'block' }} />
               {wishlist.size > 0 && (
                 <span className="cart-badge" style={{ background: '#c94438' }}>{wishlist.size}</span>
               )}
-            </button>
+            </Link>
             <button
               title={`Cart (${cartCount})`}
               onClick={() => openCart()}

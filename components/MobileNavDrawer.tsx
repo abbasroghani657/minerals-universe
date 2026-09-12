@@ -254,6 +254,27 @@ export default function MobileNavDrawer({
             >
               Featured
             </button>
+            <button
+              onClick={() => handleLinkClick('/wishlist')}
+              style={{
+                flex: 1,
+                padding: '8px',
+                borderRadius: '6px',
+                border: '1px solid #f2d8d5',
+                background: wishlistCount > 0 ? '#fff0ee' : '#fff',
+                color: wishlistCount > 0 ? '#c94438' : '#666',
+                fontSize: '12.5px',
+                fontWeight: 600,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '4px'
+              }}
+            >
+              <Heart size={13} fill={wishlistCount > 0 ? '#c94438' : 'none'} color={wishlistCount > 0 ? '#c94438' : 'currentColor'} />
+              <span>Saved ({wishlistCount})</span>
+            </button>
           </div>
 
           {/* Categories Accordion */}
@@ -341,9 +362,12 @@ export default function MobileNavDrawer({
               Information
             </div>
             {[
-              { name: 'About Our Heritage', href: '#about' },
-              { name: 'Frequently Asked Questions', href: '#faq' },
-              { name: 'Contact & Showroom', href: '#contact' }
+              { name: 'Private Wishlist / Saved Gems', href: '/wishlist' },
+              { name: 'About Our Heritage', href: '/#about' },
+              { name: 'Shipping & Delivery Policy', href: '/shipping-policy' },
+              { name: '30-Day Returns & Authenticity', href: '/returns-refunds' },
+              { name: 'Frequently Asked Questions', href: '/#faq' },
+              { name: 'Contact & Showroom', href: '/#contact' }
             ].map(link => (
               <button
                 key={link.name}

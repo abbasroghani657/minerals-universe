@@ -27,6 +27,7 @@ export default function MobileBottomBar() {
 
   const isHome = pathname === '/';
   const isShop = pathname === '/shop' || pathname.startsWith('/category');
+  const isWishlist = pathname === '/wishlist';
 
   return (
     <>
@@ -63,28 +64,21 @@ export default function MobileBottomBar() {
           <span>Search</span>
         </button>
 
-        <button 
-          type="button"
-          onClick={() => {
-            if (isHome) {
-              document.getElementById('products')?.scrollIntoView({ behavior: 'smooth' });
-            } else {
-              router.push('/#products');
-            }
-          }} 
-          className="bottom-bar-item"
-          aria-label="Wishlist"
+        <Link 
+          href="/wishlist" 
+          className={`bottom-bar-item ${isWishlist ? 'active' : ''}`}
+          aria-label="Wishlist Saved Collection"
         >
           <div style={{ position: 'relative' }}>
-            <Heart size={20} strokeWidth={1.8} fill={wishlist.size > 0 ? '#c94438' : 'none'} color={wishlist.size > 0 ? '#c94438' : 'currentColor'} />
+            <Heart size={20} strokeWidth={isWishlist ? 2.4 : 1.8} fill={isWishlist || wishlist.size > 0 ? '#c94438' : 'none'} color={isWishlist || wishlist.size > 0 ? '#c94438' : 'currentColor'} />
             {wishlist.size > 0 && (
               <span className="bottom-bar-badge" style={{ background: '#c94438' }}>
                 {wishlist.size}
               </span>
             )}
           </div>
-          <span>Saved</span>
-        </button>
+          <span style={{ fontWeight: isWishlist ? 700 : 500, color: isWishlist ? '#1a5c4a' : 'inherit' }}>Saved</span>
+        </Link>
 
         <button 
           type="button"

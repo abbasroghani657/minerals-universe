@@ -11,7 +11,7 @@ import { CATEGORY_TREE, isPrimaryCategory, normalizeCategory, getProductBadge } 
 export default function CategoryPage({ params }: { params: Promise<{ name: string }> }) {
   const resolvedParams = use(params);
   const router = useRouter();
-  const { currency, exchangeRates } = useCart();
+  const { currency, exchangeRates, wishlist, toggleWishlist } = useCart();
   const [mounted, setMounted] = useState(false);
   const [selectedSubVariety, setSelectedSubVariety] = useState<string>('All');
 
@@ -151,6 +151,38 @@ export default function CategoryPage({ params }: { params: Promise<{ name: strin
             <div key={product.id} className="product-card" onClick={() => router.push('/product/' + product.id)}>
               <div style={{ position: 'relative', width: '100%', aspectRatio: '1/1' }}>
                 <Image src={product.img} alt={product.name} fill style={{ objectFit: 'cover' }} unoptimized />
+                <button
+                  type="button"
+                  className={`wishlist-btn${wishlist.has(product.id) ? ' active' : ''}`}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    toggleWishlist(product.id);
+                  }}
+                  title={wishlist.has(product.id) ? 'Remove from Saved' : 'Save to Wishlist'}
+                  aria-label="Toggle Wishlist"
+                  style={{
+                    position: 'absolute',
+                    top: '10px',
+                    right: '10px',
+                    width: '34px',
+                    height: '34px',
+                    borderRadius: '50%',
+                    background: 'rgba(255, 255, 255, 0.92)',
+                    backdropFilter: 'blur(4px)',
+                    border: '1px solid #e8e6e1',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    cursor: 'pointer',
+                    zIndex: 4,
+                    color: wishlist.has(product.id) ? '#c94438' : '#888',
+                    fontSize: '18px',
+                    transition: 'all 0.2s ease',
+                    boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+                  }}
+                >
+                  {wishlist.has(product.id) ? '♥' : '♡'}
+                </button>
                 {(() => {
                   const b = getProductBadge(product.badge);
                   return b ? (
