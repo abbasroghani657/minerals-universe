@@ -80,6 +80,46 @@ export const CATEGORY_TREE: Record<string, CategoryDefinition> = {
 export const MAIN_CATEGORY_NAMES = Object.keys(CATEGORY_TREE);
 
 /**
+ * Turns any name into a clean URL slug (e.g. "Lapis Lazuli" -> "lapis-lazuli", "Minerals & Crystals" -> "minerals-and-crystals")
+ */
+export function slugifyCategory(name: string): string {
+  return (name || '')
+    .toLowerCase()
+    .trim()
+    .replace(/&/g, 'and')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+}
+
+/**
+ * Resolves a URL slug to its proper display name using known taxonomy or clean title-casing
+ */
+export function deslugifyCategory(slug: string): string {
+  const norm = normalizeCategory(slug);
+
+  // Check main categories
+  for (const [mainName, def] of Object.entries(CATEGORY_TREE)) {
+    if (normalizeCategory(def.slug) === norm || normalizeCategory(mainName) === norm) {
+      return mainName;
+    }
+  }
+
+  // Check all known varieties
+  for (const def of Object.values(CATEGORY_TREE)) {
+    for (const v of def.varieties) {
+      if (normalizeCategory(v) === norm || slugifyCategory(v) === slug.toLowerCase()) {
+        return v;
+      }
+    }
+  }
+
+  // General fallback: replace hyphens with spaces and capitalize
+  return slug
+    .replace(/-/g, ' ')
+    .replace(/\b\w/g, c => c.toUpperCase());
+}
+
+/**
  * Returns all predefined gemstone varieties for a given main category
  */
 export function getVarietiesForMain(mainCat: string): string[] {
@@ -97,16 +137,16 @@ export function getVarietiesForMain(mainCat: string): string[] {
 export function inferMainCategory(variety: string): string {
   const normVar = (variety || '').toLowerCase().trim();
   for (const [mainCat, def] of Object.entries(CATEGORY_TREE)) {
-    if (def.varieties.some(v => v.toLowerCase().trim() === normVar)) {
+    if (def.varieties.some(v => v.toLowerCase().trim() === normVar || slugifyCategory(v) === slugifyCategory(normVar))) {
       return mainCat;
     }
   }
 
   // Heuristic fallbacks
-  if (normVar.includes('crystal') || normVar.includes('cluster') || normVar.includes('specimen') || normVar.includes('matrix') || normVar.includes('geode')) {
+  if (normVar.includes('crystal') || normVar.includes('cluster') || normVar.includes('specimen') || normVar.includes('matrix') || normVar.includes('geode') || normVar.includes('fluorite') || normVar.includes('quartz') || normVar.includes('pyrite')) {
     return 'Minerals & Crystals';
   }
-  if (normVar.includes('polished') || normVar.includes('carved') || normVar.includes('sphere') || normVar.includes('cabochon') || normVar.includes('lapis')) {
+  if (normVar.includes('polished') || normVar.includes('carved') || normVar.includes('sphere') || normVar.includes('cabochon') || normVar.includes('lapis') || normVar.includes('calcite') || normVar.includes('agate') || normVar.includes('jasper')) {
     return 'Polished Stones';
   }
   return 'Loose Gemstones';
@@ -128,7 +168,7 @@ export function normalizeCategory(str: string): string {
  */
 export function isPrimaryCategory(cat: string): boolean {
   const norm = normalizeCategory(cat);
-  return MAIN_CATEGORY_NAMES.some(m => normalizeCategory(m) === norm);
+  return MAIN_CATEGORY_NAMES.some(m => normalizeCategory(m) === norm || normalizeCategory(CATEGORY_TREE[m].slug) === norm);
 }
 
 export interface BadgeStyle {
