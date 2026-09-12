@@ -11,10 +11,15 @@ export default function Header() {
   const { cartCount, wishlist, currency, setCurrency, openCart } = useCart();
   const router = useRouter();
   const { isSignedIn, isLoaded } = useAuth();
+  const [mounted, setMounted] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const searchRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     if (searchOpen) searchRef.current?.focus();
@@ -130,64 +135,70 @@ export default function Header() {
             </button>
             <Link
               href="/wishlist"
-              title={`Wishlist (${wishlist.size})`}
+              title={`Wishlist (${mounted ? wishlist.size : 0})`}
               className="desktop-only-item"
-              style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '18px', color: wishlist.size > 0 ? '#c94438' : 'var(--muted)', transition: 'color .2s', position: 'relative', display: 'flex', alignItems: 'center' }}
+              style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '18px', color: (mounted && wishlist.size > 0) ? '#c94438' : 'var(--muted)', transition: 'color .2s', position: 'relative', display: 'flex', alignItems: 'center' }}
             >
-              <Heart size={20} fill={wishlist.size > 0 ? 'currentColor' : 'none'} style={{ display: 'block' }} />
-              {wishlist.size > 0 && (
+              <Heart size={20} fill={(mounted && wishlist.size > 0) ? 'currentColor' : 'none'} style={{ display: 'block' }} />
+              {mounted && wishlist.size > 0 && (
                 <span className="cart-badge" style={{ background: '#c94438' }}>{wishlist.size}</span>
               )}
             </Link>
             <button
-              title={`Cart (${cartCount})`}
+              title={`Cart (${mounted ? cartCount : 0})`}
               onClick={() => openCart()}
               style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '18px', color: 'var(--muted)', position: 'relative', transition: 'color .2s' }}
               onMouseEnter={e => (e.currentTarget.style.color = 'var(--teal)')}
               onMouseLeave={e => (e.currentTarget.style.color = 'var(--muted)')}
             >
               <ShoppingCart size={20} style={{ display: 'block' }} />
-              {cartCount > 0 && <span className="cart-badge">{cartCount}</span>}
+              {mounted && cartCount > 0 && <span className="cart-badge">{cartCount}</span>}
             </button>
             <div className="desktop-only-item" style={{ marginLeft: '12px', display: 'flex', alignItems: 'center', minWidth: '70px', justifyContent: 'center' }}>
-              <ClerkLoading>
+              {!mounted ? (
                 <div style={{ width: '26px', height: '26px', borderRadius: '50%', border: '2px solid rgba(26,127,116,.2)', borderTopColor: 'var(--teal)', animation: 'spin 1s linear infinite' }}></div>
-              </ClerkLoading>
-              <ClerkLoaded>
-                {!isSignedIn ? (
-                  <Link
-                    href="/sign-in"
-                    style={{
-                      fontSize: '13px',
-                      fontWeight: 600,
-                      color: 'var(--teal)',
-                      border: '1px solid var(--teal)',
-                      borderRadius: '4px',
-                      padding: '6px 12px',
-                      textDecoration: 'none',
-                      transition: 'all 0.2s',
-                    }}
-                  >
-                    Sign In
-                  </Link>
-                ) : (
-                  <UserButton />
-                )}
-              </ClerkLoaded>
+              ) : (
+                <>
+                  <ClerkLoading>
+                    <div style={{ width: '26px', height: '26px', borderRadius: '50%', border: '2px solid rgba(26,127,116,.2)', borderTopColor: 'var(--teal)', animation: 'spin 1s linear infinite' }}></div>
+                  </ClerkLoading>
+                  <ClerkLoaded>
+                    {!isSignedIn ? (
+                      <Link
+                        href="/sign-in"
+                        style={{
+                          fontSize: '13px',
+                          fontWeight: 600,
+                          color: 'var(--teal)',
+                          border: '1px solid var(--teal)',
+                          borderRadius: '4px',
+                          padding: '6px 12px',
+                          textDecoration: 'none',
+                          transition: 'all 0.2s',
+                        }}
+                      >
+                        Sign In
+                      </Link>
+                    ) : (
+                      <UserButton />
+                    )}
+                  </ClerkLoaded>
+                </>
+              )}
             </div>
           </div>
         </div>
       </header>
 
-            {/* Mobile Slide-Over Navigation Drawer */}
+      {/* Mobile Slide-Over Navigation Drawer */}
       <MobileNavDrawer
         isOpen={mobileMenuOpen}
         onClose={() => setMobileMenuOpen(false)}
-        cartCount={cartCount}
-        wishlistCount={wishlist.size}
+        cartCount={mounted ? cartCount : 0}
+        wishlistCount={mounted ? wishlist.size : 0}
         currency={currency}
         setCurrency={setCurrency}
-        isSignedIn={isSignedIn}
+        isSignedIn={mounted ? isSignedIn : false}
       />
 
       {/* Search Modal */}
@@ -205,7 +216,7 @@ export default function Header() {
             width: '100%', maxWidth: '600px', margin: '0 24px',
             boxShadow: '0 24px 64px rgba(15,92,83,.2)',
           }}>
-            <p style={{ color: 'var(--teal)', fontSize: '12px', letterSpacing: '2px', textTransform: 'uppercase', marginBottom: '16px' }}>✦ Search Products</p>
+            <p style={{ color: 'var(--teal)', fontSize: '12px', letterSpacing: '2px', textTransform: 'uppercase', marginBottom: '16px' }}>🔍 Search Products</p>
             <form onSubmit={handleSearch} style={{ display: 'flex', gap: '12px' }}>
               <input
                 ref={searchRef}

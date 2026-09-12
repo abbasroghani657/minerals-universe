@@ -80,6 +80,11 @@ export default function MobileNavDrawer({
   const router = useRouter();
   const [openSection, setOpenSection] = useState<string | null>(CATEGORIES[0].name);
   const [searchQuery, setSearchQuery] = useState('');
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Lock body scroll when drawer is open
   useEffect(() => {
@@ -449,7 +454,10 @@ export default function MobileNavDrawer({
 
           {/* Account Button */}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <ClerkLoaded>
+            {!mounted ? (
+              <div style={{ width: '100%', height: '40px', background: '#fff', border: '1px solid #1a5c4a', borderRadius: '6px' }}></div>
+            ) : (
+              <ClerkLoaded>
               {!isSignedIn ? (
                 <button
                   onClick={() => handleLinkClick('/sign-in')}
@@ -474,9 +482,11 @@ export default function MobileNavDrawer({
                 </div>
               )}
             </ClerkLoaded>
+            )}
           </div>
         </div>
       </div>
     </div>
   );
 }
+
