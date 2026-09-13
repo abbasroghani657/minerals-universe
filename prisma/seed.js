@@ -1,3 +1,5 @@
+require('dotenv').config({ path: '.env.local' });
+require('dotenv').config();
 const { PrismaClient } = require('@prisma/client');
 const { PrismaMariaDb } = require('@prisma/adapter-mariadb');
 
@@ -9,6 +11,8 @@ try {
   urlParsed = new URL('mysql://root:maaz@localhost:3306/abbasshoping');
 }
 
+const isTidbOrSsl = urlParsed.searchParams.get('sslaccept') || urlParsed.hostname.includes('tidbcloud');
+
 const adapter = new PrismaMariaDb({
   host: urlParsed.hostname || 'localhost',
   port: urlParsed.port ? Number(urlParsed.port) : 3306,
@@ -16,6 +20,7 @@ const adapter = new PrismaMariaDb({
   password: urlParsed.password ? decodeURIComponent(urlParsed.password) : '',
   database: urlParsed.pathname.replace(/^\//, '') || 'abbasshoping',
   connectionLimit: 5,
+  ssl: isTidbOrSsl ? { rejectUnauthorized: true } : undefined,
 });
 
 const prisma = new PrismaClient({ adapter });

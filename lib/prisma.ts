@@ -1,4 +1,4 @@
-﻿import { PrismaClient } from '@prisma/client';
+import { PrismaClient } from '@prisma/client';
 import { PrismaMariaDb } from '@prisma/adapter-mariadb';
 
 const globalForPrisma = globalThis as unknown as { prisma: PrismaClient };
@@ -13,6 +13,8 @@ try {
   urlParsed = new URL('mysql://root:maaz@localhost:3306/abbasshoping');
 }
 
+const isTidbOrSsl = urlParsed.searchParams.get('sslaccept') || urlParsed.hostname.includes('tidbcloud');
+
 const adapter = new PrismaMariaDb({
   host: urlParsed.hostname || 'localhost',
   port: urlParsed.port ? Number(urlParsed.port) : 3306,
@@ -20,6 +22,7 @@ const adapter = new PrismaMariaDb({
   password: urlParsed.password ? decodeURIComponent(urlParsed.password) : '',
   database: urlParsed.pathname.replace(/^\//, '') || 'abbasshoping',
   connectionLimit: 10,
+  ssl: isTidbOrSsl ? { rejectUnauthorized: true } : undefined,
 });
 
 function createClient(): PrismaClient {
