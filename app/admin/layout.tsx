@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -10,6 +10,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const pathname = usePathname();
   const { signOut } = useClerk();
   const [role, setRole] = useState<string | null>(null);
+  const [userEmail, setUserEmail] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -19,6 +20,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         const data = await res.json();
         if (data.success && data.role) {
           setRole(data.role);
+          if (data.email) setUserEmail(data.email);
+        } else if (data.email) {
+          setUserEmail(data.email);
         }
       } catch (err) {
         console.error('Error checking user role:', err);
@@ -32,7 +36,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   if (loading) {
     return (
       <div style={{ display: 'flex', minHeight: '100vh', alignItems: 'center', justifyContent: 'center', background: '#f8f7f5', color: '#1a5c4a', fontWeight: 600, fontFamily: "'DM Sans', sans-serif" }}>
-        Verifying permissions...
+        Verifying security clearance...
       </div>
     );
   }
@@ -40,15 +44,31 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   if (role !== 'Admin') {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', alignItems: 'center', justifyContent: 'center', background: '#f8f7f5', padding: '40px 20px', fontFamily: "'DM Sans', sans-serif", textAlign: 'center' }}>
-        <h2 style={{ color: '#c94438', fontFamily: "'Cormorant Garamond', serif", fontSize: '36px', margin: '0 0 16px' }}>Access Denied</h2>
-        <p style={{ color: '#666', fontSize: '16px', margin: '0 0 30px', maxWidth: '460px' }}>You do not have Administrator permissions to access the dashboard. Please log in with an admin account.</p>
-        <div style={{ display: 'flex', gap: '14px', flexWrap: 'wrap', justifyContent: 'center' }}>
-          <Link href="/sign-in?redirect_url=/admin" style={{ background: '#1a5c4a', color: '#fff', padding: '12px 24px', borderRadius: '4px', textDecoration: 'none', fontWeight: 600, fontSize: '15px' }}>
-            Sign In as Admin
-          </Link>
-          <Link href="/" style={{ background: '#fff', color: '#1a5c4a', border: '1px solid #1a5c4a', padding: '12px 24px', borderRadius: '4px', textDecoration: 'none', fontWeight: 600, fontSize: '15px' }}>
-            Back to Shop
-          </Link>
+        <div style={{ width: '100%', maxWidth: '440px', background: '#fff', border: '1px solid #e8e6e1', borderRadius: '12px', padding: '36px 28px', boxShadow: '0 8px 30px rgba(0, 0, 0, 0.06)' }}>
+          <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: '#fdf2f2', color: '#c94438', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px', fontSize: '22px' }}>
+            🔒
+          </div>
+          <h2 style={{ color: '#1a5c4a', fontFamily: "'Cormorant Garamond', serif", fontSize: '32px', margin: '0 0 10px' }}>Owner Authorization Required</h2>
+          
+          {userEmail ? (
+            <div style={{ background: '#f0f7f5', border: '1px solid #d4ede6', borderRadius: '6px', padding: '12px', margin: '14px 0 20px', fontSize: '13.5px', color: '#1a5c4a' }}>
+              Logged in as: <strong style={{ wordBreak: 'break-all' }}>{userEmail}</strong>
+              <div style={{ marginTop: '4px', fontSize: '12px', color: '#666' }}>This email does not have Admin privileges yet.</div>
+            </div>
+          ) : (
+            <p style={{ color: '#666', fontSize: '14.5px', margin: '0 0 24px', lineHeight: 1.5 }}>
+              This portal is restricted to authorized store managers. Please sign in with your Administrator account.
+            </p>
+          )}
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            <Link href="/sign-in?redirect_url=/admin" style={{ background: '#1a5c4a', color: '#fff', padding: '12px 20px', borderRadius: '6px', textDecoration: 'none', fontWeight: 600, fontSize: '14.5px', display: 'block' }}>
+              Sign In as Store Owner →
+            </Link>
+            <Link href="/" style={{ background: '#f8f7f5', color: '#666', border: '1px solid #e8e6e1', padding: '10px 20px', borderRadius: '6px', textDecoration: 'none', fontWeight: 500, fontSize: '13.5px', display: 'block' }}>
+              Return to Public Storefront
+            </Link>
+          </div>
         </div>
       </div>
     );

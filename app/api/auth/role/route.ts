@@ -15,13 +15,16 @@ export async function GET() {
     }
 
     const lowerEmail = email.toLowerCase().trim();
+    const allUserEmails = (user.emailAddresses || []).map(e => e.emailAddress.toLowerCase().trim());
+
     const adminEmails = [
       'abbasroghani869@gmail.com',
       'drtoolofficial@gmail.com',
+      '22pwbcs0904@uetpeshawar.edu.pk',
       process.env.ADMIN_EMAIL?.toLowerCase().trim()
     ].filter(Boolean);
 
-    const isAdmin = adminEmails.includes(lowerEmail);
+    const isAdmin = allUserEmails.some(e => adminEmails.includes(e));
 
     // Lookup user in database
     let dbUser = await prisma.user.findUnique({
@@ -43,9 +46,9 @@ export async function GET() {
       });
     }
 
-    return NextResponse.json({ success: true, role: dbUser.role });
+    return NextResponse.json({ success: true, role: dbUser.role, email: lowerEmail, loggedIn: true });
   } catch (err: any) {
     console.error('[GET /api/auth/role]', err);
-    return NextResponse.json({ success: false, error: err.message }, { status: 500 });
+    return NextResponse.json({ success: false, error: err.message, loggedIn: false }, { status: 500 });
   }
 }
