@@ -67,6 +67,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
     async function loadRates() {
       try {
         const res = await fetch('/api/rates');
+        if (!res.ok) return;
+        const cType = res.headers.get('content-type') || '';
+        if (!cType.includes('application/json')) return;
         const data = await res.json();
         if (data.success && data.rates) {
           setExchangeRates(data.rates);
@@ -236,4 +239,5 @@ export function CartProvider({ children }: { children: ReactNode }) {
 }
 
 export const useCart = () => useContext(CartContext);
+
 

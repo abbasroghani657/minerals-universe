@@ -72,6 +72,9 @@ export default function HeroSlider() {
     async function fetchBanners() {
       try {
         const res = await fetch('/api/settings');
+        if (!res.ok) return;
+        const cType = res.headers.get('content-type') || '';
+        if (!cType.includes('application/json')) return;
         const data = await res.json();
         if (data.success && data.settings) {
           setSettings(data.settings);
@@ -253,3 +256,4 @@ export default function HeroSlider() {
     </section>
   );
 }
+

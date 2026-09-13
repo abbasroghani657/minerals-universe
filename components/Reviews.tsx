@@ -31,6 +31,9 @@ export default function Reviews() {
     async function loadApprovedReviews() {
       try {
         const res = await fetch('/api/reviews?status=Approved');
+        if (!res.ok) return;
+        const cType = res.headers.get('content-type') || '';
+        if (!cType.includes('application/json')) return;
         const data = await res.json();
         if (data.success && data.reviews && data.reviews.length > 0) {
           // Format custom reviews to match the display schema
@@ -266,3 +269,4 @@ export default function Reviews() {
     </>
   );
 }
+

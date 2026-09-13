@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import Image from 'next/image';
 import { useState, useEffect } from 'react';
@@ -68,6 +68,9 @@ export default function Bundles() {
     async function loadLiveBundles() {
       try {
         const res = await fetch('/api/bundles');
+        if (!res.ok) return;
+        const cType = res.headers.get('content-type') || '';
+        if (!cType.includes('application/json')) return;
         const data = await res.json();
         if (data.success && Array.isArray(data.bundles) && data.bundles.length > 0) {
           setBundles(data.bundles);

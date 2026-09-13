@@ -14,6 +14,9 @@ export default function Products() {
     async function fetchHomeProducts() {
       try {
         const res = await fetch('/api/products');
+        if (!res.ok) return;
+        const cType = res.headers.get('content-type') || '';
+        if (!cType.includes('application/json')) return;
         const data = await res.json();
         if (data.success && data.products) {
           // Display newest 4 real products from database
@@ -272,3 +275,4 @@ export default function Products() {
     </>
   );
 }
+

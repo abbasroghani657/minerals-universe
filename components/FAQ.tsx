@@ -1,20 +1,24 @@
 'use client';
 import { useState, useEffect } from 'react';
+import { DEFAULT_FAQS } from '@/lib/defaultData';
 
 export default function FAQ() {
-  const [faqs, setFaqs] = useState<any[]>([]);
+  const [faqs, setFaqs] = useState<any[]>(DEFAULT_FAQS);
   const [openIndex, setOpenIndex] = useState<number | null>(null);
 
   useEffect(() => {
     async function loadFaqs() {
       try {
         const res = await fetch('/api/faqs');
+        if (!res.ok) return;
+        const cType = res.headers.get('content-type') || '';
+        if (!cType.includes('application/json')) return;
         const data = await res.json();
-        if (data.success && data.faqs) {
+        if (data.success && Array.isArray(data.faqs) && data.faqs.length > 0) {
           setFaqs(data.faqs);
         }
       } catch (err) {
-        console.error('Failed to load FAQs:', err);
+        console.warn('Using fallback FAQs:', err);
       }
     }
     loadFaqs();

@@ -15,6 +15,9 @@ export default function Categories() {
     async function loadCategories() {
       try {
         const res = await fetch('/api/products');
+        if (!res.ok) return;
+        const cType = res.headers.get('content-type') || '';
+        if (!cType.includes('application/json')) return;
         const data = await res.json();
         if (data.success && Array.isArray(data.products)) {
           setProducts(data.products);
@@ -266,3 +269,4 @@ export default function Categories() {
     </>
   );
 }
+
