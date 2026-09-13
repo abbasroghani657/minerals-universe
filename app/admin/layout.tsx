@@ -42,8 +42,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', alignItems: 'center', justifyContent: 'center', background: '#f8f7f5', padding: '40px 20px', fontFamily: "'DM Sans', sans-serif", textAlign: 'center' }}>
         <h2 style={{ color: '#c94438', fontFamily: "'Cormorant Garamond', serif", fontSize: '36px', margin: '0 0 16px' }}>Access Denied</h2>
         <p style={{ color: '#666', fontSize: '16px', margin: '0 0 30px', maxWidth: '460px' }}>You do not have Administrator permissions to access the dashboard. Please log in with an admin account.</p>
-        <div style={{ display: 'flex', gap: '16px' }}>
-          <Link href="/" style={{ background: '#1a5c4a', color: '#fff', padding: '12px 24px', borderRadius: '4px', textDecoration: 'none', fontWeight: 600, fontSize: '15px' }}>Back to Shop</Link>
+        <div style={{ display: 'flex', gap: '14px', flexWrap: 'wrap', justifyContent: 'center' }}>
+          <Link href="/sign-in?redirect_url=/admin" style={{ background: '#1a5c4a', color: '#fff', padding: '12px 24px', borderRadius: '4px', textDecoration: 'none', fontWeight: 600, fontSize: '15px' }}>
+            Sign In as Admin
+          </Link>
+          <Link href="/" style={{ background: '#fff', color: '#1a5c4a', border: '1px solid #1a5c4a', padding: '12px 24px', borderRadius: '4px', textDecoration: 'none', fontWeight: 600, fontSize: '15px' }}>
+            Back to Shop
+          </Link>
         </div>
       </div>
     );
