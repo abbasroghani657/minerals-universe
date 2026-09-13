@@ -119,7 +119,7 @@ export default function WishlistPage() {
   };
 
   return (
-    <div style={{ background: '#fbfaf8', minHeight: '100vh', padding: '120px 20px 80px', fontFamily: "'DM Sans', sans-serif", color: '#222' }}>
+    <div style={{ background: '#fbfaf8', minHeight: '100vh', padding: '28px 20px 60px', fontFamily: "'DM Sans', sans-serif", color: '#222' }}>
       <style dangerouslySetInnerHTML={{__html: `
         @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=DM+Sans:wght@400;500;600;700&display=swap');
         

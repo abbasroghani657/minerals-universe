@@ -71,7 +71,7 @@ export default function Categories() {
   return (
     <>
       <div className="teal-divider"></div>
-      <div id="categories" className="cat-section" style={{ background: '#f8f7f5', padding: '90px 20px' }}>
+      <div id="categories" className="cat-section" style={{ background: '#f8f7f5', padding: '60px 20px' }}>
         <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
           
           <div style={{ textAlign: 'center', marginBottom: '50px' }}>

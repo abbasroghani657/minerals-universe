@@ -52,7 +52,7 @@ export default function Products() {
 
   return (
     <>
-      <section id="products" style={{ background: 'var(--bg)', padding: '80px 24px' }}>
+      <section id="products" style={{ background: 'var(--bg)', padding: '60px 24px' }}>
         <div className="section-inner" style={{ maxWidth: '1300px', margin: '0 auto' }}>
           <div className="text-center" style={{ marginBottom: '44px' }}>
             <p style={{ color: 'var(--teal)', fontSize: '12px', letterSpacing: '3px', textTransform: 'uppercase', marginBottom: '8px', fontWeight: 600 }}>

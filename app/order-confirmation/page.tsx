@@ -49,7 +49,7 @@ export default function OrderConfirmationPage() {
 
   if (!isLoaded) {
     return (
-      <div style={{ padding: '140px 20px', textAlign: 'center', color: '#888', fontSize: '16px' }}>
+      <div style={{ padding: '36px 20px', textAlign: 'center', color: '#888', fontSize: '16px' }}>
         Loading order receipt…
       </div>
     );
@@ -57,7 +57,7 @@ export default function OrderConfirmationPage() {
 
   if (!order) {
     return (
-      <div style={{ background: '#f8f7f5', minHeight: '100vh', padding: '140px 20px 80px', textAlign: 'center', fontFamily: "'DM Sans', sans-serif" }}>
+      <div style={{ background: '#f8f7f5', minHeight: '100vh', padding: '36px 20px 60px', textAlign: 'center', fontFamily: "'DM Sans', sans-serif" }}>
         <div style={{ maxWidth: '520px', margin: '0 auto', background: '#fff', borderRadius: '12px', padding: '36px', boxShadow: '0 4px 24px rgba(0,0,0,0.06)' }}>
           <CheckCircle2 size={48} color="#1a5c4a" style={{ margin: '0 auto 16px' }} />
           <h2 style={{ fontSize: '22px', fontWeight: 700, margin: '0 0 10px', color: '#1a1a1a' }}>Order Successfully Received</h2>
@@ -76,7 +76,7 @@ export default function OrderConfirmationPage() {
   const displayTotal = order.totalUSD ? `$${order.totalUSD.toFixed(2)} USD` : `${sym}${order.total.toLocaleString()}`;
 
   return (
-    <div style={{ background: '#f8f7f5', minHeight: '100vh', padding: '110px 20px 80px', fontFamily: "'DM Sans', sans-serif" }}>
+    <div style={{ background: '#f8f7f5', minHeight: '100vh', padding: '36px 20px 60px', fontFamily: "'DM Sans', sans-serif" }}>
       <div style={{ maxWidth: '680px', margin: '0 auto' }}>
 
         {/* Success Header Card */}

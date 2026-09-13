@@ -159,7 +159,7 @@ export default function PremiumCheckoutPage() {
   };
 
   return (
-    <div style={{ background: '#f8f7f5', minHeight: '100vh', padding: '110px 20px 80px', fontFamily: "'DM Sans', sans-serif" }}>
+    <div style={{ background: '#f8f7f5', minHeight: '100vh', padding: '28px 20px 60px', fontFamily: "'DM Sans', sans-serif" }}>
       <style dangerouslySetInnerHTML={{ __html: `
         .heading-serif { font-family: 'Playfair Display', Georgia, serif; }
         .page-title {

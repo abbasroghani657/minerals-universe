@@ -151,7 +151,7 @@ function ShopContent() {
   };
 
   return (
-    <div style={{ background: '#f8f7f5', minHeight: '100vh', padding: '110px 20px 80px', fontFamily: "'DM Sans', sans-serif", color: '#333' }}>
+    <div style={{ background: '#f8f7f5', minHeight: '100vh', padding: '28px 20px 60px', fontFamily: "'DM Sans', sans-serif", color: '#333' }}>
       <style dangerouslySetInnerHTML={{__html: `
         @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=DM+Sans:wght@400;500;700&display=swap');
         .heading-serif { font-family: 'Cormorant Garamond', serif; }
@@ -473,7 +473,7 @@ function ShopContent() {
 
 export default function ShopPage() {
   return (
-    <Suspense fallback={<div style={{ padding: '120px 20px', textAlign: 'center', color: '#1a5c4a' }}>Loading shop catalog...</div>}>
+    <Suspense fallback={<div style={{ padding: '36px 20px', textAlign: 'center', color: '#1a5c4a' }}>Loading shop catalog...</div>}>
       <ShopContent />
     </Suspense>
   );

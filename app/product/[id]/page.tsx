@@ -67,7 +67,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
   const isWished = wishlist.has(product.id);
 
   return (
-    <div style={{ background: '#f8f7f5', minHeight: '100vh', padding: '110px 20px 60px', fontFamily: "'DM Sans', sans-serif", color: '#333' }}>
+    <div style={{ background: '#f8f7f5', minHeight: '100vh', padding: '28px 20px 60px', fontFamily: "'DM Sans', sans-serif", color: '#333' }}>
       <style dangerouslySetInnerHTML={{__html: `
         @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=DM+Sans:wght@400;500;700&display=swap');
         .heading-serif { font-family: 'Cormorant Garamond', serif; }
@@ -121,13 +121,16 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
         }
       `}} />
 
-      <div className="product-container" style={{ position: 'relative' }}>
+      <div style={{ maxWidth: '1200px', margin: '0 auto 20px' }}>
         <button 
           onClick={() => router.back()} 
-          style={{ position: 'absolute', top: '-40px', left: 0, background: 'none', border: 'none', color: '#1a5c4a', fontSize: '15px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', padding: 0 }}
+          style={{ background: 'none', border: 'none', color: '#1a5c4a', fontSize: '15px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', padding: 0 }}
         >
           <ArrowLeft size={18} /> Back
         </button>
+      </div>
+
+      <div className="product-container">
 
         {/* Left: Image Gallery */}
         <div className="product-image-wrap">

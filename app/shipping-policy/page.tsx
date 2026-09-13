@@ -9,7 +9,7 @@ export const metadata = {
 
 export default function ShippingPolicyPage() {
   return (
-    <div style={{ background: '#fbfaf8', minHeight: '100vh', padding: '120px 20px 80px', fontFamily: "'DM Sans', sans-serif", color: '#222' }}>
+    <div style={{ background: '#fbfaf8', minHeight: '100vh', padding: '32px 20px 60px', fontFamily: "'DM Sans', sans-serif", color: '#222' }}>
       <style dangerouslySetInnerHTML={{__html: `
         @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=DM+Sans:wght@400;500;600;700&display=swap');
         .serif-heading { font-family: 'Cormorant Garamond', serif; }
