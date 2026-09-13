@@ -3,9 +3,15 @@ import { getAllOrders, saveOrder, generateOrderId } from '@/lib/orders';
 import { sendOrderConfirmationEmail } from '@/lib/email';
 import stripe from '@/lib/stripe';
 import prisma from '@/lib/prisma';
+import { verifyAdminRequest } from '@/lib/auth';
 
-export async function GET() {
+export async function GET(req: Request) {
   try {
+    const auth = await verifyAdminRequest(req);
+    if (!auth.authorized) {
+      return NextResponse.json({ success: false, error: 'Unauthorized: Admin clearance required.' }, { status: 403 });
+    }
+
     const orders = await getAllOrders();
     return NextResponse.json({ success: true, orders });
   } catch (err: any) {
@@ -147,6 +153,11 @@ export async function POST(req: Request) {
 
 export async function PUT(req: Request) {
   try {
+    const auth = await verifyAdminRequest(req);
+    if (!auth.authorized) {
+      return NextResponse.json({ success: false, error: 'Unauthorized: Admin clearance required.' }, { status: 403 });
+    }
+
     const body = await req.json();
     const { id, status, tracking } = body;
 
@@ -171,6 +182,11 @@ export async function PUT(req: Request) {
 
 export async function DELETE(req: Request) {
   try {
+    const auth = await verifyAdminRequest(req);
+    if (!auth.authorized) {
+      return NextResponse.json({ success: false, error: 'Unauthorized: Admin clearance required.' }, { status: 403 });
+    }
+
     const { searchParams } = new URL(req.url);
     const id = searchParams.get('id');
 

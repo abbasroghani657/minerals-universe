@@ -2,9 +2,15 @@ import { NextResponse } from 'next/server';
 import fs from 'fs/promises';
 import path from 'path';
 import sharp from 'sharp';
+import { verifyAdminRequest } from '@/lib/auth';
 
 export async function POST(req: Request) {
   try {
+    const auth = await verifyAdminRequest(req);
+    if (!auth.authorized) {
+      return NextResponse.json({ success: false, error: 'Unauthorized: Admin clearance required.' }, { status: 403 });
+    }
+
     const formData = await req.formData();
     const file = formData.get('file') as File | null;
     const type = (formData.get('type') as string) || 'product'; // 'cover' or 'product'

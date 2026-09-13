@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { DEFAULT_PRODUCTS } from '@/lib/defaultData';
 import { inferMainCategory, isPrimaryCategory, normalizeCategory, CATEGORY_TREE, getVarietiesForMain } from '@/utils/categories';
+import { verifyAdminRequest } from '@/lib/auth';
 
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
@@ -118,6 +119,11 @@ export async function GET(req: Request) {
 
 export async function POST(req: Request) {
   try {
+    const auth = await verifyAdminRequest(req);
+    if (!auth.authorized) {
+      return NextResponse.json({ success: false, error: 'Unauthorized: Admin clearance required.' }, { status: 403 });
+    }
+
     const body = await req.json();
     const { name, mainCat, cat, priceNum, original, sale, desc, origin, treatment, cert, img, stock, badge } = body;
 
@@ -146,6 +152,71 @@ export async function POST(req: Request) {
     return NextResponse.json({ success: true, product: newProduct }, { status: 201 });
   } catch (err: any) {
     console.error('[POST /api/products] Error:', err);
+    return NextResponse.json({ success: false, error: err.message }, { status: 500 });
+  }
+}
+
+export async function PUT(req: Request) {
+  try {
+    const auth = await verifyAdminRequest(req);
+    if (!auth.authorized) {
+      return NextResponse.json({ success: false, error: 'Unauthorized: Admin clearance required.' }, { status: 403 });
+    }
+
+    const body = await req.json();
+    const { id, name, mainCat, cat, priceNum, original, sale, desc, origin, treatment, cert, img, stock, badge } = body;
+
+    if (!id) {
+      return NextResponse.json({ success: false, error: 'Product ID is required for update' }, { status: 400 });
+    }
+
+    const updated = await prisma.product.update({
+      where: { id: Number(id) },
+      data: {
+        ...(name && { name: name.trim() }),
+        ...(mainCat && { mainCat: mainCat.trim() }),
+        ...(cat && { cat: cat.trim() }),
+        ...(priceNum !== undefined && { priceNum: Number(priceNum) }),
+        ...(original !== undefined && { original: original ? String(original).trim() : null }),
+        ...(sale && { sale: String(sale).trim() }),
+        ...(desc !== undefined && { desc: desc ? desc.trim() : '' }),
+        ...(origin !== undefined && { origin: origin ? origin.trim() : 'Pakistan' }),
+        ...(treatment !== undefined && { treatment: treatment ? treatment.trim() : '100% Natural' }),
+        ...(cert !== undefined && { cert: cert ? cert.trim() : 'Authentic Gem' }),
+        ...(img && { img: img.trim() }),
+        ...(stock !== undefined && { stock: String(stock) }),
+        ...(badge !== undefined && { badge: badge ? String(badge).trim() : '' }),
+      }
+    });
+
+    return NextResponse.json({ success: true, product: updated });
+  } catch (err: any) {
+    console.error('[PUT /api/products] Error:', err);
+    return NextResponse.json({ success: false, error: err.message }, { status: 500 });
+  }
+}
+
+export async function DELETE(req: Request) {
+  try {
+    const auth = await verifyAdminRequest(req);
+    if (!auth.authorized) {
+      return NextResponse.json({ success: false, error: 'Unauthorized: Admin clearance required.' }, { status: 403 });
+    }
+
+    const { searchParams } = new URL(req.url);
+    const id = searchParams.get('id');
+
+    if (!id) {
+      return NextResponse.json({ success: false, error: 'Missing product ID parameter' }, { status: 400 });
+    }
+
+    await prisma.product.delete({
+      where: { id: Number(id) }
+    });
+
+    return NextResponse.json({ success: true, message: `Product ${id} deleted successfully.` });
+  } catch (err: any) {
+    console.error('[DELETE /api/products] Error:', err);
     return NextResponse.json({ success: false, error: err.message }, { status: 500 });
   }
 }

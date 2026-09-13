@@ -18,6 +18,7 @@ interface Props {
   currency: string;
   setCurrency: (c: string) => void;
   isSignedIn: boolean | undefined;
+  isAdmin?: boolean;
 }
 
 const CATEGORIES = [
@@ -75,7 +76,8 @@ export default function MobileNavDrawer({
   wishlistCount,
   currency,
   setCurrency,
-  isSignedIn
+  isSignedIn,
+  isAdmin = false
 }: Props) {
   const router = useRouter();
   const [openSection, setOpenSection] = useState<string | null>(CATEGORIES[0].name);
@@ -451,6 +453,31 @@ export default function MobileNavDrawer({
           >
             <FaWhatsapp size={18} /> Chat with Gemologist
           </a>
+
+          {/* Admin Portal Button (Discreet, visible only to verified Admins) */}
+          {isAdmin && (
+            <button
+              onClick={() => handleLinkClick('/admin')}
+              style={{
+                width: '100%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '8px',
+                padding: '10px',
+                background: 'rgba(197, 160, 89, 0.12)',
+                border: '1px solid #c5a059',
+                borderRadius: '6px',
+                color: '#8f6e2b',
+                fontWeight: 700,
+                fontSize: '13px',
+                marginBottom: '10px',
+                cursor: 'pointer',
+              }}
+            >
+              <span>⚡</span> Admin Control Portal
+            </button>
+          )}
 
           {/* Account Button */}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>

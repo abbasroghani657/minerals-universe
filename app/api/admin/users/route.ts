@@ -7,7 +7,9 @@ export const dynamic = 'force-dynamic';
 function getAdminEmails() {
   return [
     'abbasroghani869@gmail.com',
+    'abbasroghani657@gmail.com',
     'drtoolofficial@gmail.com',
+    '22pwbcs0904@uetpeshawar.edu.pk',
     process.env.ADMIN_EMAIL?.toLowerCase().trim()
   ].filter(Boolean) as string[];
 }
@@ -213,7 +215,7 @@ export async function PATCH(req: Request) {
     const adminEmails = getAdminEmails();
 
     // Prevent removing super-admins from admin
-    if (role !== 'Admin' && (lowerEmail === 'abbasroghani869@gmail.com' || lowerEmail === 'drtoolofficial@gmail.com')) {
+    if (role !== 'Admin' && (lowerEmail === 'abbasroghani869@gmail.com' || lowerEmail === 'abbasroghani657@gmail.com' || lowerEmail === 'drtoolofficial@gmail.com')) {
       return NextResponse.json({ success: false, error: 'Cannot demote the primary store owner account.' }, { status: 400 });
     }
 

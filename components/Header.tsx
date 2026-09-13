@@ -12,6 +12,7 @@ export default function Header() {
   const router = useRouter();
   const { isSignedIn, isLoaded } = useAuth();
   const [mounted, setMounted] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -20,6 +21,19 @@ export default function Header() {
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  useEffect(() => {
+    if (isSignedIn) {
+      fetch('/api/auth/role')
+        .then(res => res.json())
+        .then(data => {
+          if (data.isAdmin) setIsAdmin(true);
+        })
+        .catch(() => {});
+    } else {
+      setIsAdmin(false);
+    }
+  }, [isSignedIn]);
 
   useEffect(() => {
     if (searchOpen) searchRef.current?.focus();
@@ -180,7 +194,31 @@ export default function Header() {
                         Sign In
                       </Link>
                     ) : (
-                      <UserButton />
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        {isAdmin && (
+                          <Link
+                            href="/admin"
+                            title="Open Admin Dashboard"
+                            style={{
+                              fontSize: '11.5px',
+                              fontWeight: 700,
+                              color: '#8f6e2b',
+                              background: 'rgba(197, 160, 89, 0.15)',
+                              border: '1px solid #c5a059',
+                              borderRadius: '4px',
+                              padding: '4px 8px',
+                              textDecoration: 'none',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '4px',
+                              transition: 'all 0.2s',
+                            }}
+                          >
+                            <span>⚡</span> Admin
+                          </Link>
+                        )}
+                        <UserButton />
+                      </div>
                     )}
                   </ClerkLoaded>
                 </>
@@ -199,6 +237,7 @@ export default function Header() {
         currency={currency}
         setCurrency={setCurrency}
         isSignedIn={mounted ? isSignedIn : false}
+        isAdmin={mounted ? isAdmin : false}
       />
 
       {/* Search Modal */}
