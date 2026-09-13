@@ -103,17 +103,20 @@ export async function GET(req: Request) {
       orderBy: { id: 'desc' }
     });
 
+    const cacheHeaders = { 'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=300' };
+
     if (products && products.length > 0) {
-      return NextResponse.json({ success: true, products });
+      return NextResponse.json({ success: true, products }, { headers: cacheHeaders });
     }
-    return NextResponse.json({ success: true, products: DEFAULT_PRODUCTS });
+    return NextResponse.json({ success: true, products: DEFAULT_PRODUCTS }, { headers: cacheHeaders });
   } catch (err: any) {
     console.warn('[GET /api/products] Database issue, using fallback data:', err.message);
+    const cacheHeaders = { 'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=300' };
     if (id) {
       const fallback = DEFAULT_PRODUCTS.find(p => p.id === Number(id));
-      return NextResponse.json({ success: true, product: fallback || null });
+      return NextResponse.json({ success: true, product: fallback || null }, { headers: cacheHeaders });
     }
-    return NextResponse.json({ success: true, products: DEFAULT_PRODUCTS });
+    return NextResponse.json({ success: true, products: DEFAULT_PRODUCTS }, { headers: cacheHeaders });
   }
 }
 

@@ -168,57 +168,92 @@ export default function Header() {
               <ShoppingCart size={20} style={{ display: 'block' }} />
               {mounted && cartCount > 0 && <span className="cart-badge">{cartCount}</span>}
             </button>
-            <div className="desktop-only-item" style={{ marginLeft: '12px', display: 'flex', alignItems: 'center', minWidth: '70px', justifyContent: 'center' }}>
+            {/* Store Owner Admin Button - Prominent, Luxury Gold, Always Accessible */}
+            <Link
+              href="/admin"
+              title="Store Owner Admin Panel"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '5px',
+                fontSize: '12px',
+                fontWeight: 700,
+                padding: '6px 12px',
+                borderRadius: '6px',
+                background: 'linear-gradient(135deg, #c5a059 0%, #dfba73 100%)',
+                color: '#071510',
+                border: 'none',
+                textDecoration: 'none',
+                boxShadow: '0 2px 8px rgba(197, 160, 89, 0.3)',
+                transition: 'transform 0.2s, box-shadow 0.2s',
+                whiteSpace: 'nowrap',
+                flexShrink: 0,
+                cursor: 'pointer',
+              }}
+              onMouseEnter={e => (e.currentTarget.style.transform = 'translateY(-1px)')}
+              onMouseLeave={e => (e.currentTarget.style.transform = 'translateY(0)')}
+            >
+              <span>⚡</span>
+              <span>Admin</span>
+            </Link>
+
+            {/* User Account / Sign In */}
+            <div style={{ display: 'flex', alignItems: 'center', flexShrink: 0, marginLeft: '4px' }}>
               {!mounted ? (
-                <div style={{ width: '26px', height: '26px', borderRadius: '50%', border: '2px solid rgba(26,127,116,.2)', borderTopColor: 'var(--teal)', animation: 'spin 1s linear infinite' }}></div>
+                <Link
+                  href="/sign-in"
+                  style={{
+                    fontSize: '12.5px',
+                    fontWeight: 600,
+                    color: 'var(--teal)',
+                    border: '1px solid var(--teal)',
+                    borderRadius: '5px',
+                    padding: '5px 10px',
+                    textDecoration: 'none',
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  Sign In
+                </Link>
               ) : (
                 <>
                   <ClerkLoading>
-                    <div style={{ width: '26px', height: '26px', borderRadius: '50%', border: '2px solid rgba(26,127,116,.2)', borderTopColor: 'var(--teal)', animation: 'spin 1s linear infinite' }}></div>
+                    <Link
+                      href="/sign-in"
+                      style={{
+                        fontSize: '12.5px',
+                        fontWeight: 600,
+                        color: 'var(--teal)',
+                        border: '1px solid var(--teal)',
+                        borderRadius: '5px',
+                        padding: '5px 10px',
+                        textDecoration: 'none',
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      Sign In
+                    </Link>
                   </ClerkLoading>
                   <ClerkLoaded>
                     {!isSignedIn ? (
                       <Link
                         href="/sign-in"
                         style={{
-                          fontSize: '13px',
+                          fontSize: '12.5px',
                           fontWeight: 600,
                           color: 'var(--teal)',
                           border: '1px solid var(--teal)',
-                          borderRadius: '4px',
-                          padding: '6px 12px',
+                          borderRadius: '5px',
+                          padding: '5px 10px',
                           textDecoration: 'none',
+                          whiteSpace: 'nowrap',
                           transition: 'all 0.2s',
                         }}
                       >
                         Sign In
                       </Link>
                     ) : (
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        {isAdmin && (
-                          <Link
-                            href="/admin"
-                            title="Open Admin Dashboard"
-                            style={{
-                              fontSize: '11.5px',
-                              fontWeight: 700,
-                              color: '#8f6e2b',
-                              background: 'rgba(197, 160, 89, 0.15)',
-                              border: '1px solid #c5a059',
-                              borderRadius: '4px',
-                              padding: '4px 8px',
-                              textDecoration: 'none',
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              gap: '4px',
-                              transition: 'all 0.2s',
-                            }}
-                          >
-                            <span>⚡</span> Admin
-                          </Link>
-                        )}
-                        <UserButton />
-                      </div>
+                      <UserButton />
                     )}
                   </ClerkLoaded>
                 </>

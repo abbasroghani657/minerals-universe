@@ -21,16 +21,17 @@ export async function GET(req: Request) {
         acc[s.key] = s.value;
         return acc;
       }, {});
-      return NextResponse.json({ success: true, settings: { ...DEFAULT_SETTINGS, ...config } });
+      return NextResponse.json({ success: true, settings: { ...DEFAULT_SETTINGS, ...config } }, { headers: { 'Cache-Control': 'public, s-maxage=120, stale-while-revalidate=600' } });
     }
 
-    return NextResponse.json({ success: true, settings: DEFAULT_SETTINGS });
+    return NextResponse.json({ success: true, settings: DEFAULT_SETTINGS }, { headers: { 'Cache-Control': 'public, s-maxage=120, stale-while-revalidate=600' } });
   } catch (err: any) {
     console.warn('[GET /api/settings] Database not ready, using fallback settings:', err.message);
+    const cacheHeaders = { 'Cache-Control': 'public, s-maxage=120, stale-while-revalidate=600' };
     if (key) {
-      return NextResponse.json({ success: true, key, value: DEFAULT_SETTINGS[key] || null });
+      return NextResponse.json({ success: true, key, value: DEFAULT_SETTINGS[key] || null }, { headers: cacheHeaders });
     }
-    return NextResponse.json({ success: true, settings: DEFAULT_SETTINGS });
+    return NextResponse.json({ success: true, settings: DEFAULT_SETTINGS }, { headers: cacheHeaders });
   }
 }
 

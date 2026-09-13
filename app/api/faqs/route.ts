@@ -4,17 +4,18 @@ import { DEFAULT_FAQS } from '@/lib/defaultData';
 import { verifyAdminRequest } from '@/lib/auth';
 
 export async function GET() {
+  const cacheHeaders = { 'Cache-Control': 'public, s-maxage=120, stale-while-revalidate=600' };
   try {
     const faqs = await prisma.faq.findMany({
       orderBy: { id: 'asc' }
     });
     if (faqs && faqs.length > 0) {
-      return NextResponse.json({ success: true, faqs });
+      return NextResponse.json({ success: true, faqs }, { headers: cacheHeaders });
     }
-    return NextResponse.json({ success: true, faqs: DEFAULT_FAQS });
+    return NextResponse.json({ success: true, faqs: DEFAULT_FAQS }, { headers: cacheHeaders });
   } catch (err: any) {
     console.warn('[GET /api/faqs] Database not ready, using fallback FAQs:', err.message);
-    return NextResponse.json({ success: true, faqs: DEFAULT_FAQS });
+    return NextResponse.json({ success: true, faqs: DEFAULT_FAQS }, { headers: cacheHeaders });
   }
 }
 

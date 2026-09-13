@@ -18,7 +18,7 @@ const SLIDE_DEFAULTS = [
     defaultDesc: 'Handpicked specimens from around the world, curated for collectors and connoisseurs',
     defaultCta: 'Shop Now',
     defaultHref: '#products',
-    defaultBg: '/images/hero/luxury-gemstones-collection.jpg',
+    defaultBg: '/images/hero/luxury-gemstones-collection.webp',
   },
   {
     id: 2,
@@ -36,7 +36,7 @@ const SLIDE_DEFAULTS = [
     defaultDesc: 'Sapphires, Rubies, Tourmalines & more - directly sourced from premier mining regions',
     defaultCta: 'Explore Collection',
     defaultHref: '#categories',
-    defaultBg: '/images/hero/aquamarine-crystal-matrix.jpg',
+    defaultBg: '/images/hero/aquamarine-crystal-matrix.webp',
   },
   {
     id: 3,
@@ -54,7 +54,7 @@ const SLIDE_DEFAULTS = [
     defaultDesc: "Authentic specimens for collectors and jewelers - from the world's finest geological formations",
     defaultCta: 'View All',
     defaultHref: '#categories',
-    defaultBg: '/images/hero/faceted-gems-spectrum.jpg',
+    defaultBg: '/images/hero/faceted-gems-spectrum.webp',
   },
 ];
 
@@ -78,15 +78,6 @@ export default function HeroSlider() {
         const data = await res.json();
         if (data.success && data.settings) {
           setSettings(data.settings);
-
-          // Zero-flicker preload of all 3 images in browser memory
-          SLIDE_DEFAULTS.forEach(slide => {
-            const url = data.settings[slide.bannerKey] || slide.defaultBg;
-            if (url && typeof window !== 'undefined') {
-              const img = new window.Image();
-              img.src = url;
-            }
-          });
         }
       } catch (err) {
         console.warn('Using fallback hero banners:', err);

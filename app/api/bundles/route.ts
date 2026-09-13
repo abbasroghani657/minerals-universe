@@ -86,7 +86,10 @@ export async function GET(req: Request) {
       };
     });
 
-    return NextResponse.json({ success: true, bundles: formatted });
+    return NextResponse.json(
+      { success: true, bundles: formatted },
+      { headers: { 'Cache-Control': 'public, s-maxage=120, stale-while-revalidate=600' } }
+    );
   } catch (err: any) {
     console.error('[GET /api/bundles]', err);
     return NextResponse.json(
@@ -99,7 +102,10 @@ export async function GET(req: Request) {
           imgs: JSON.parse(b.imgs),
         })),
       },
-      { status: 200 }
+      { 
+        status: 200,
+        headers: { 'Cache-Control': 'public, s-maxage=120, stale-while-revalidate=600' }
+      }
     );
   }
 }

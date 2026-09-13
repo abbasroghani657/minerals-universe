@@ -22,10 +22,12 @@ export async function GET(req: Request) {
       orderBy: { createdAt: 'desc' }
     });
 
-    return NextResponse.json({ success: true, reviews });
+    const cacheHeaders = { 'Cache-Control': 'public, s-maxage=120, stale-while-revalidate=600' };
+    return NextResponse.json({ success: true, reviews }, { headers: cacheHeaders });
   } catch (err: any) {
     console.warn('[GET /api/reviews] Database not ready, using fallback reviews:', err.message);
-    return NextResponse.json({ success: true, reviews: DEFAULT_REVIEWS });
+    const cacheHeaders = { 'Cache-Control': 'public, s-maxage=120, stale-while-revalidate=600' };
+    return NextResponse.json({ success: true, reviews: DEFAULT_REVIEWS }, { headers: cacheHeaders });
   }
 }
 
