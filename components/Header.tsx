@@ -2,7 +2,7 @@
 import Link from 'next/link';
 import { useState, useRef, useEffect } from 'react';
 import { useCart } from '@/context/CartContext';
-import { Search, Heart, ShoppingCart, Menu } from 'lucide-react';
+import { Search, Heart, ShoppingCart, Menu, ShieldCheck } from 'lucide-react';
 import MobileNavDrawer from '@/components/MobileNavDrawer';
 import { useRouter } from 'next/navigation';
 import { useAuth, useUser, UserButton, ClerkLoaded, ClerkLoading } from '@clerk/nextjs';
@@ -24,9 +24,29 @@ export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const searchRef = useRef<HTMLInputElement>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
 
-  const allEmails = (user?.emailAddresses || []).map(e => e.emailAddress?.toLowerCase().trim());
-  const isAdmin = allEmails.some(e => ADMIN_EMAILS.includes(e)) || (user?.publicMetadata as any)?.role === 'Admin';
+  useEffect(() => {
+    if (!isSignedIn || !user) {
+      setIsAdmin(false);
+      return;
+    }
+    const allEmails = (user.emailAddresses || []).map(e => e.emailAddress?.toLowerCase().trim());
+    const isHardcoded = allEmails.some(e => ADMIN_EMAILS.includes(e));
+    const isClerkAdmin = (user.publicMetadata as any)?.role === 'Admin';
+    if (isHardcoded || isClerkAdmin) {
+      setIsAdmin(true);
+      return;
+    }
+    fetch('/api/auth/role')
+      .then(res => res.json())
+      .then(data => {
+        if (data.success && data.role === 'Admin') {
+          setIsAdmin(true);
+        }
+      })
+      .catch(() => {});
+  }, [isSignedIn, user]);
 
   useEffect(() => {
     setMounted(true);
@@ -165,34 +185,45 @@ export default function Header() {
               <ShoppingCart size={20} style={{ display: 'block' }} />
               {mounted && cartCount > 0 && <span className="cart-badge">{cartCount}</span>}
             </button>
-            {/* Store Owner Admin Button - Prominent, Luxury Gold, Always Accessible */}
-            <Link
-              href="/admin"
-              title="Store Owner Admin Panel"
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '5px',
-                fontSize: '12px',
-                fontWeight: 700,
-                padding: '6px 12px',
-                borderRadius: '6px',
-                background: 'linear-gradient(135deg, #c5a059 0%, #dfba73 100%)',
-                color: '#071510',
-                border: 'none',
-                textDecoration: 'none',
-                boxShadow: '0 2px 8px rgba(197, 160, 89, 0.3)',
-                transition: 'transform 0.2s, box-shadow 0.2s',
-                whiteSpace: 'nowrap',
-                flexShrink: 0,
-                cursor: 'pointer',
-              }}
-              onMouseEnter={e => (e.currentTarget.style.transform = 'translateY(-1px)')}
-              onMouseLeave={e => (e.currentTarget.style.transform = 'translateY(0)')}
-            >
-              <span>⚡</span>
-              <span>Admin</span>
-            </Link>
+            {/* Store Owner Admin Button - Securely shown ONLY to verified authenticated admins */}
+            {mounted && isSignedIn && isAdmin && (
+              <Link
+                href="/admin"
+                title="Store Management & Admin Portal"
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  fontSize: '11.5px',
+                  fontWeight: 600,
+                  letterSpacing: '0.4px',
+                  padding: '5px 12px',
+                  borderRadius: '6px',
+                  background: '#092e27',
+                  color: '#e6c887',
+                  border: '1px solid rgba(197, 160, 89, 0.45)',
+                  textDecoration: 'none',
+                  boxShadow: '0 2px 6px rgba(0,0,0,0.08)',
+                  transition: 'all 0.2s ease',
+                  whiteSpace: 'nowrap',
+                  flexShrink: 0,
+                  cursor: 'pointer',
+                }}
+                onMouseEnter={e => {
+                  e.currentTarget.style.borderColor = '#c5a059';
+                  e.currentTarget.style.background = '#0e3d34';
+                  e.currentTarget.style.boxShadow = '0 3px 10px rgba(197, 160, 89, 0.2)';
+                }}
+                onMouseLeave={e => {
+                  e.currentTarget.style.borderColor = 'rgba(197, 160, 89, 0.45)';
+                  e.currentTarget.style.background = '#092e27';
+                  e.currentTarget.style.boxShadow = '0 2px 6px rgba(0,0,0,0.08)';
+                }}
+              >
+                <ShieldCheck size={13} style={{ color: '#c5a059' }} />
+                <span>Admin Portal</span>
+              </Link>
+            )}
 
             {/* User Account / Sign In */}
             <div style={{ display: 'flex', alignItems: 'center', flexShrink: 0, marginLeft: '4px' }}>
