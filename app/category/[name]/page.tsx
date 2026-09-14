@@ -50,6 +50,9 @@ export default function CategoryPage({ params }: { params: Promise<{ name: strin
 
   useEffect(() => {
     setMounted(true);
+    if (displayName) {
+      document.title = `${displayName} | Minerals Universe`;
+    }
     async function loadData() {
       try {
         setLoading(true);

@@ -37,6 +37,22 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const isDirectAdmin = allClerkEmails.some(e => ADMIN_EMAILS.includes(e)) || (clerkUser?.publicMetadata as any)?.role === 'Admin';
   const activeEmail = clerkUser?.primaryEmailAddress?.emailAddress?.toLowerCase().trim() || allClerkEmails[0] || null;
 
+  // Set dedicated clean browser tab title for every admin route (no AI hyphens)
+  useEffect(() => {
+    const titles: Record<string, string> = {
+      '/admin': 'Admin Dashboard | Minerals Universe',
+      '/admin/products': 'Products | Minerals Universe Admin',
+      '/admin/orders': 'Orders & Shipments | Minerals Universe Admin',
+      '/admin/inquiries': 'Customer Inquiries | Minerals Universe Admin',
+      '/admin/users': 'Customer Management | Minerals Universe Admin',
+      '/admin/reviews': 'Reviews Moderation | Minerals Universe Admin',
+      '/admin/settings': 'Store Settings | Minerals Universe Admin',
+      '/admin/faqs': 'FAQs Management | Minerals Universe Admin',
+      '/admin/bundles': 'Complete Sets | Minerals Universe Admin',
+    };
+    document.title = titles[pathname] || 'Admin Panel | Minerals Universe';
+  }, [pathname]);
+
   useEffect(() => {
     async function fetchRole() {
       try {

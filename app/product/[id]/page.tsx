@@ -30,6 +30,9 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
         const data = await res.json();
         if (data.success && data.product) {
           setProduct(data.product);
+          if (data.product.name) {
+            document.title = `${data.product.name} | Minerals Universe`;
+          }
         }
       } catch (err) {
         console.error('Failed to load product detail:', err);

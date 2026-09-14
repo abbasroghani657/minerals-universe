@@ -21,6 +21,10 @@ function ShopContent() {
   const [products, setProducts] = useState<any[]>(DEFAULT_PRODUCTS);
   const [searchQuery, setSearchQuery] = useState(initialSearch);
 
+  useEffect(() => {
+    document.title = 'Shop Natural Gemstones & Minerals | Minerals Universe';
+  }, []);
+
   // Department Filter
   const [selectedDepartment, setSelectedDepartment] = useState<string>(
     isPrimaryCategory(initialCat) ? initialCat : initialMain
