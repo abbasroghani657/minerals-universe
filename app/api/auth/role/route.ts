@@ -18,10 +18,10 @@ export async function GET(req: Request) {
     const lowerEmail = email.toLowerCase().trim();
     const allUserEmails = (user.emailAddresses || []).map(e => e.emailAddress.toLowerCase().trim());
 
-    // 1. Immediate super-admin check from configured emails
-    let isAdmin = allUserEmails.some(e => ADMIN_EMAILS.includes(e));
+    // 1. Immediate super-admin check from configured emails or Clerk publicMetadata
+    let isAdmin = allUserEmails.some(e => ADMIN_EMAILS.includes(e)) || (user.publicMetadata as any)?.role === 'Admin';
     let dbRole = isAdmin ? 'Admin' : 'Customer';
-    let dbName = `${user.firstName || ''} ${user.lastName || ''}`.trim() || (isAdmin ? 'Zaheer Abbas' : 'User');
+    let dbName = `${user.firstName || ''} ${user.lastName || ''}`.trim() || (isAdmin ? 'Administrator' : 'User');
 
     // 2. Safe Database sync (non-blocking if DB has latency)
     try {

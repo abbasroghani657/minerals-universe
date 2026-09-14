@@ -1,43 +1,64 @@
 import { NextResponse } from 'next/server';
 import { currentUser, clerkClient } from '@clerk/nextjs/server';
 import prisma from '@/lib/prisma';
+import { ADMIN_EMAILS, MASTER_PASSKEYS } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 
-function getAdminEmails() {
-  return [
-    'abbasroghani869@gmail.com',
-    'abbasroghani657@gmail.com',
-    'drtoolofficial@gmail.com',
-    '22pwbcs0904@uetpeshawar.edu.pk',
-    process.env.ADMIN_EMAIL?.toLowerCase().trim()
-  ].filter(Boolean) as string[];
-}
-
-// Check if requester is Admin
-async function verifyAdmin() {
-  const user = await currentUser();
-  if (!user) return null;
-  const email = user.emailAddresses[0]?.emailAddress?.toLowerCase().trim();
-  if (!email) return null;
-
-  const adminEmails = getAdminEmails();
-  if (adminEmails.includes(email)) return { user, email, isAdmin: true };
-
-  const dbUser = await prisma.user.findUnique({ where: { email } });
-  if (dbUser?.role === 'Admin') return { user, email, isAdmin: true };
-
-  return null;
-}
-
-export async function GET() {
+// Comprehensive admin verification
+async function verifyAdmin(req?: Request) {
   try {
-    const auth = await verifyAdmin();
+    // 1. Direct passkey header check
+    if (req) {
+      const headerKey = req.headers.get('x-admin-key') || req.headers.get('authorization')?.replace('Bearer ', '');
+      if (headerKey && MASTER_PASSKEYS.includes(headerKey.trim())) {
+        return { email: 'master@mineralsuniverse.com', isAdmin: true };
+      }
+    }
+
+    // 2. Authenticated Clerk session check
+    const user = await currentUser();
+    if (!user) return null;
+
+    const allEmails = (user.emailAddresses || [])
+      .map(e => e.emailAddress?.toLowerCase().trim())
+      .filter(Boolean);
+
+    if (allEmails.length === 0) return null;
+
+    // Fast check: super admin list
+    if (allEmails.some(e => ADMIN_EMAILS.includes(e))) {
+      return { user, email: allEmails[0], isAdmin: true };
+    }
+
+    // Fast check: Clerk metadata
+    if ((user.publicMetadata as any)?.role === 'Admin') {
+      return { user, email: allEmails[0], isAdmin: true };
+    }
+
+    // Database lookup in TiDB
+    const dbUser = await prisma.user.findFirst({
+      where: { email: { in: allEmails } }
+    });
+    if (dbUser?.role === 'Admin') {
+      return { user, email: dbUser.email, isAdmin: true };
+    }
+
+    return null;
+  } catch (err) {
+    console.error('[verifyAdmin] Verification error:', err);
+    return null;
+  }
+}
+
+export async function GET(req: Request) {
+  try {
+    const auth = await verifyAdmin(req);
     if (!auth) {
       return NextResponse.json({ success: false, error: 'Unauthorized. Admin access required.' }, { status: 403 });
     }
 
-    const adminEmails = getAdminEmails();
+    const adminEmails = ADMIN_EMAILS;
 
     // 1. Fetch users from Prisma
     let prismaUsers: any[] = [];
@@ -199,40 +220,69 @@ export async function GET() {
 // Update user role (Promote to Admin / Set as Customer)
 export async function PATCH(req: Request) {
   try {
-    const auth = await verifyAdmin();
+    const auth = await verifyAdmin(req);
     if (!auth) {
-      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 403 });
+      return NextResponse.json({ success: false, error: 'Unauthorized. Store Owner clearance required.' }, { status: 403 });
     }
 
     const body = await req.json();
     const { email, role } = body;
 
     if (!email || !['Admin', 'Customer'].includes(role)) {
-      return NextResponse.json({ success: false, error: 'Invalid email or role' }, { status: 400 });
+      return NextResponse.json({ success: false, error: 'Invalid email or role specified.' }, { status: 400 });
     }
 
     const lowerEmail = email.toLowerCase().trim();
-    const adminEmails = getAdminEmails();
 
-    // Prevent removing super-admins from admin
-    if (role !== 'Admin' && (lowerEmail === 'abbasroghani869@gmail.com' || lowerEmail === 'abbasroghani657@gmail.com' || lowerEmail === 'drtoolofficial@gmail.com')) {
+    // Prevent demoting primary super owners
+    const superOwners = [
+      'abbasroghani869@gmail.com',
+      'abbasroghani657@gmail.com',
+      'drtoolofficial@gmail.com'
+    ];
+    if (role !== 'Admin' && superOwners.includes(lowerEmail)) {
       return NextResponse.json({ success: false, error: 'Cannot demote the primary store owner account.' }, { status: 400 });
     }
 
-    // Update in Prisma
-    const updated = await prisma.user.upsert({
-      where: { email: lowerEmail },
-      update: { role },
-      create: {
-        email: lowerEmail,
-        name: email.split('@')[0],
-        role
-      }
-    });
+    // 1. Update in TiDB Prisma
+    let updatedUser: any = null;
+    try {
+      updatedUser = await prisma.user.upsert({
+        where: { email: lowerEmail },
+        update: { role },
+        create: {
+          email: lowerEmail,
+          name: email.split('@')[0],
+          role
+        }
+      });
+    } catch (dbErr) {
+      console.error('[PATCH /api/admin/users] Prisma update error:', dbErr);
+    }
 
-    return NextResponse.json({ success: true, user: updated });
+    // 2. Sync to Clerk user metadata so Clerk session immediately contains Admin role
+    try {
+      const client = await clerkClient();
+      const clerkUsersResponse = await client.users.getUserList({ emailAddress: [lowerEmail] });
+      const clerkUsersList = (clerkUsersResponse as any).data || clerkUsersResponse || [];
+      if (clerkUsersList.length > 0) {
+        await client.users.updateUserMetadata(clerkUsersList[0].id, {
+          publicMetadata: {
+            role: role
+          }
+        });
+      }
+    } catch (clerkErr) {
+      console.warn('[PATCH /api/admin/users] Clerk metadata sync warning:', clerkErr);
+    }
+
+    return NextResponse.json({ 
+      success: true, 
+      user: updatedUser || { email: lowerEmail, role },
+      message: `Account ${lowerEmail} is now assigned the role of ${role}.` 
+    });
   } catch (err: any) {
     console.error('[PATCH /api/admin/users] Error:', err);
-    return NextResponse.json({ success: false, error: err.message }, { status: 500 });
+    return NextResponse.json({ success: false, error: err.message || 'Server error updating role' }, { status: 500 });
   }
 }

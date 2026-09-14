@@ -79,6 +79,15 @@ export async function verifyAdminRequest(req?: Request): Promise<AdminAuthResult
       };
     }
 
+    // 3b. Check Clerk publicMetadata for assigned Admin role
+    if ((clerkUser.publicMetadata as any)?.role === 'Admin') {
+      return {
+        authorized: true,
+        email: primaryEmail,
+        name: `${clerkUser.firstName || ''} ${clerkUser.lastName || ''}`.trim() || 'Store Admin',
+      };
+    }
+
     // 4. Database check: lookup user role in TiDB
     const dbUser = await prisma.user.findFirst({
       where: { email: { in: allEmails } },

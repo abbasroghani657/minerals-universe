@@ -4,7 +4,8 @@ import { useState, useEffect, useMemo } from 'react';
 import Image from 'next/image';
 import { 
   Users, UserCheck, Shield, Clock, Search, Download, 
-  RefreshCw, Copy, Check, ChevronRight, AlertCircle 
+  RefreshCw, Copy, Check, ChevronRight, AlertCircle,
+  ShieldCheck, ShieldAlert, X, Loader2
 } from 'lucide-react';
 import { UserRecord, UserStats } from './types';
 import UserDetailsDrawer from './UserDetailsDrawer';
@@ -21,6 +22,7 @@ export default function AdminUsersPage() {
   const [selectedUser, setSelectedUser] = useState<UserRecord | null>(null);
   const [updatingRoleFor, setUpdatingRoleFor] = useState<string | null>(null);
   const [actionMessage, setActionMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
+  const [confirmModal, setConfirmModal] = useState<{ user: UserRecord; targetRole: 'Admin' | 'Customer' } | null>(null);
 
   async function loadUsers(isRefresh = false) {
     if (isRefresh) setRefreshing(true);
@@ -48,12 +50,14 @@ export default function AdminUsersPage() {
     setTimeout(() => setCopiedEmail(null), 2000);
   };
 
-  const handleRoleChange = async (user: UserRecord, newRole: 'Admin' | 'Customer') => {
-    if (user.role === newRole) return;
-    const msg = newRole === 'Admin'
-      ? `Promote ${user.name} (${user.email}) to Administrator?`
-      : `Demote ${user.name} (${user.email}) to Customer?`;
-    if (!window.confirm(msg)) return;
+  const handleOpenRoleModal = (user: UserRecord, targetRole: 'Admin' | 'Customer') => {
+    if (user.role === targetRole) return;
+    setConfirmModal({ user, targetRole });
+  };
+
+  const executeRoleChange = async () => {
+    if (!confirmModal) return;
+    const { user, targetRole } = confirmModal;
 
     setUpdatingRoleFor(user.email);
     setActionMessage(null);
@@ -62,28 +66,32 @@ export default function AdminUsersPage() {
       const res = await fetch('/api/admin/users', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: user.email, role: newRole })
+        body: JSON.stringify({ email: user.email, role: targetRole })
       });
       const data = await res.json();
       if (data.success) {
-        setActionMessage({ text: `Updated ${user.name} to ${newRole}.`, type: 'success' });
-        setUsers(prev => prev.map(u => u.email === user.email ? { ...u, role: newRole } : u));
+        setActionMessage({ 
+          text: `Privileges Updated: ${user.name} (${user.email}) is now assigned as ${targetRole}.`, 
+          type: 'success' 
+        });
+        setUsers(prev => prev.map(u => u.email === user.email ? { ...u, role: targetRole } : u));
         if (selectedUser?.email === user.email) {
-          setSelectedUser(prev => prev ? { ...prev, role: newRole } : null);
+          setSelectedUser(prev => prev ? { ...prev, role: targetRole } : null);
         }
         setStats(prev => ({
           ...prev,
-          totalCustomers: newRole === 'Customer' ? prev.totalCustomers + 1 : prev.totalCustomers - 1,
-          totalAdmins: newRole === 'Admin' ? prev.totalAdmins + 1 : prev.totalAdmins - 1
+          totalCustomers: targetRole === 'Customer' ? prev.totalCustomers + 1 : Math.max(0, prev.totalCustomers - 1),
+          totalAdmins: targetRole === 'Admin' ? prev.totalAdmins + 1 : Math.max(0, prev.totalAdmins - 1)
         }));
+        setConfirmModal(null);
       } else {
-        setActionMessage({ text: data.error || 'Failed to update role.', type: 'error' });
+        setActionMessage({ text: data.error || 'Failed to update account role.', type: 'error' });
       }
     } catch (err: any) {
-      setActionMessage({ text: err.message || 'Error occurred.', type: 'error' });
+      setActionMessage({ text: err.message || 'An error occurred while updating permissions.', type: 'error' });
     } finally {
       setUpdatingRoleFor(null);
-      setTimeout(() => setActionMessage(null), 5000);
+      setTimeout(() => setActionMessage(null), 6000);
     }
   };
 
@@ -357,7 +365,7 @@ export default function AdminUsersPage() {
                       <td style={{ padding: '16px 24px', textAlign: 'right' }}>
                         <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '8px' }}>
                           <button
-                            onClick={() => handleRoleChange(user, isAdmin ? 'Customer' : 'Admin')}
+                            onClick={() => handleOpenRoleModal(user, isAdmin ? 'Customer' : 'Admin')}
                             disabled={updatingRoleFor === user.email}
                             style={{ padding: '6px 12px', borderRadius: '5px', fontSize: '12px', fontWeight: 600, cursor: 'pointer', border: '1px solid #dcd7ce', background: '#fff', color: isAdmin ? '#721c24' : '#1a5c4a' }}
                           >
@@ -380,9 +388,238 @@ export default function AdminUsersPage() {
       <UserDetailsDrawer
         user={selectedUser}
         onClose={() => setSelectedUser(null)}
-        onRoleChange={handleRoleChange}
+        onRoleChange={handleOpenRoleModal}
         isUpdating={updatingRoleFor === selectedUser?.email}
       />
+
+      {/* Luxury Role Confirmation Modal */}
+      {confirmModal && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(5, 18, 14, 0.78)',
+            backdropFilter: 'blur(10px)',
+            WebkitBackdropFilter: 'blur(10px)',
+            zIndex: 2000,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '20px'
+          }}
+          onClick={(e) => {
+            if (e.target === e.currentTarget && updatingRoleFor === null) {
+              setConfirmModal(null);
+            }
+          }}
+        >
+          <div
+            style={{
+              width: '100%',
+              maxWidth: '480px',
+              background: 'linear-gradient(180deg, #112d23 0%, #071712 100%)',
+              border: '1px solid rgba(197, 160, 89, 0.4)',
+              borderRadius: '18px',
+              padding: '36px 32px',
+              boxShadow: '0 24px 70px rgba(0, 0, 0, 0.7), 0 0 35px rgba(197, 160, 89, 0.15)',
+              color: '#fff',
+              position: 'relative',
+              textAlign: 'center'
+            }}
+          >
+            {/* Close Button */}
+            <button
+              onClick={() => setConfirmModal(null)}
+              disabled={updatingRoleFor !== null}
+              style={{
+                position: 'absolute',
+                top: '16px',
+                right: '16px',
+                background: 'rgba(255, 255, 255, 0.08)',
+                border: 'none',
+                borderRadius: '50%',
+                width: '32px',
+                height: '32px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: 'rgba(255, 255, 255, 0.6)',
+                cursor: 'pointer',
+                transition: 'all 0.2s'
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.color = '#fff'; e.currentTarget.style.background = 'rgba(255, 255, 255, 0.15)'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.color = 'rgba(255, 255, 255, 0.6)'; e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)'; }}
+            >
+              <X size={16} />
+            </button>
+
+            {/* Central Security Shield Icon */}
+            <div
+              style={{
+                width: '68px',
+                height: '68px',
+                borderRadius: '50%',
+                background: confirmModal.targetRole === 'Admin' ? 'rgba(197, 160, 89, 0.15)' : 'rgba(220, 53, 69, 0.15)',
+                border: `1.5px solid ${confirmModal.targetRole === 'Admin' ? 'rgba(197, 160, 89, 0.5)' : 'rgba(220, 53, 69, 0.5)'}`,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                margin: '0 auto 20px',
+                color: confirmModal.targetRole === 'Admin' ? '#c5a059' : '#ff6b6b',
+                boxShadow: confirmModal.targetRole === 'Admin' ? '0 0 25px rgba(197, 160, 89, 0.25)' : '0 0 25px rgba(220, 53, 69, 0.25)'
+              }}
+            >
+              {confirmModal.targetRole === 'Admin' ? <ShieldCheck size={36} /> : <ShieldAlert size={36} />}
+            </div>
+
+            <h3
+              style={{
+                fontFamily: "'Cormorant Garamond', serif",
+                fontSize: '28px',
+                margin: '0 0 8px',
+                color: '#fff',
+                letterSpacing: '0.5px',
+                fontWeight: 700
+              }}
+            >
+              {confirmModal.targetRole === 'Admin' ? 'Grant Administrator Privileges' : 'Revoke Administrator Access'}
+            </h3>
+
+            <p style={{ fontSize: '13.5px', color: 'rgba(255, 255, 255, 0.7)', margin: '0 0 24px', lineHeight: 1.5 }}>
+              {confirmModal.targetRole === 'Admin' 
+                ? 'Elevate this user account with verified Administrator credentials and executive store control.'
+                : 'Remove administrative clearance from this account and restore standard Customer access.'}
+            </p>
+
+            {/* Target Account Badge */}
+            <div
+              style={{
+                background: 'rgba(255, 255, 255, 0.05)',
+                border: '1px solid rgba(197, 160, 89, 0.3)',
+                borderRadius: '12px',
+                padding: '16px',
+                marginBottom: '20px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '14px',
+                textAlign: 'left'
+              }}
+            >
+              {confirmModal.user.imageUrl ? (
+                <Image src={confirmModal.user.imageUrl} alt={confirmModal.user.name} width={46} height={46} style={{ borderRadius: '50%', objectFit: 'cover' }} unoptimized />
+              ) : (
+                <div style={{ width: '46px', height: '46px', borderRadius: '50%', background: confirmModal.targetRole === 'Admin' ? '#c5a059' : '#3a4b44', color: '#071510', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: '16px' }}>
+                  {(confirmModal.user.name || 'U').slice(0, 2).toUpperCase()}
+                </div>
+              )}
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontWeight: 700, fontSize: '15px', color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                  {confirmModal.user.name}
+                </div>
+                <div style={{ fontSize: '13px', color: '#c5a059', wordBreak: 'break-all' }}>
+                  {confirmModal.user.email}
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '6px', fontSize: '11.5px' }}>
+                  <span style={{ color: 'rgba(255,255,255,0.6)' }}>Current: <strong>{confirmModal.user.role}</strong></span>
+                  <span style={{ color: confirmModal.targetRole === 'Admin' ? '#70e0a5' : '#ff8787', fontWeight: 700 }}>
+                    ➔ Target: {confirmModal.targetRole}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Security Notice */}
+            <div
+              style={{
+                background: 'rgba(197, 160, 89, 0.08)',
+                borderLeft: '3px solid #c5a059',
+                padding: '12px 14px',
+                borderRadius: '6px',
+                fontSize: '12px',
+                color: 'rgba(255, 255, 255, 0.82)',
+                lineHeight: 1.5,
+                textAlign: 'left',
+                marginBottom: '26px'
+              }}
+            >
+              {confirmModal.targetRole === 'Admin' ? (
+                <>
+                  <strong style={{ color: '#c5a059' }}>✦ Administrator Permissions:</strong> This user will gain full privileges to manage product listings, pricing, customer orders, client accounts, and store settings.
+                </>
+              ) : (
+                <>
+                  <strong style={{ color: '#ff6b6b' }}>✦ Revocation Notice:</strong> This user will immediately lose access to the Admin Portal, sales analytics, customer dossiers, and management APIs.
+                </>
+              )}
+            </div>
+
+            {/* Action Buttons */}
+            <div style={{ display: 'flex', gap: '12px' }}>
+              <button
+                type="button"
+                onClick={() => setConfirmModal(null)}
+                disabled={updatingRoleFor !== null}
+                style={{
+                  flex: 1,
+                  padding: '13px 18px',
+                  background: 'transparent',
+                  border: '1px solid rgba(255, 255, 255, 0.2)',
+                  color: 'rgba(255, 255, 255, 0.85)',
+                  borderRadius: '8px',
+                  fontWeight: 600,
+                  fontSize: '14px',
+                  cursor: 'pointer',
+                  transition: 'background 0.2s'
+                }}
+              >
+                Cancel
+              </button>
+
+              <button
+                type="button"
+                onClick={executeRoleChange}
+                disabled={updatingRoleFor !== null}
+                style={{
+                  flex: 1.5,
+                  padding: '13px 20px',
+                  background: confirmModal.targetRole === 'Admin'
+                    ? 'linear-gradient(135deg, #c5a059 0%, #dfba73 100%)'
+                    : 'linear-gradient(135deg, #dc3545 0%, #bd2130 100%)',
+                  border: 'none',
+                  color: confirmModal.targetRole === 'Admin' ? '#071510' : '#fff',
+                  borderRadius: '8px',
+                  fontWeight: 700,
+                  fontSize: '14px',
+                  cursor: updatingRoleFor !== null ? 'not-allowed' : 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '8px',
+                  boxShadow: confirmModal.targetRole === 'Admin' ? '0 4px 18px rgba(197, 160, 89, 0.35)' : '0 4px 18px rgba(220, 53, 69, 0.35)',
+                  transition: 'opacity 0.2s'
+                }}
+              >
+                {updatingRoleFor === confirmModal.user.email ? (
+                  <>
+                    <Loader2 size={16} className="animate-spin" style={{ animation: 'spin 1s linear infinite' }} />
+                    Applying Role...
+                  </>
+                ) : confirmModal.targetRole === 'Admin' ? (
+                  <>
+                    <ShieldCheck size={17} />
+                    Confirm &amp; Make Admin
+                  </>
+                ) : (
+                  <>
+                    <ShieldAlert size={17} />
+                    Confirm Revoke Access
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

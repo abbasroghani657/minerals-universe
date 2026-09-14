@@ -34,7 +34,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   // 1. Direct check from Clerk profile
   const allClerkEmails = (clerkUser?.emailAddresses || []).map(e => e.emailAddress.toLowerCase().trim());
-  const isDirectAdmin = allClerkEmails.some(e => ADMIN_EMAILS.includes(e));
+  const isDirectAdmin = allClerkEmails.some(e => ADMIN_EMAILS.includes(e)) || (clerkUser?.publicMetadata as any)?.role === 'Admin';
   const activeEmail = clerkUser?.primaryEmailAddress?.emailAddress?.toLowerCase().trim() || allClerkEmails[0] || null;
 
   useEffect(() => {
