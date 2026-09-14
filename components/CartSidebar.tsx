@@ -70,7 +70,8 @@ export default function CartSidebar() {
         style={{
           position: 'fixed',
           top: 0, right: 0,
-          width: '400px', maxWidth: '100vw',
+          width: 'min(400px, 100vw)',
+          maxWidth: '100vw',
           height: '100vh',
           backgroundColor: '#fff',
           zIndex: 1000,
@@ -80,12 +81,12 @@ export default function CartSidebar() {
           animation: 'slideInRight 0.3s ease-out'
         }}
       >
-        <div style={{ padding: '24px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div style={{ padding: '20px 24px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <h2 style={{ fontSize: '20px', margin: 0, fontFamily: "'Inter', sans-serif" }}>Cart ({cartCount} {cartCount === 1 ? 'item' : 'items'})</h2>
           <button onClick={closeCart} style={{ background: 'none', border: 'none', fontSize: '24px', cursor: 'pointer', color: 'var(--muted)' }} aria-label="Close Cart">×</button>
         </div>
         
-        <div style={{ flex: 1, overflowY: 'auto', padding: '24px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', padding: '20px 16px' }}>
           {cartItems.length === 0 ? (
             <div style={{ textAlign: 'center', marginTop: '40px', color: 'var(--muted)' }}>
               <div style={{ fontSize: '48px', marginBottom: '16px' }}>🛒</div>
@@ -93,23 +94,23 @@ export default function CartSidebar() {
               <button onClick={closeCart} className="btn-outline-teal" style={{ marginTop: '16px' }}>Continue Shopping</button>
             </div>
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
               {cartItems.map(item => (
-                <div key={item.id} style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
-                  <Image src={item.img} alt={item.name} width={80} height={80} style={{ objectFit: 'cover', borderRadius: '8px', flexShrink: 0 }} unoptimized />
+                <div key={item.id} style={{ display: 'flex', gap: '14px', alignItems: 'center' }}>
+                  <Image src={item.img} alt={item.name} width={76} height={76} style={{ objectFit: 'cover', borderRadius: '8px', flexShrink: 0 }} unoptimized />
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <h4 style={{ margin: '0 0 8px 0', fontSize: '14px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.name}</h4>
+                    <h4 style={{ margin: '0 0 6px 0', fontSize: '13.5px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.name}</h4>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <span style={{ fontWeight: 600, color: 'var(--teal-dark)' }}>{formatPrice(item.price, currency, exchangeRates)}</span>
+                      <span style={{ fontWeight: 600, color: 'var(--teal-dark)', fontSize: '14px' }}>{formatPrice(item.price, currency, exchangeRates)}</span>
                       <div style={{ display: 'flex', alignItems: 'center', border: '1px solid var(--border)', borderRadius: '4px' }}>
                         <button onClick={() => updateQuantity(item.id, -1)} style={{ padding: '4px 8px', background: 'none', border: 'none', cursor: 'pointer' }} aria-label="Decrease quantity">-</button>
-                        <span style={{ padding: '0 8px', fontSize: '14px', width: '24px', textAlign: 'center' }}>{item.quantity}</span>
+                        <span style={{ padding: '0 8px', fontSize: '13px', width: '22px', textAlign: 'center' }}>{item.quantity}</span>
                         <button onClick={() => updateQuantity(item.id, 1)} style={{ padding: '4px 8px', background: 'none', border: 'none', cursor: 'pointer' }} aria-label="Increase quantity">+</button>
                       </div>
                     </div>
                   </div>
                   <button onClick={() => removeFromCart(item.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#c94438', padding: '4px', alignSelf: 'flex-start' }} title="Remove item" aria-label="Remove item">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
                   </button>
                 </div>
               ))}
@@ -118,12 +119,12 @@ export default function CartSidebar() {
         </div>
         
         {cartItems.length > 0 && (
-          <div style={{ padding: '24px', borderTop: '1px solid var(--border)', background: 'var(--bg)' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '16px', fontSize: '18px', fontWeight: 600 }}>
+          <div style={{ padding: '20px 20px calc(20px + env(safe-area-inset-bottom, 0px))', borderTop: '1px solid var(--border)', background: 'var(--bg)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '14px', fontSize: '17px', fontWeight: 600 }}>
               <span>Subtotal</span>
               <span style={{ color: 'var(--teal-dark)' }}>{formatPrice(subtotal, currency, exchangeRates)}</span>
             </div>
-            <button onClick={handleCheckout} className="btn-teal" style={{ width: '100%', padding: '16px', fontSize: '16px' }}>
+            <button onClick={handleCheckout} className="btn-teal" style={{ width: '100%', padding: '15px', fontSize: '15px' }}>
               Proceed to Checkout
             </button>
           </div>

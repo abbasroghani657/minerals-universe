@@ -6,7 +6,8 @@ import { useState, useEffect } from 'react';
 import { useClerk, useUser } from '@clerk/nextjs';
 import { 
   LayoutDashboard, Package, ShoppingCart, MessageSquare, Mail, 
-  LogOut, HelpCircle, Settings, Users, Layers, ShieldCheck, KeyRound, ArrowLeft, Loader2
+  LogOut, HelpCircle, Settings, Users, Layers, ShieldCheck, KeyRound, ArrowLeft, Loader2,
+  Menu, X
 } from 'lucide-react';
 
 const ADMIN_EMAILS = [
@@ -31,6 +32,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [isSubmittingPasskey, setIsSubmittingPasskey] = useState(false);
   const [passkeyError, setPasskeyError] = useState<string | null>(null);
   const [passkeySuccess, setPasskeySuccess] = useState<string | null>(null);
+
+  // Responsive mobile navigation drawer
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  useEffect(() => {
+    setMobileMenuOpen(false);
+  }, [pathname]);
 
   // 1. Direct check from Clerk profile
   const allClerkEmails = (clerkUser?.emailAddresses || []).map(e => e.emailAddress.toLowerCase().trim());
@@ -290,33 +298,113 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   ];
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', background: '#f8f9fa', fontFamily: "'DM Sans', sans-serif" }}>
-      {/* Sidebar */}
-      <div style={{ width: '260px', background: '#1a5c4a', color: '#fff', display: 'flex', flexDirection: 'column' }}>
-        <div style={{ padding: '24px', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
-          <h2 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '24px', margin: 0, color: '#c5a059' }}>
-            Minerals Universe
-          </h2>
-          <p style={{ margin: '4px 0 0', fontSize: '12px', color: 'rgba(255,255,255,0.6)', textTransform: 'uppercase', letterSpacing: '1px' }}>
-            Executive Vault
-          </p>
+    <div className="admin-root-layout" style={{ display: 'flex', minHeight: '100vh', background: '#f8f9fa', fontFamily: "'DM Sans', sans-serif" }}>
+      <style dangerouslySetInnerHTML={{ __html: `
+        @media (max-width: 900px) {
+          .admin-sidebar {
+            position: fixed !important;
+            top: 0 !important;
+            bottom: 0 !important;
+            left: 0 !important;
+            width: 280px !important;
+            z-index: 1050 !important;
+            transform: translateX(-100%);
+            transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+            box-shadow: 4px 0 25px rgba(0,0,0,0.3) !important;
+          }
+          .admin-sidebar.open {
+            transform: translateX(0) !important;
+          }
+          .admin-backdrop {
+            display: block !important;
+          }
+          .admin-topbar {
+            padding: 12px 16px !important;
+          }
+          .admin-content-inner {
+            padding: 16px 14px 60px !important;
+          }
+          .admin-mobile-menu-btn {
+            display: flex !important;
+          }
+        }
+        @media (min-width: 901px) {
+          .admin-mobile-menu-btn {
+            display: none !important;
+          }
+          .admin-backdrop {
+            display: none !important;
+          }
+        }
+      `}} />
+
+      {/* Mobile Drawer Backdrop */}
+      {mobileMenuOpen && (
+        <div 
+          className="admin-backdrop"
+          onClick={() => setMobileMenuOpen(false)}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(0,0,0,0.55)',
+            backdropFilter: 'blur(4px)',
+            WebkitBackdropFilter: 'blur(4px)',
+            zIndex: 1040,
+          }}
+        />
+      )}
+
+      {/* Sidebar (Desktop persistent, Mobile slide-over drawer) */}
+      <div className={`admin-sidebar ${mobileMenuOpen ? 'open' : ''}`} style={{ width: '260px', background: '#1a5c4a', color: '#fff', display: 'flex', flexDirection: 'column' }}>
+        <div style={{ padding: '20px 24px', borderBottom: '1px solid rgba(255,255,255,0.1)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div>
+            <h2 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '22px', margin: 0, color: '#c5a059' }}>
+              Minerals Universe
+            </h2>
+            <p style={{ margin: '3px 0 0', fontSize: '11px', color: 'rgba(255,255,255,0.6)', textTransform: 'uppercase', letterSpacing: '1px' }}>
+              Executive Vault
+            </p>
+          </div>
+          <button
+            onClick={() => setMobileMenuOpen(false)}
+            className="admin-mobile-menu-btn"
+            style={{
+              background: 'rgba(255,255,255,0.1)',
+              border: 'none',
+              color: '#fff',
+              width: '32px',
+              height: '32px',
+              borderRadius: '6px',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer'
+            }}
+            aria-label="Close menu"
+          >
+            <X size={18} />
+          </button>
         </div>
 
-        <nav style={{ flex: 1, padding: '24px 0', display: 'flex', flexDirection: 'column' }}>
+        <nav style={{ flex: 1, padding: '16px 0', display: 'flex', flexDirection: 'column', overflowY: 'auto' }}>
           {navItems.map((item) => {
             const isActive = pathname === item.href || (pathname?.startsWith(item.href) && item.href !== '/executive-vault');
             const Icon = item.icon;
             return (
-              <Link key={item.name} href={item.href} style={{
-                display: 'flex', alignItems: 'center', gap: '12px', padding: '14px 24px',
-                color: isActive ? '#fff' : 'rgba(255,255,255,0.7)',
-                background: isActive ? 'rgba(255,255,255,0.1)' : 'transparent',
-                textDecoration: 'none',
-                borderLeft: isActive ? '4px solid #c5a059' : '4px solid transparent',
-                transition: 'all 0.2s',
-                fontWeight: isActive ? 600 : 500,
-                fontSize: '15px'
-              }}>
+              <Link 
+                key={item.name} 
+                href={item.href} 
+                onClick={() => setMobileMenuOpen(false)}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: '12px', padding: '13px 24px',
+                  color: isActive ? '#fff' : 'rgba(255,255,255,0.7)',
+                  background: isActive ? 'rgba(255,255,255,0.1)' : 'transparent',
+                  textDecoration: 'none',
+                  borderLeft: isActive ? '4px solid #c5a059' : '4px solid transparent',
+                  transition: 'all 0.2s',
+                  fontWeight: isActive ? 600 : 500,
+                  fontSize: '14.5px'
+                }}
+              >
                 <Icon size={18} color={isActive ? '#c5a059' : 'currentColor'} />
                 {item.name}
               </Link>
@@ -324,13 +412,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           })}
         </nav>
 
-        <div style={{ padding: '24px', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
+        <div style={{ padding: '20px 24px', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
           <Link
             href="/"
             style={{
               display: 'flex', alignItems: 'center', gap: '10px', width: '100%',
-              padding: '10px 12px', background: 'rgba(255,255,255,0.05)', borderRadius: '4px',
-              color: 'rgba(255,255,255,0.8)', textDecoration: 'none', fontSize: '13.5px', marginBottom: '8px'
+              padding: '10px 12px', background: 'rgba(255,255,255,0.05)', borderRadius: '6px',
+              color: 'rgba(255,255,255,0.85)', textDecoration: 'none', fontSize: '13px', marginBottom: '8px'
             }}
           >
             <ArrowLeft size={15} /> Storefront
@@ -339,36 +427,57 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             onClick={() => signOut({ redirectUrl: '/' })}
             style={{
               display: 'flex', alignItems: 'center', gap: '10px', width: '100%',
-              padding: '12px', background: 'rgba(255,255,255,0.05)', border: 'none',
-              color: '#fff', borderRadius: '4px', cursor: 'pointer', transition: 'background 0.2s',
-              fontSize: '14px', fontWeight: 500
+              padding: '10px 12px', background: 'rgba(255,255,255,0.05)', border: 'none',
+              color: '#fff', borderRadius: '6px', cursor: 'pointer', transition: 'background 0.2s',
+              fontSize: '13px', fontWeight: 500
             }}
           >
-            <LogOut size={16} /> Logout
+            <LogOut size={15} /> Logout
           </button>
         </div>
       </div>
 
       {/* Main Content Area */}
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, width: '100%' }}>
         {/* Topbar */}
-        <div style={{ background: '#fff', padding: '20px 40px', borderBottom: '1px solid #e8e6e1', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <h1 style={{ margin: 0, fontSize: '20px', color: '#1a5c4a', fontWeight: 600 }}>
-            {navItems.find(i => i.href === pathname)?.name || 'Admin Overview'}
-          </h1>
+        <div className="admin-topbar" style={{ background: '#fff', padding: '18px 36px', borderBottom: '1px solid #e8e6e1', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <div style={{ width: '36px', height: '36px', background: '#c5a059', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 600, fontSize: '14px' }}>
+            <button
+              onClick={() => setMobileMenuOpen(true)}
+              className="admin-mobile-menu-btn"
+              style={{
+                background: '#f0eee9',
+                border: 'none',
+                color: '#1a5c4a',
+                width: '38px',
+                height: '38px',
+                borderRadius: '8px',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer'
+              }}
+              aria-label="Open navigation menu"
+            >
+              <Menu size={20} />
+            </button>
+            <h1 style={{ margin: 0, fontSize: '18px', color: '#1a5c4a', fontWeight: 700, letterSpacing: '-0.3px' }}>
+              {navItems.find(i => i.href === pathname)?.name || 'Executive Vault'}
+            </h1>
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <div style={{ width: '34px', height: '34px', background: '#c5a059', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 700, fontSize: '13px', flexShrink: 0 }}>
               {(userName || 'ZA').substring(0, 2).toUpperCase()}
             </div>
-            <div>
-              <p style={{ margin: 0, fontSize: '14px', fontWeight: 600, color: '#333' }}>{userName || 'Zaheer Abbas'}</p>
-              <p style={{ margin: 0, fontSize: '12px', color: '#888' }}>Administrator ({activeEmail || 'Owner'})</p>
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
+              <p style={{ margin: 0, fontSize: '13px', fontWeight: 600, color: '#333', lineHeight: 1.2 }}>{userName || 'Zaheer Abbas'}</p>
+              <p style={{ margin: 0, fontSize: '11px', color: '#888' }}>Owner</p>
             </div>
           </div>
         </div>
 
         {/* Page Content */}
-        <div style={{ padding: '40px', overflowY: 'auto', flex: 1 }}>
+        <div className="admin-content-inner" style={{ padding: '32px 36px', overflowY: 'auto', flex: 1, minWidth: 0 }}>
           {children}
         </div>
       </div>

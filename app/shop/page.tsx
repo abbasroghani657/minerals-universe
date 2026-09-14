@@ -175,6 +175,62 @@ function ShopContent() {
         .original-price { color: #888; text-decoration: line-through; font-size: 14px; }
         .add-btn { width: 100%; background: transparent; color: #1a5c4a; border: 1px solid #1a5c4a; padding: 12px; border-radius: 4px; font-size: 13px; font-weight: 600; text-transform: uppercase; cursor: pointer; transition: all 0.3s; margin-bottom: 10px; }
         .add-btn:hover, .add-btn.added { background: #1a5c4a; color: #fff; }
+
+        @media (max-width: 768px) {
+          .category-title { font-size: 22px !important; margin-bottom: 16px !important; }
+          .products-grid {
+            grid-template-columns: repeat(2, 1fr) !important;
+            gap: 12px !important;
+          }
+          .product-info {
+            padding: 12px 10px !important;
+          }
+          .product-info h4 {
+            font-size: 14px !important;
+            min-height: 36px !important;
+            margin-bottom: 6px !important;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+          }
+          .price-row {
+            margin-bottom: 10px !important;
+            gap: 6px !important;
+            flex-wrap: wrap !important;
+          }
+          .sale-price {
+            font-size: 14.5px !important;
+          }
+          .original-price {
+            font-size: 11.5px !important;
+          }
+          .add-btn {
+            padding: 9px 4px !important;
+            font-size: 11.5px !important;
+            letter-spacing: 0.5px !important;
+          }
+          .shop-pills-scroll {
+            display: flex !important;
+            flex-wrap: nowrap !important;
+            overflow-x: auto !important;
+            -webkit-overflow-scrolling: touch !important;
+            scrollbar-width: none !important;
+            justify-content: flex-start !important;
+            padding: 4px 16px 10px !important;
+            margin: 0 -20px 14px !important;
+            gap: 8px !important;
+          }
+          .shop-pills-scroll::-webkit-scrollbar {
+            display: none !important;
+          }
+          .shop-pills-scroll button {
+            flex-shrink: 0 !important;
+            white-space: nowrap !important;
+            font-size: 13px !important;
+            padding: 8px 16px !important;
+          }
+        }
       `}} />
 
       {/* Hero Header */}
@@ -202,7 +258,7 @@ function ShopContent() {
                   borderRadius: '30px',
                   border: '1px solid #d4cfc7',
                   background: '#fff',
-                  fontSize: '14px',
+                  fontSize: '16px',
                   outline: 'none',
                   boxShadow: '0 4px 16px rgba(0,0,0,0.03)',
                 }}
@@ -235,7 +291,7 @@ function ShopContent() {
         </div>
 
         {/* Tier 1: Department Tabs */}
-        <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '10px', maxWidth: '800px', margin: '0 auto 16px' }}>
+        <div className="shop-pills-scroll" style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '10px', maxWidth: '800px', margin: '0 auto 16px' }}>
           {['All', ...MAIN_CATEGORY_NAMES].map((dept) => {
             const isActive = selectedDepartment === dept;
             const label = dept === 'All' ? 'All Departments' : dept === 'Loose Gemstones' ? '💎 Loose Gemstones' : dept === 'Minerals & Crystals' ? '🔮 Minerals & Crystals' : '🪨 Polished Stones';
@@ -265,7 +321,7 @@ function ShopContent() {
 
         {/* Tier 2: Variety Filter Pills */}
         {availableVarieties.length > 2 && (
-          <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '6px', maxWidth: '940px', margin: '0 auto' }}>
+          <div className="shop-pills-scroll" style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '6px', maxWidth: '940px', margin: '0 auto' }}>
             {availableVarieties.map((v) => {
               const isActive = selectedVariety.toLowerCase() === v.toLowerCase();
               return (

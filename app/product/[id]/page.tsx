@@ -131,8 +131,30 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
         .product-card:hover .btn-teal-outline { background: #1a5c4a; color: #fff; }
 
         @media(max-width: 900px) {
-          .product-container { grid-template-columns: 1fr; gap: 30px; }
+          .product-container { grid-template-columns: 1fr; gap: 24px; }
           .tab-content { padding: 20px; }
+          .cat-grid {
+            grid-template-columns: repeat(2, 1fr) !important;
+            gap: 12px !important;
+          }
+          .cat-grid .product-info {
+            padding: 12px 10px !important;
+          }
+          .cat-grid h4 {
+            font-size: 14px !important;
+            margin-bottom: 6px !important;
+          }
+          .product-actions-wrap {
+            gap: 10px !important;
+          }
+          .product-title-heading {
+            font-size: clamp(24px, 6.5vw, 36px) !important;
+          }
+        }
+        @media(max-width: 480px) {
+          .trust-badge-grid {
+            grid-template-columns: 1fr !important;
+          }
         }
       `}} />
 
@@ -169,7 +191,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
               {product.cat}
             </span>
           </p>
-          <h1 className="heading-serif" style={{ fontSize: '42px', color: '#1a5c4a', margin: '0 0 20px', lineHeight: 1.2 }}>{product.name}</h1>
+          <h1 className="heading-serif product-title-heading" style={{ fontSize: '42px', color: '#1a5c4a', margin: '0 0 20px', lineHeight: 1.2 }}>{product.name}</h1>
           
           <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '30px' }}>
             <span style={{ fontSize: '28px', color: '#1a5c4a', fontWeight: 700 }}>{formatPrice(product.priceNum, currency, exchangeRates)}</span>
@@ -181,7 +203,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
             {product.desc}
           </p>
 
-          <div style={{ display: 'flex', gap: '16px', marginBottom: '30px', flexWrap: 'wrap' }}>
+          <div className="product-actions-wrap" style={{ display: 'flex', gap: '16px', marginBottom: '30px', flexWrap: 'wrap' }}>
             <div className="qty-wrap">
               <button className="qty-btn" onClick={() => setQty(Math.max(1, qty - 1))}>−</button>
               <input type="text" className="qty-input" value={qty} readOnly />
@@ -236,7 +258,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
           </a>
 
           {/* 4 Luxury International Trust Badges */}
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "14px", marginTop: "10px", paddingTop: "20px", borderTop: "1px solid #e8e6e1" }}>
+          <div className="trust-badge-grid" style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "14px", marginTop: "10px", paddingTop: "20px", borderTop: "1px solid #e8e6e1" }}>
             <div style={{ display: "flex", alignItems: "center", gap: "10px", padding: "12px", background: "#faf9f7", borderRadius: "6px" }}>
               <ShieldCheck size={24} color="#c5a059" />
               <div>

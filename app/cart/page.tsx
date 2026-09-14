@@ -45,7 +45,10 @@ export default function CartPage() {
         
         @media(max-width: 900px) {
           .cart-container { grid-template-columns: 1fr; }
-          .cart-item { flex-direction: column; }
+        }
+        @media(max-width: 600px) {
+          .cart-card { padding: 20px 16px !important; }
+          .cart-item { flex-direction: row !important; gap: 14px !important; }
         }
       `}} />
 

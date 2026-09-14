@@ -191,8 +191,42 @@ export default function AdminDashboard() {
 
   return (
     <div>
+      <style dangerouslySetInnerHTML={{ __html: `
+        @media (max-width: 768px) {
+          .vault-header {
+            flex-direction: column !important;
+            align-items: stretch !important;
+            gap: 16px !important;
+          }
+          .vault-header-actions {
+            width: 100% !important;
+            display: flex !important;
+          }
+          .vault-header-actions a {
+            flex: 1 !important;
+            justify-content: center !important;
+          }
+          .vault-stats-grid {
+            grid-template-columns: repeat(2, 1fr) !important;
+            gap: 12px !important;
+          }
+          .vault-main-grid {
+            grid-template-columns: 1fr !important;
+            gap: 20px !important;
+          }
+          .vault-card {
+            padding: 16px !important;
+          }
+        }
+        @media (max-width: 480px) {
+          .vault-stats-grid {
+            grid-template-columns: 1fr !important;
+          }
+        }
+      `}} />
+
       {/* Top Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '28px' }}>
+      <div className="vault-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '28px' }}>
         <div>
           <h2 style={{ margin: '0 0 6px', fontSize: '28px', color: '#1a5c4a', fontFamily: "'Cormorant Garamond', serif", fontWeight: 700 }}>
             Welcome back, Zaheer
@@ -201,7 +235,7 @@ export default function AdminDashboard() {
             Live Store Operations &amp; Performance Overview • <span style={{ color: '#1a5c4a', fontWeight: 600 }}>MariaDB Live Sync</span>
           </p>
         </div>
-        <div style={{ display: 'flex', gap: '10px' }}>
+        <div className="vault-header-actions" style={{ display: 'flex', gap: '10px' }}>
           <Link
             href="/executive-vault/products"
             style={{
@@ -243,7 +277,7 @@ export default function AdminDashboard() {
       </div>
 
       {/* Stats Cards (100% Real-Time Database Counts) */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(230px, 1fr))', gap: '20px', marginBottom: '32px' }}>
+      <div className="vault-stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(230px, 1fr))', gap: '20px', marginBottom: '32px' }}>
         {stats.map((stat, index) => {
           const Icon = stat.icon;
           return (
@@ -274,10 +308,10 @@ export default function AdminDashboard() {
       </div>
 
       {/* Main Grid: Orders & Live Alerts */}
-      <div style={{ display: 'grid', gridTemplateColumns: '2fr 1.1fr', gap: '24px' }}>
+      <div className="vault-main-grid" style={{ display: 'grid', gridTemplateColumns: '2fr 1.1fr', gap: '24px' }}>
         
         {/* Left Column: Recent Orders */}
-        <div style={{ background: '#fff', borderRadius: '12px', border: '1px solid #e8e6e1', padding: '24px', boxShadow: '0 2px 8px rgba(0,0,0,0.02)' }}>
+        <div className="vault-card" style={{ background: '#fff', borderRadius: '12px', border: '1px solid #e8e6e1', padding: '24px', boxShadow: '0 2px 8px rgba(0,0,0,0.02)' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '18px' }}>
             <div>
               <h3 style={{ margin: '0 0 4px', fontSize: '18px', color: '#333', fontWeight: 600 }}>Recent Orders</h3>
@@ -313,7 +347,7 @@ export default function AdminDashboard() {
               <p style={{ margin: '0 auto 20px', fontSize: '13.5px', color: '#777', maxWidth: '420px', lineHeight: '1.5' }}>
                 When customers purchase gemstones on your website via PayPal or bank transfer, their order receipts will appear here in real time with instant tracking tools.
               </p>
-              <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
+              <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap' }}>
                 <Link 
                   href="/executive-vault/products" 
                   style={{ 
@@ -354,8 +388,8 @@ export default function AdminDashboard() {
             </div>
           ) : (
             /* Live Orders Table */
-            <div style={{ overflowX: 'auto' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+            <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+              <table style={{ width: '100%', minWidth: '540px', borderCollapse: 'collapse' }}>
                 <thead>
                   <tr style={{ borderBottom: '1px solid #e8e6e1', textAlign: 'left', color: '#888', fontSize: '12px' }}>
                     <th style={{ padding: '12px 8px', fontWeight: 600 }}>Order ID</th>
@@ -407,7 +441,7 @@ export default function AdminDashboard() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
           
           {/* Real-time Alerts Card */}
-          <div style={{ background: '#fff', borderRadius: '12px', border: '1px solid #e8e6e1', padding: '24px', boxShadow: '0 2px 8px rgba(0,0,0,0.02)' }}>
+          <div className="vault-card" style={{ background: '#fff', borderRadius: '12px', border: '1px solid #e8e6e1', padding: '24px', boxShadow: '0 2px 8px rgba(0,0,0,0.02)' }}>
             <h3 style={{ margin: '0 0 16px', fontSize: '17px', color: '#333', fontWeight: 600 }}>Action Required</h3>
             
             {!hasPendingActions ? (
@@ -518,7 +552,7 @@ export default function AdminDashboard() {
           </div>
 
           {/* Quick Operations Shortcuts */}
-          <div style={{ background: '#fff', borderRadius: '12px', border: '1px solid #e8e6e1', padding: '22px 24px', boxShadow: '0 2px 8px rgba(0,0,0,0.02)' }}>
+          <div className="vault-card" style={{ background: '#fff', borderRadius: '12px', border: '1px solid #e8e6e1', padding: '22px 24px', boxShadow: '0 2px 8px rgba(0,0,0,0.02)' }}>
             <h4 style={{ margin: '0 0 14px', fontSize: '15px', color: '#333', fontWeight: 600 }}>Quick Navigation</h4>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
               <Link 

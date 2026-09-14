@@ -138,7 +138,7 @@ export default function MobileBottomBar() {
                     padding: '12px 14px 12px 38px',
                     borderRadius: '8px',
                     border: '1.5px solid #1a5c4a',
-                    fontSize: '15px',
+                    fontSize: '16px',
                     outline: 'none',
                     fontFamily: "'DM Sans', sans-serif",
                     boxSizing: 'border-box',

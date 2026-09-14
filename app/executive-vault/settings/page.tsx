@@ -546,6 +546,35 @@ export default function AdminSettings() {
 
   return (
     <>
+      <style dangerouslySetInnerHTML={{ __html: `
+        @media (max-width: 768px) {
+          .settings-main-card {
+            padding: 16px 12px !important;
+          }
+          .settings-banner-grid {
+            grid-template-columns: 1fr !important;
+            gap: 14px !important;
+          }
+          .settings-expand-grid {
+            grid-template-columns: 1fr !important;
+            gap: 10px !important;
+          }
+          .settings-journey-grid {
+            grid-template-columns: 1fr !important;
+            gap: 14px !important;
+          }
+          .settings-save-btn {
+            width: 100% !important;
+            justify-content: center !important;
+          }
+          .settings-main-card input,
+          .settings-main-card textarea,
+          .settings-main-card select {
+            font-size: 16px !important;
+          }
+        }
+      `}} />
+
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
         <div>
           <h1 style={{ fontFamily: 'Playfair Display, serif', fontSize: '28px', color: '#1a5c4a', margin: '0 0 6px' }}>
@@ -563,7 +592,7 @@ export default function AdminSettings() {
         </div>
       )}
 
-      <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: '8px', padding: '32px' }}>
+      <div className="settings-main-card" style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: '8px', padding: '32px' }}>
         <form onSubmit={handleSubmit} style={{ display: 'grid', gap: '40px' }}>
 
           {/* SECTION 0: Hero Cover Banners CMS */}
@@ -618,7 +647,7 @@ export default function AdminSettings() {
                       </button>
                     </div>
 
-                    <div style={{ display: 'grid', gridTemplateColumns: '260px 1fr', gap: '20px', alignItems: 'start' }}>
+                    <div className="settings-banner-grid" style={{ display: 'grid', gridTemplateColumns: '260px 1fr', gap: '20px', alignItems: 'start' }}>
                       {/* Live Image Preview */}
                       <div>
                         <div style={{ 
@@ -797,7 +826,7 @@ export default function AdminSettings() {
                     {/* Expandable Slide Text Customizer */}
                     {isExpanded && showText && (
                       <div style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px dashed #e2e8f0', background: '#f8fafc', padding: '16px', borderRadius: '6px' }}>
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '14px', marginBottom: '12px' }}>
+                        <div className="settings-expand-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '14px', marginBottom: '12px' }}>
                           <div>
                             <label style={labelStyle}>Badge / Tag</label>
                             <input 
@@ -834,7 +863,7 @@ export default function AdminSettings() {
                           />
                         </div>
 
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '14px' }}>
+                        <div className="settings-expand-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '14px' }}>
                           <div>
                             <label style={labelStyle}>Button Text</label>
                             <input 
@@ -881,7 +910,7 @@ export default function AdminSettings() {
               </div>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: '20px' }}>
+            <div className="settings-journey-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px' }}>
               {journeySlots.map((slot) => {
                 const imgKey = `journey_img_${slot.num}`;
                 const capKey = `journey_caption_${slot.num}`;
@@ -1086,6 +1115,7 @@ export default function AdminSettings() {
             <button 
               type="submit" 
               disabled={saving}
+              className="settings-save-btn"
               style={{ 
                 padding: '14px 36px', 
                 background: '#0f5c53', 

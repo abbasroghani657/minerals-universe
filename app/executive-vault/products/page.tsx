@@ -430,6 +430,54 @@ export default function AdminProducts() {
 
   return (
     <>
+      <style dangerouslySetInnerHTML={{ __html: `
+        @media (max-width: 768px) {
+          .products-header-flex {
+            flex-direction: column !important;
+            align-items: stretch !important;
+            gap: 14px !important;
+          }
+          .products-header-btn {
+            width: 100% !important;
+            justify-content: center !important;
+          }
+          .products-filter-bar {
+            flex-direction: column !important;
+          }
+          .products-filter-bar select {
+            width: 100% !important;
+          }
+          .modal-sheet-container {
+            padding: 0 !important;
+            align-items: flex-end !important;
+          }
+          .modal-sheet-content {
+            max-height: 94vh !important;
+            border-radius: 16px 16px 0 0 !important;
+          }
+          .modal-form-padding {
+            padding: 18px 16px 28px !important;
+          }
+          .form-grid-2col, .form-grid-3col, .form-grid-4col {
+            grid-template-columns: 1fr !important;
+            gap: 12px !important;
+          }
+          .modal-footer-btns {
+            flex-direction: column-reverse !important;
+            gap: 10px !important;
+          }
+          .modal-footer-btns button {
+            width: 100% !important;
+            justify-content: center !important;
+          }
+          .modal-sheet-content input, 
+          .modal-sheet-content select, 
+          .modal-sheet-content textarea {
+            font-size: 16px !important;
+          }
+        }
+      `}} />
+
       {/* Global Toast */}
       {toast && (
         <div style={{
@@ -445,7 +493,7 @@ export default function AdminProducts() {
       )}
 
       {/* Header & Add Button */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '16px' }}>
+      <div className="products-header-flex" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '16px' }}>
         <div>
           <h2 style={{ margin: '0 0 4px', fontSize: '28px', color: '#1a5c4a', fontFamily: "'Cormorant Garamond', serif", fontWeight: 700 }}>
             Gemstones &amp; Minerals Catalog
@@ -456,6 +504,7 @@ export default function AdminProducts() {
         </div>
         <button
           onClick={handleAddNew}
+          className="products-header-btn"
           style={{
             background: '#1a5c4a', color: '#fff', border: 'none',
             padding: '12px 22px', borderRadius: '6px', cursor: 'pointer',
@@ -524,7 +573,7 @@ export default function AdminProducts() {
       <div style={{ background: '#fff', borderRadius: '12px', border: '1px solid #e8e6e1', padding: '24px', boxShadow: '0 2px 10px rgba(0,0,0,0.02)' }}>
         
         {/* Filters Bar */}
-        <div style={{ display: 'flex', gap: '14px', marginBottom: '20px', flexWrap: 'wrap' }}>
+        <div className="products-filter-bar" style={{ display: 'flex', gap: '14px', marginBottom: '20px', flexWrap: 'wrap' }}>
           <div style={{ flex: 1, minWidth: '240px', position: 'relative' }}>
             <Search size={18} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: '#888' }} />
             <input 
@@ -658,8 +707,8 @@ export default function AdminProducts() {
 
       {/* Add / Edit Modal */}
       {isModalOpen && (
-        <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.55)', zIndex: 9999, display: 'flex', justifyContent: 'center', alignItems: 'center', backdropFilter: 'blur(4px)', padding: '20px' }}>
-          <div style={{ background: '#fff', width: '100%', maxWidth: '840px', maxHeight: '92vh', borderRadius: '12px', overflowY: 'auto', position: 'relative', boxShadow: '0 16px 48px rgba(0,0,0,0.2)' }}>
+        <div className="modal-sheet-container" style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.55)', zIndex: 9999, display: 'flex', justifyContent: 'center', alignItems: 'center', backdropFilter: 'blur(4px)', padding: '20px' }}>
+          <div className="modal-sheet-content" style={{ background: '#fff', width: '100%', maxWidth: '840px', maxHeight: '92vh', borderRadius: '12px', overflowY: 'auto', position: 'relative', boxShadow: '0 16px 48px rgba(0,0,0,0.2)' }}>
             
             {/* Modal Header */}
             <div style={{ position: 'sticky', top: 0, background: '#fff', padding: '20px 26px', borderBottom: '1px solid #e8e6e1', display: 'flex', justifyContent: 'space-between', alignItems: 'center', zIndex: 10 }}>
@@ -680,7 +729,7 @@ export default function AdminProducts() {
               </button>
             </div>
 
-            <div style={{ padding: '26px' }}>
+            <div className="modal-form-padding" style={{ padding: '26px' }}>
               <form onSubmit={handleSubmit}>
                 
                 {/* 1. Category Hierarchy Selection */}
@@ -726,7 +775,7 @@ export default function AdminProducts() {
                 </div>
 
                 {/* Sub-Variety & Title */}
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '18px', marginBottom: '20px' }}>
+                <div className="form-grid-2col" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '18px', marginBottom: '20px' }}>
                   <div>
                     <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#444', marginBottom: '6px' }}>
                       Gemstone / Mineral Variety *
@@ -851,7 +900,7 @@ export default function AdminProducts() {
                   3. Pricing &amp; Badges (International USD)
                 </h3>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '18px', marginBottom: '24px' }}>
+                <div className="form-grid-3col" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '18px', marginBottom: '24px' }}>
                   <div>
                     <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#444', marginBottom: '6px' }}>
                       Sale Price (USD $) *
@@ -920,7 +969,7 @@ export default function AdminProducts() {
                   4. Gemstone Specifications &amp; Provenance
                 </h3>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '16px', marginBottom: '20px' }}>
+                <div className="form-grid-4col" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '16px', marginBottom: '20px' }}>
                   <div>
                     <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#444', marginBottom: '6px' }}>Stock Quantity</label>
                     <input 
@@ -980,7 +1029,7 @@ export default function AdminProducts() {
                 </div>
 
                 {/* Action Buttons */}
-                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '14px', borderTop: '1px solid #e8e6e1', paddingTop: '20px' }}>
+                <div className="modal-footer-btns" style={{ display: 'flex', justifyContent: 'flex-end', gap: '14px', borderTop: '1px solid #e8e6e1', paddingTop: '20px' }}>
                   <button 
                     type="button" 
                     onClick={() => setIsModalOpen(false)} 

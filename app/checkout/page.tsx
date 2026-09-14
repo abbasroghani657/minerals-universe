@@ -142,7 +142,7 @@ export default function PremiumCheckoutPage() {
     border: '1px solid #d5d2cc',
     borderRadius: '6px',
     color: '#1a1a1a',
-    fontSize: '14.5px',
+    fontSize: '16px',
     outline: 'none',
     boxSizing: 'border-box',
     transition: 'border-color 0.2s, box-shadow 0.2s',
@@ -312,9 +312,14 @@ export default function PremiumCheckoutPage() {
         }
         
         @media (max-width: 900px) {
-          .checkout-container { grid-template-columns: 1fr; gap: 30px; }
+          .checkout-container { grid-template-columns: 1fr; gap: 24px; }
           .order-summary-card { position: static; }
           .payment-tabs { grid-template-columns: 1fr; }
+        }
+        @media (max-width: 600px) {
+          .checkout-email-phone-grid { grid-template-columns: 1fr !important; }
+          .section-card { padding: 20px 16px !important; }
+          .order-summary-card { padding: 20px 16px !important; }
         }
       `}} />
 
@@ -345,7 +350,7 @@ export default function PremiumCheckoutPage() {
                   />
                 </div>
                 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
+                <div className="checkout-email-phone-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
                   <div>
                     <label style={labelBase}>Email Address *</label>
                     <input 

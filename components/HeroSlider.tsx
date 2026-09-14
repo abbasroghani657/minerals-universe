@@ -65,8 +65,26 @@ export default function HeroSlider({ initialSettings }: { initialSettings?: Reco
   const sparklesRef = useRef<HTMLDivElement>(null);
   const [isPaused, setIsPaused] = useState(false);
   const [scrollProgress, setScrollProgress] = useState(0);
+  const touchStartX = useRef<number | null>(null);
 
   const goTo = (n: number) => setCur(((n % 3) + 3) % 3);
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.targetTouches[0].clientX;
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (touchStartX.current === null) return;
+    const diff = touchStartX.current - e.changedTouches[0].clientX;
+    if (diff > 45) {
+      // Swiped left -> Next slide
+      goTo(cur + 1);
+    } else if (diff < -45) {
+      // Swiped right -> Previous slide
+      goTo(cur - 1);
+    }
+    touchStartX.current = null;
+  };
 
   // Background sync for settings if not provided via SSR
   useEffect(() => {
@@ -156,6 +174,8 @@ export default function HeroSlider({ initialSettings }: { initialSettings?: Reco
       style={{ padding: 0 }}
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
       aria-label="Featured Minerals & Gemstones Showcase"
     >
       <div className="sparkles" ref={sparklesRef}></div>

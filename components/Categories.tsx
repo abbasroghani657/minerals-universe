@@ -70,6 +70,16 @@ export default function Categories() {
 
   return (
     <>
+      <style dangerouslySetInnerHTML={{ __html: `
+        @media (max-width: 768px) {
+          .cat-section {
+            padding: 36px 14px !important;
+          }
+          .cat-heading {
+            font-size: 28px !important;
+          }
+        }
+      `}} />
       <div className="teal-divider"></div>
       <div id="categories" className="cat-section" style={{ background: '#f8f7f5', padding: '60px 20px' }}>
         <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
@@ -88,7 +98,7 @@ export default function Categories() {
           </div>
           
           {/* 3 Main Department Cards */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '30px', marginBottom: '40px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '24px', marginBottom: '40px' }}>
             {MAIN_CATEGORY_NAMES.map((mainName) => {
               const def = CATEGORY_TREE[mainName];
               const count = departmentCounts[mainName] || 0;

@@ -199,7 +199,7 @@ export default function MobileNavDrawer({
                 padding: '10px 38px 10px 14px',
                 borderRadius: '6px',
                 border: '1px solid #dcd7ce',
-                fontSize: '13.5px',
+                fontSize: '16px',
                 outline: 'none',
                 background: '#faf9f7',
                 fontFamily: "'DM Sans', sans-serif"

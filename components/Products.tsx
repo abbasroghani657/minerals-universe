@@ -68,7 +68,7 @@ export default function Products({ initialProducts }: { initialProducts?: any[] 
             </p>
           </div>
 
-          <div className="products-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '28px' }}>
+          <div className="products-grid">
             {homeProducts.map((product) => {
               const badgeText = product.badge?.trim() || 'NEW ARRIVAL';
               const isNew = badgeText.toUpperCase().includes('NEW');

@@ -813,16 +813,16 @@ html, body {
   }
 }
 
-/* Floating WhatsApp Button on Mobile */
-@media (max-width: 600px) {
+/* Floating WhatsApp Button on Mobile: Sits safely above the mobile navigation dock */
+@media (max-width: 768px) {
   .wa-float {
-    bottom: 18px !important;
+    bottom: calc(74px + env(safe-area-inset-bottom, 0px)) !important;
     right: 16px !important;
-    width: 48px !important;
-    height: 48px !important;
-    font-size: 22px !important;
-    box-shadow: 0 4px 14px rgba(37,211,102,.4) !important;
-    z-index: 999 !important;
+    width: 50px !important;
+    height: 50px !important;
+    font-size: 24px !important;
+    box-shadow: 0 4px 16px rgba(37,211,102,.45) !important;
+    z-index: 950 !important;
   }
 }
 
