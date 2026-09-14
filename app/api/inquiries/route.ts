@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { verifyAdminRequest } from '@/lib/auth';
 import { invalidateCache } from '@/lib/cache';
+import { sendInquiryReplyEmail } from '@/lib/email';
 
 export async function GET(req: Request) {
   try {
@@ -59,20 +60,106 @@ export async function PUT(req: Request) {
     }
 
     const body = await req.json();
-    const { id, status } = body;
-    if (!id || !status) {
-      return NextResponse.json({ success: false, error: 'Missing id or status' }, { status: 400 });
+    const { id, status, action, replyMessage, subject, toEmail, customerName } = body;
+
+    if (!id) {
+      return NextResponse.json({ success: false, error: 'Missing inquiry ID' }, { status: 400 });
     }
 
-    await prisma.inquiry.update({
+    // 1. Reply to customer via Email & mark as Replied
+    if (action === 'reply' || replyMessage) {
+      const inquiry = await prisma.inquiry.findUnique({ where: { id } });
+      if (!inquiry) {
+        return NextResponse.json({ success: false, error: 'Inquiry not found' }, { status: 404 });
+      }
+
+      const recipient = toEmail || inquiry.email;
+      const name = customerName || inquiry.name;
+      const sub = subject || inquiry.subject || 'Your Inquiry with Minerals Universe';
+
+      if (!recipient || !recipient.includes('@') || recipient.includes('no-email')) {
+        return NextResponse.json({ success: false, error: 'Customer does not have a valid email address.' }, { status: 400 });
+      }
+
+      try {
+        await sendInquiryReplyEmail({
+          to: recipient,
+          customerName: name,
+          subject: sub,
+          replyMessage: String(replyMessage).trim(),
+          originalMessage: inquiry.message,
+        });
+      } catch (mailErr: any) {
+        console.error('[Inquiry Reply Email Error]:', mailErr);
+        return NextResponse.json({
+          success: false,
+          error: `Failed to dispatch email: ${mailErr.message || 'SMTP delivery failure'}. Please verify SMTP settings.`,
+        }, { status: 500 });
+      }
+
+      // Successfully sent email: update inquiry status to Replied
+      const updated = await prisma.inquiry.update({
+        where: { id },
+        data: { status: 'Replied' }
+      });
+
+      invalidateCache('admin_overview_data');
+      return NextResponse.json({
+        success: true,
+        message: `Response email sent successfully to ${recipient}!`,
+        inquiry: updated
+      });
+    }
+
+    // 2. Simple status toggle (Unread / Read / Replied)
+    if (!status) {
+      return NextResponse.json({ success: false, error: 'Missing status update' }, { status: 400 });
+    }
+
+    const updated = await prisma.inquiry.update({
       where: { id },
       data: { status }
     });
 
     invalidateCache('admin_overview_data');
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true, inquiry: updated });
   } catch (err: any) {
     console.error('[PUT /api/inquiries]', err);
+    return NextResponse.json({ success: false, error: err.message }, { status: 500 });
+  }
+}
+
+export async function DELETE(req: Request) {
+  try {
+    const auth = await verifyAdminRequest(req);
+    if (!auth.authorized) {
+      return NextResponse.json({ success: false, error: 'Unauthorized: Admin clearance required.' }, { status: 403 });
+    }
+
+    const { searchParams } = new URL(req.url);
+    let id = searchParams.get('id');
+
+    if (!id) {
+      try {
+        const body = await req.json();
+        id = body?.id;
+      } catch {
+        // query param is preferred
+      }
+    }
+
+    if (!id) {
+      return NextResponse.json({ success: false, error: 'Missing inquiry ID' }, { status: 400 });
+    }
+
+    await prisma.inquiry.delete({
+      where: { id }
+    });
+
+    invalidateCache('admin_overview_data');
+    return NextResponse.json({ success: true, message: 'Inquiry deleted successfully' });
+  } catch (err: any) {
+    console.error('[DELETE /api/inquiries]', err);
     return NextResponse.json({ success: false, error: err.message }, { status: 500 });
   }
 }

@@ -121,3 +121,68 @@ export async function sendOrderConfirmationEmail(order: OrderDetails): Promise<v
     html,
   });
 }
+
+export async function sendInquiryReplyEmail({
+  to,
+  customerName,
+  subject,
+  replyMessage,
+  originalMessage,
+}: {
+  to: string;
+  customerName: string;
+  subject: string;
+  replyMessage: string;
+  originalMessage?: string;
+}): Promise<void> {
+  const html = `
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Response from Minerals Universe</title></head>
+<body style="margin:0;padding:0;background:#f4f4f4;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f4f4;padding:40px 0;">
+    <tr><td align="center">
+      <table width="600" cellpadding="0" cellspacing="0" style="background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);">
+        <tr>
+          <td style="background:#0f5c53;padding:28px 40px;text-align:center;">
+            <h1 style="margin:0;color:#fff;font-size:24px;font-weight:600;letter-spacing:0.5px;">Minerals Universe</h1>
+            <p style="margin:6px 0 0;color:#d4ede6;font-size:13px;">Customer Support & Gemstone Advisory</p>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:36px 40px;">
+            <p style="margin:0 0 12px;font-size:16px;color:#333;">Dear <strong>${customerName}</strong>,</p>
+            <p style="margin:0 0 20px;font-size:15px;color:#444;line-height:1.6;white-space:pre-wrap;">${replyMessage}</p>
+
+            ${originalMessage ? `
+            <div style="margin-top:24px;padding:16px;background:#f8f9fa;border-left:3px solid #0f5c53;border-radius:4px;">
+              <p style="margin:0 0 6px;font-size:12px;font-weight:700;color:#777;text-transform:uppercase;">Your Original Inquiry:</p>
+              <p style="margin:0;font-size:13.5px;color:#666;line-height:1.5;font-style:italic;">"${originalMessage}"</p>
+            </div>
+            ` : ''}
+
+            <div style="margin-top:28px;padding-top:20px;border-top:1px solid #eee;font-size:13px;color:#666;">
+              <p style="margin:0 0 4px;">For instant assistance, you can also reach our team on WhatsApp: <strong>+92 300 158 1210</strong></p>
+              <p style="margin:0;">Office # F23, 2nd Floor, Asghar Gemstones Market, Namak Mandi, Peshawar, Pakistan</p>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td style="background:#f9f9f9;padding:20px 40px;text-align:center;border-top:1px solid #f0f0f0;">
+            <p style="margin:0;font-size:12px;color:#888;">© 2026 Minerals Universe. All Rights Reserved.</p>
+          </td>
+        </tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
+
+  await transporter.sendMail({
+    from: `"Minerals Universe" <${process.env.SMTP_USER || 'no-reply@mineralsuniverse.com'}>`,
+    to,
+    bcc: process.env.ADMIN_EMAIL,
+    subject: `Re: ${subject || 'Your Inquiry with Minerals Universe'}`,
+    html,
+  });
+}
