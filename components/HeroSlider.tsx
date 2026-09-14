@@ -15,7 +15,7 @@ const SLIDE_DEFAULTS = [
     showTextKey: 'hero_show_text_1',
     fitKey: 'hero_fit_1',
     defaultTag: '✨ Featured Collection',
-    defaultTitle: "Polished Stones - Nature's Art, Perfected",
+    defaultTitle: "Polished Stones: Nature's Art, Perfected",
     defaultDesc: 'Handpicked specimens from around the world, curated for collectors and connoisseurs',
     defaultCta: 'Shop Now',
     defaultHref: '#products',
@@ -33,8 +33,8 @@ const SLIDE_DEFAULTS = [
     showTextKey: 'hero_show_text_2',
     fitKey: 'hero_fit_2',
     defaultTag: '✨ New Arrivals',
-    defaultTitle: 'Natural Loose Gemstones - Rare & Certified',
-    defaultDesc: 'Sapphires, Rubies, Tourmalines & more - directly sourced from premier mining regions',
+    defaultTitle: 'Natural Loose Gemstones: Rare & Certified',
+    defaultDesc: 'Sapphires, Rubies, Tourmalines & more, directly sourced from premier mining regions',
     defaultCta: 'Explore Collection',
     defaultHref: '#categories',
     defaultBg: '/images/hero/aquamarine-crystal-matrix.webp',
@@ -51,8 +51,8 @@ const SLIDE_DEFAULTS = [
     showTextKey: 'hero_show_text_3',
     fitKey: 'hero_fit_3',
     defaultTag: '✨ Collectors Edition',
-    defaultTitle: 'Minerals & Crystals - Sourced from the Earth',
-    defaultDesc: "Authentic specimens for collectors and jewelers - from the world's finest geological formations",
+    defaultTitle: 'Minerals & Crystals: Sourced from the Earth',
+    defaultDesc: "Authentic specimens for collectors and jewelers, from the world's finest geological formations",
     defaultCta: 'View All',
     defaultHref: '#categories',
     defaultBg: '/images/hero/faceted-gems-spectrum.webp',
@@ -118,14 +118,23 @@ export default function HeroSlider() {
     }
   }, []);
 
-  // Format title with glowing teal accent on secondary segment
+  // Format title with glowing teal accent on secondary segment (breaks cleanly without hyphens)
   const renderTitle = (rawTitle: string) => {
     if (!rawTitle) return null;
     if (rawTitle.includes(' - ')) {
       const [mainPart, accentPart] = rawTitle.split(' - ');
       return (
         <>
-          {mainPart} -<br />
+          {mainPart}<br />
+          <span>{accentPart}</span>
+        </>
+      );
+    }
+    if (rawTitle.includes(': ')) {
+      const [mainPart, accentPart] = rawTitle.split(': ');
+      return (
+        <>
+          {mainPart}<br />
           <span>{accentPart}</span>
         </>
       );

@@ -57,11 +57,11 @@ export default function CustomOrder() {
                 <p style={{ color: '#9ee4de', fontSize: '12px', letterSpacing: '2.5px', textTransform: 'uppercase', marginBottom: '12px' }}>✦ Bespoke Service</p>
                 <h2>Can&apos;t Find What You&apos;re<br /><span>Looking For?</span></h2>
                 <div style={{ width: '52px', height: '3px', background: '#9ee4de', borderRadius: '2px', marginBottom: '20px' }}></div>
-                <p>Request a Custom Stone — our gemologists source rare gems to your exact specifications. From investment-grade sapphires to unique collector specimens, we fulfill bespoke orders worldwide.</p>
+                <p>Request a Custom Stone: our gemologists source rare gems to your exact specifications. From investment-grade sapphires to unique collector specimens, we fulfill bespoke orders worldwide.</p>
                 <ul style={{ listStyle: 'none', marginTop: '16px' }}>
                   <li style={{ color: 'rgba(255,255,255,.68)', fontSize: '13.5px', marginBottom: '8px' }}>✦ Direct mine sourcing from Pakistan &amp; Afghanistan</li>
                   <li style={{ color: 'rgba(255,255,255,.68)', fontSize: '13.5px', marginBottom: '8px' }}>✦ GIA / AGL certification available</li>
-                  <li style={{ color: 'rgba(255,255,255,.68)', fontSize: '13.5px', marginBottom: '8px' }}>✦ Typical fulfillment: 7–21 business days</li>
+                  <li style={{ color: 'rgba(255,255,255,.68)', fontSize: '13.5px', marginBottom: '8px' }}>✦ Typical fulfillment: 7 to 21 business days</li>
                 </ul>
               </div>
               <div>

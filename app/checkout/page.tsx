@@ -99,7 +99,7 @@ export default function PremiumCheckoutPage() {
         currencySymbol: currencySymbol,
         exchangeRate: currentRate,
         paymentMethod: `PayPal Express (Txn: ${txnId})`,
-        paymentStatus: `Paid (PayPal - ${txnId})`,
+        paymentStatus: `Paid (PayPal: ${txnId})`,
       };
 
       const res = await fetch('/api/orders', {

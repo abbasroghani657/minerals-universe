@@ -83,7 +83,7 @@ export default function Categories() {
             </h2>
             <div className="teal-line" style={{ margin: '0 auto 20px' }}></div>
             <p style={{ color: '#666', maxWidth: '640px', margin: '0 auto', fontSize: '15px', lineHeight: 1.6 }}>
-              Discover our ethically sourced natural gems classified into three premier collections — from precision-faceted collector gems to rare crystalline matrix specimens.
+              Discover our ethically sourced natural gems classified into three premier collections, ranging from precision-faceted collector gems to rare crystalline matrix specimens.
             </p>
           </div>
           

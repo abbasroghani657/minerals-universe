@@ -100,7 +100,7 @@ export default function UserDetailsDrawer({ user, onClose, onRoleChange, isUpdat
         {/* Action Buttons */}
         <div style={{ marginTop: 'auto', display: 'flex', flexDirection: 'column', gap: '10px' }}>
           <a
-            href={`mailto:${user.email}?subject=Minerals Universe - Exclusive Gemstone Inquiry`}
+            href={`mailto:${user.email}?subject=Minerals Universe | Exclusive Gemstone Inquiry`}
             style={{
               display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
               padding: '12px', background: '#1a5c4a', color: '#fff', borderRadius: '6px',

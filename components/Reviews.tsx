@@ -5,7 +5,7 @@ import Image from 'next/image';
 import { Star, Upload, X } from 'lucide-react';
 
 const initialReviews = [
-  { initial: 'S', name: 'Sarah K.', location: '🇺🇸 United States', rating: 5, text: '"The aquamarine I received was absolutely stunning — the color and clarity exceeded my expectations. Beautifully packaged with the full gemological report."', photo: 'https://images.unsplash.com/photo-1617038220319-276d3cfab638?w=150&q=70' },
+  { initial: 'S', name: 'Sarah K.', location: '🇺🇸 United States', rating: 5, text: '"The aquamarine I received was absolutely stunning, the color and clarity exceeded my expectations. Beautifully packaged with the full gemological report."', photo: 'https://images.unsplash.com/photo-1617038220319-276d3cfab638?w=150&q=70' },
   { initial: 'M', name: 'Marco B.', location: '🇩🇪 Germany', rating: 5, text: '"Ordered a custom tourmaline for my wife\'s ring. The team was incredibly helpful and the stone arrived perfectly. Exceptional service throughout."' },
   { initial: 'A', name: 'Aisha R.', location: '🇦🇪 UAE', rating: 5, text: '"Best source for Pakistani sapphires online. Authentic, certified, and priced fairly. The WhatsApp support made the experience very personal."' },
   { initial: 'J', name: 'James T.', location: '🇬🇧 United Kingdom', rating: 4, text: '"Great quality emerald. The shipping took a bit longer than expected to the UK, but the stone itself is flawless."', photo: '/images/products/aquamarine-round-gem.jpg' },

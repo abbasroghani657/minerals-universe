@@ -8,7 +8,7 @@ export default function SourcingMap() {
             <h2 className="section-title">Sourced from the World&apos;s<br /><span>Finest Locations</span></h2>
             <div className="teal-line"></div>
             <p style={{ color: 'var(--muted)', maxWidth: '600px', margin: '0 auto', fontSize: '14.5px', lineHeight: '1.75' }}>
-              We are committed to ethical, transparent sourcing — working directly with trusted miners and cooperatives to ensure fair wages, safe conditions, and environmental responsibility.
+              We are committed to ethical, transparent sourcing, working directly with trusted miners and cooperatives to ensure fair wages, safe conditions, and environmental responsibility.
             </p>
           </div>
           <div className="world-map-wrap">
@@ -39,7 +39,7 @@ export default function SourcingMap() {
             <div className="origin-card"><span className="flag">🇱🇰</span><h4>Sri Lanka</h4><p>Sapphire, Ruby, Spinel</p></div>
             <div className="origin-card"><span className="flag">🇲🇲</span><h4>Myanmar</h4><p>Ruby, Sapphire, Spinel</p></div>
             <div className="origin-card"><span className="flag">🇲🇬</span><h4>Madagascar</h4><p>Sapphire, Tourmaline, Garnet</p></div>
-            <div className="origin-card"><span className="flag">🇨🇴</span><h4>Colombia</h4><p>Emerald — Finest Green</p></div>
+            <div className="origin-card"><span className="flag">🇨🇴</span><h4>Colombia</h4><p>Emerald: Finest Green</p></div>
           </div>
         </div>
       </section>

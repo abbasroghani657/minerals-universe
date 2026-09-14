@@ -89,13 +89,13 @@ export default function ShippingPolicyPage() {
             All orders placed with Minerals Universe are dispatched from our headquarters in Namak Mandi, Peshawar. We partner exclusively with premier international logistics providers, primarily <strong>DHL Express Worldwide</strong> and <strong>FedEx International Priority</strong>.
           </p>
           <ul style={{ fontSize: '14.5px', lineHeight: 1.8, color: '#444', paddingLeft: '20px', marginBottom: '20px' }}>
-            <li><strong>United States & Canada:</strong> 3 – 5 business days</li>
-            <li><strong>United Kingdom & European Union:</strong> 3 – 5 business days</li>
-            <li><strong>United Arab Emirates & Gulf States:</strong> 2 – 4 business days</li>
-            <li><strong>Australia, New Zealand & East Asia:</strong> 5 – 7 business days</li>
+            <li><strong>United States & Canada:</strong> 3 to 5 business days</li>
+            <li><strong>United Kingdom & European Union:</strong> 3 to 5 business days</li>
+            <li><strong>United Arab Emirates & Gulf States:</strong> 2 to 4 business days</li>
+            <li><strong>Australia, New Zealand & East Asia:</strong> 5 to 7 business days</li>
           </ul>
           <p style={{ fontSize: '14.5px', lineHeight: 1.7, color: '#444', margin: 0 }}>
-            Order dispatch occurs within 24–48 hours following payment confirmation and necessary gemological certificate verification.
+            Order dispatch occurs within 24 to 48 hours following payment confirmation and necessary gemological certificate verification.
           </p>
         </div>
 

@@ -41,7 +41,7 @@ export async function verifyAdminRequest(req?: Request): Promise<AdminAuthResult
     // 2. Check authenticated Clerk session
     const clerkUser = await currentUser();
     if (!clerkUser) {
-      return { authorized: false, reason: 'Unauthenticated - No active session' };
+      return { authorized: false, reason: 'Unauthenticated: No active session' };
     }
 
     const allEmails = (clerkUser.emailAddresses || [])
@@ -102,7 +102,7 @@ export async function verifyAdminRequest(req?: Request): Promise<AdminAuthResult
       };
     }
 
-    return { authorized: false, email: primaryEmail, reason: 'Forbidden - Account does not have Admin clearance' };
+    return { authorized: false, email: primaryEmail, reason: 'Forbidden: Account does not have Admin clearance' };
   } catch (err: any) {
     console.error('[verifyAdminRequest] Error:', err);
     return { authorized: false, reason: err.message || 'Internal authorization error' };

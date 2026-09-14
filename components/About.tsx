@@ -11,7 +11,7 @@ export default function About() {
               <h2>Welcome to<br /><span>Minerals Universe</span></h2>
               <div className="teal-line left" style={{ marginBottom: '28px' }}></div>
               <p>Minerals Universe is your premier destination for authentic gemstones, minerals, and crystals sourced directly from the world&apos;s most prolific geological regions. For over a decade, we have curated an extraordinary collection for jewelers, collectors, and enthusiasts worldwide.</p>
-              <p>Our team of expert gemologists personally inspects every specimen — from the sapphire mines of Pakistan&apos;s Hunza Valley to the tourmaline deposits of Kunar, Afghanistan. Each stone is authenticated, certified, and delivered with complete transparency.</p>
+              <p>Our team of expert gemologists personally inspects every specimen, from the sapphire mines of Pakistan&apos;s Hunza Valley to the tourmaline deposits of Kunar, Afghanistan. Each stone is authenticated, certified, and delivered with complete transparency.</p>
               <a href="#products" className="btn-teal" style={{ marginTop: '16px' }}>Shop Now</a>
               <div className="stats-row">
                 <div className="stat"><div className="stat-num">500+</div><div className="stat-label">Products</div></div>

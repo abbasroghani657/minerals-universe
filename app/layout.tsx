@@ -21,11 +21,11 @@ const poppins = Poppins({
 });
 
 export const metadata: Metadata = {
-  title: 'Minerals Universe — Premium Gemstones & Minerals',
-  description: 'Pakistan\'s premier online destination for authentic gemstones, minerals and crystals. Sapphires, Rubies, Tourmalines & more — directly sourced, certified, and delivered worldwide.',
+  title: 'Minerals Universe | Premium Gemstones & Minerals',
+  description: 'Pakistan\'s premier online destination for authentic gemstones, minerals and crystals. Sapphires, Rubies, Tourmalines and more, directly sourced, certified, and delivered worldwide.',
   keywords: 'gemstones, minerals, crystals, sapphire, ruby, tourmaline, Pakistan, certified gems',
   openGraph: {
-    title: 'Minerals Universe — Premium Gemstones & Minerals',
+    title: 'Minerals Universe | Premium Gemstones & Minerals',
     description: 'Authentic gemstones, minerals, and crystals sourced directly from the world\'s finest geological regions.',
     type: 'website',
   },

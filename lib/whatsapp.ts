@@ -15,7 +15,7 @@ export function buildWhatsAppURL(order: OrderDetails): string {
   message += `Items:\n`;
   
   order.items.forEach(item => {
-    message += `- ${item.name} x${item.quantity} — PKR ${(item.price * item.quantity).toLocaleString()}\n`;
+    message += `• ${item.name} x${item.quantity}: PKR ${(item.price * item.quantity).toLocaleString()}\n`;
   });
   
   message += `Total: PKR ${order.total.toLocaleString()}\n`;

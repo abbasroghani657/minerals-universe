@@ -86,7 +86,7 @@ export default function Footer() {
           <div className="footer-bottom">
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
               <p className="footer-copy" style={{ margin: 0 }}>
-                Copyright © 2025 Minerals Universe — All Rights Reserved | Powered by Minerals Universe
+                Copyright © 2025 Minerals Universe. All Rights Reserved | Powered by Minerals Universe
               </p>
               <div style={{ display: 'flex', gap: '14px', fontSize: '12px', color: 'rgba(255,255,255,0.4)', flexWrap: 'wrap' }}>
                 <Link href="/shipping-policy" style={{ color: 'rgba(255,255,255,0.5)', textDecoration: 'none' }}>Shipping Policy</Link>

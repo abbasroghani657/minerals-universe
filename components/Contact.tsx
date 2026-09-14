@@ -89,7 +89,7 @@ export default function Contact() {
               <div className="info-row"><span>📍</span><p>Office # F23 second floor Asghar gemstones market namak mandi Peshawar Pakistan</p></div>
               <div className="info-row"><span>📞</span><p><a href="tel:+923001581210" style={{ color: 'var(--body)', textDecoration: 'none' }}>+92 300 158 1210</a></p></div>
               <div className="info-row"><span>📧</span><p><a href="mailto:info@mineralsuniverse.com" style={{ color: 'var(--body)', textDecoration: 'none' }}>info@mineralsuniverse.com</a></p></div>
-              <div className="info-row"><span>🕐</span><p>Mon–Sat: 9:00 AM – 7:00 PM PKT<br />Sunday: 11:00 AM – 5:00 PM</p></div>
+              <div className="info-row"><span>🕐</span><p>Mon to Sat: 9:00 AM to 7:00 PM PKT<br />Sunday: 11:00 AM to 5:00 PM</p></div>
               <div className="social-row">
                 <a className="social-btn" style={{ color: '#E1306C' }} href="https://www.instagram.com/mineralsuniverse_" target="_blank" rel="noopener" title="Instagram"><FaInstagram size={18} /></a>
                 <a className="social-btn" style={{ color: '#000000' }} href="https://www.tiktok.com/@mineralsuniverse1?_r=1&_t=ZN-95hIvZ38Z30" target="_blank" rel="noopener" title="TikTok"><FaTiktok size={18} /></a>

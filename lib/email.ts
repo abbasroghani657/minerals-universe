@@ -93,7 +93,7 @@ export async function sendOrderConfirmationEmail(order: OrderDetails): Promise<v
 
             <!-- What happens next -->
             <h3 style="margin:0 0 10px;font-size:16px;color:#222;">What happens next?</h3>
-            <p style="margin:0 0 8px;font-size:14px;color:#555;line-height:1.6;">✅ &nbsp;Your order will be verified and prepared for dispatch within <strong>1–2 business days</strong>.</p>
+            <p style="margin:0 0 8px;font-size:14px;color:#555;line-height:1.6;">✅ &nbsp;Your order will be verified and prepared for dispatch within <strong>1 to 2 business days</strong>.</p>
             <p style="margin:0 0 8px;font-size:14px;color:#555;line-height:1.6;">📦 &nbsp;You will receive full tracking details once your certified parcel is shipped.</p>
             <p style="margin:0;font-size:14px;color:#555;line-height:1.6;">💬 &nbsp;For urgent questions, reply to this email or reach us on WhatsApp.</p>
           </td>
@@ -102,7 +102,7 @@ export async function sendOrderConfirmationEmail(order: OrderDetails): Promise<v
         <!-- Footer -->
         <tr>
           <td style="background:#f9f9f9;padding:24px 40px;text-align:center;border-top:1px solid #f0f0f0;">
-            <p style="margin:0 0 6px;font-size:13px;color:#888;"><strong>Minerals Universe</strong> — Pakistan's Premier Gemstone Destination</p>
+            <p style="margin:0 0 6px;font-size:13px;color:#888;"><strong>Minerals Universe</strong> | Pakistan's Premier Gemstone Destination</p>
             <p style="margin:0;font-size:12px;color:#aaa;">Questions? Email us at <a href="mailto:${process.env.ADMIN_EMAIL || 'support@mineralsuniverse.com'}" style="color:#0f5c53;">${process.env.ADMIN_EMAIL || 'support@mineralsuniverse.com'}</a></p>
           </td>
         </tr>
@@ -117,7 +117,7 @@ export async function sendOrderConfirmationEmail(order: OrderDetails): Promise<v
     from: `"Minerals Universe" <${process.env.SMTP_USER || 'no-reply@mineralsuniverse.com'}>`,
     to: order.customerEmail,
     bcc: process.env.ADMIN_EMAIL,
-    subject: `Order Confirmed — #${order.orderId}`,
+    subject: `Order Confirmed: #${order.orderId}`,
     html,
   });
 }

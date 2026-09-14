@@ -25,7 +25,7 @@ import { FaTiktok, FaEbay, FaWhatsapp, FaInstagram, FaYoutube } from 'react-icon
 const FACTORY_DEFAULTS: Record<string, string> = {
   hero_banner_1: 'https://images.unsplash.com/photo-1551868041-3bfcabc0a86c?w=1600&q=80',
   hero_tag_1: '✨ Featured Collection',
-  hero_title_1: "Polished Stones - Nature's Art, Perfected",
+  hero_title_1: "Polished Stones: Nature's Art, Perfected",
   hero_desc_1: 'Handpicked specimens from around the world, curated for collectors and connoisseurs',
   hero_cta_1: 'Shop Now',
   hero_link_1: '#products',
@@ -34,8 +34,8 @@ const FACTORY_DEFAULTS: Record<string, string> = {
 
   hero_banner_2: 'https://images.unsplash.com/photo-1625750331870-624de6fd3452?w=1600&q=80',
   hero_tag_2: '✨ New Arrivals',
-  hero_title_2: 'Natural Loose Gemstones - Rare & Certified',
-  hero_desc_2: 'Sapphires, Rubies, Tourmalines & more - directly sourced from premier mining regions',
+  hero_title_2: 'Natural Loose Gemstones: Rare & Certified',
+  hero_desc_2: 'Sapphires, Rubies, Tourmalines & more, directly sourced from premier mining regions',
   hero_cta_2: 'Explore Collection',
   hero_link_2: '#categories',
   hero_show_text_2: 'true',
@@ -43,14 +43,14 @@ const FACTORY_DEFAULTS: Record<string, string> = {
 
   hero_banner_3: 'https://images.unsplash.com/photo-1519608487953-e999c86e7455?w=1600&q=80',
   hero_tag_3: '✨ Collectors Edition',
-  hero_title_3: 'Minerals & Crystals - Sourced from the Earth',
-  hero_desc_3: "Authentic specimens for collectors and jewelers - from the world's finest geological formations",
+  hero_title_3: 'Minerals & Crystals: Sourced from the Earth',
+  hero_desc_3: "Authentic specimens for collectors and jewelers, from the world's finest geological formations",
   hero_cta_3: 'View All',
   hero_link_3: '#categories',
   hero_show_text_3: 'true',
   hero_fit_3: 'cover',
   journey_img_1: '/images/journey/raw-emeralds-mine.jpg',
-  journey_caption_1: '✦ Direct Mine Sourcing — Raw Swat Emeralds',
+  journey_caption_1: '✦ Direct Mine Sourcing: Raw Swat Emeralds',
   journey_link_1: 'https://www.instagram.com',
 
   journey_img_2: '/images/journey/aquamarine-inspection.jpg',
@@ -516,7 +516,7 @@ export default function AdminSettings() {
       linkKey: 'hero_link_1', 
       showTextKey: 'hero_show_text_1',
       fitKey: 'hero_fit_1',
-      defaultTitle: 'Polished Stones - Nature\'s Art, Perfected' 
+      defaultTitle: 'Polished Stones: Nature\'s Art, Perfected' 
     },
     { 
       num: 2, 
@@ -528,7 +528,7 @@ export default function AdminSettings() {
       linkKey: 'hero_link_2', 
       showTextKey: 'hero_show_text_2',
       fitKey: 'hero_fit_2',
-      defaultTitle: 'Natural Loose Gemstones - Rare & Certified' 
+      defaultTitle: 'Natural Loose Gemstones: Rare & Certified' 
     },
     { 
       num: 3, 
@@ -540,7 +540,7 @@ export default function AdminSettings() {
       linkKey: 'hero_link_3', 
       showTextKey: 'hero_show_text_3',
       fitKey: 'hero_fit_3',
-      defaultTitle: 'Minerals & Crystals - Sourced from the Earth' 
+      defaultTitle: 'Minerals & Crystals: Sourced from the Earth' 
     },
   ];
 
@@ -605,7 +605,7 @@ export default function AdminSettings() {
                           Slide {slot.num}
                         </span>
                         <strong style={{ fontSize: '15px', color: '#1e293b' }}>
-                          {showText ? (settings[slot.titleKey] || slot.defaultTitle) : '(Clean Image Only - No Text)'}
+                          {showText ? (settings[slot.titleKey] || slot.defaultTitle) : '(Clean Image Only: No Text)'}
                         </strong>
                       </div>
                       <button
@@ -810,14 +810,14 @@ export default function AdminSettings() {
                             />
                           </div>
                           <div>
-                            <label style={labelStyle}>Headline (Use " - " to accent second half)</label>
+                            <label style={labelStyle}>Headline</label>
                             <input 
                               name={slot.titleKey}
                               type="text"
                               value={settings[slot.titleKey] || ''}
                               onChange={handleChange}
                               style={inputStyle}
-                              placeholder="e.g. Polished Stones - Nature's Art, Perfected"
+                              placeholder="e.g. Polished Stones: Nature's Art, Perfected"
                             />
                           </div>
                         </div>
@@ -873,7 +873,7 @@ export default function AdminSettings() {
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid #eee', paddingBottom: '10px', marginBottom: '20px' }}>
               <div>
                 <h3 style={{ fontSize: '17px', color: '#1a5c4a', textTransform: 'uppercase', letterSpacing: '1px', margin: '0 0 4px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <Camera size={20} /> Follow Our Journey — Social Showcase Gallery (6 Slots)
+                  <Camera size={20} /> Follow Our Journey: Social Showcase Gallery (6 Slots)
                 </h3>
                 <p style={{ margin: 0, fontSize: '13px', color: '#666' }}>
                   These 6 high-resolution photographs appear directly in the &ldquo;Follow Our Journey&rdquo; section on the storefront homepage. Each image builds international collector confidence by highlighting authentic mine sourcing, gem inspection, packaging, and cutting artistry.
@@ -1024,7 +1024,7 @@ export default function AdminSettings() {
                         name={capKey}
                         value={settings[capKey] ?? FACTORY_DEFAULTS[capKey] ?? ''}
                         onChange={handleChange}
-                        placeholder="e.g. ✦ Direct Mine Sourcing — Raw Swat Emeralds"
+                        placeholder="e.g. ✦ Direct Mine Sourcing: Raw Swat Emeralds"
                         style={{ ...inputStyle, fontSize: '13px', padding: '8px 10px' }}
                       />
                     </div>

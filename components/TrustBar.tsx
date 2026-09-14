@@ -12,7 +12,7 @@ export default function TrustBar() {
           <div className="trust-card">
             <span className="trust-icon">🔒</span>
             <h3>Secure Payment</h3>
-            <p>Visa, Mastercard, PayPal — all transactions encrypted &amp; protected</p>
+            <p>Visa, Mastercard, PayPal: all transactions encrypted &amp; protected</p>
           </div>
           <div className="trust-card">
             <span className="trust-icon">💎</span>
@@ -22,7 +22,7 @@ export default function TrustBar() {
           <div className="trust-card">
             <span className="trust-icon">🌍</span>
             <h3>Fast Shipping Worldwide</h3>
-            <p>Insured express delivery to 50+ countries — fully tracked</p>
+            <p>Insured express delivery to 50+ countries, fully tracked</p>
           </div>
         </div>
       </div>

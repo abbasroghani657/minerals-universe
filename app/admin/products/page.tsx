@@ -784,7 +784,7 @@ export default function AdminProducts() {
                       defaultValue={editingProduct?.name} 
                       required 
                       style={{ width: '100%', padding: '12px 14px', border: '1px solid #d5d2cc', borderRadius: '6px', outline: 'none', fontSize: '14px' }} 
-                      placeholder="e.g. Natural Swat Emerald Cushion Cut — 3.5 Cts" 
+                      placeholder="e.g. Natural Swat Emerald Cushion Cut (3.5 Cts)" 
                     />
                   </div>
                 </div>

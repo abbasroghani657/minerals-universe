@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
@@ -108,7 +108,7 @@ export default function InstagramGrid() {
             <h2 className="section-title">Follow Our <span>Journey</span></h2>
             <div className="teal-line"></div>
             <p style={{ color: '#666', fontSize: '15px', maxWidth: '640px', margin: '14px auto 0' }}>
-              From the high-altitude mines of northern Pakistan to our precision gemological laboratory — explore authentic behind-the-scenes moments.
+              From the high-altitude mines of northern Pakistan to our precision gemological laboratory, explore authentic behind-the-scenes moments.
             </p>
           </div>
 
