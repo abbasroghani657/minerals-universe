@@ -147,44 +147,129 @@ export default function AdminSettings() {
     });
   };
 
+  const compressImageClient = async (
+    file: File,
+    maxWidth = 2400,
+    maxHeight = 1350,
+    quality = 0.86
+  ): Promise<{ file: File; base64: string }> => {
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const dataUrl = (event.target?.result as string) || '';
+        const img = document.createElement('img');
+        img.onload = () => {
+          let { width, height } = img;
+          if (width > maxWidth || height > maxHeight) {
+            const ratio = Math.min(maxWidth / width, maxHeight / height);
+            width = Math.round(width * ratio);
+            height = Math.round(height * ratio);
+          }
+          const canvas = document.createElement('canvas');
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          if (!ctx) {
+            resolve({ file, base64: dataUrl });
+            return;
+          }
+          ctx.drawImage(img, 0, 0, width, height);
+          const compressedBase64 = canvas.toDataURL('image/webp', quality);
+          canvas.toBlob(
+            (blob) => {
+              if (blob) {
+                const cleanName = file.name.replace(/\.[^.]+$/, '.webp');
+                const compressedFile = new File([blob], cleanName, { type: 'image/webp' });
+                resolve({ file: compressedFile, base64: compressedBase64 });
+              } else {
+                resolve({ file, base64: dataUrl });
+              }
+            },
+            'image/webp',
+            quality
+          );
+        };
+        img.onerror = () => resolve({ file, base64: dataUrl });
+        img.src = dataUrl;
+      };
+      reader.onerror = () => resolve({ file, base64: '' });
+      reader.readAsDataURL(file);
+    });
+  };
+
   const handleBannerUpload = async (slotNumber: number, e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const rawFile = e.target.files?.[0];
+    if (!rawFile) return;
 
     const key = `hero_banner_${slotNumber}`;
     setUploadingSlot(slotNumber);
-    setUploadFeedback(prev => ({ ...prev, [key]: 'Optimizing & Saving (Zero Cropping)...' }));
+    setUploadFeedback(prev => ({ ...prev, [key]: 'Optimizing & compressing image...' }));
 
     try {
-      const formData = new FormData();
-      formData.append('file', file);
-      formData.append('type', 'cover');
+      // 1. Client-side instant canvas compression (drops 10MB down to ~150KB)
+      const { file: compressedFile, base64: fallbackBase64 } = await compressImageClient(rawFile, 2400, 1350, 0.86);
 
-      const res = await fetch('/api/upload', {
-        method: 'POST',
-        body: formData,
-      });
+      let finalUrl = '';
 
-      const data = await res.json();
-      if (data.success && data.url) {
-        setSettings(prev => ({ ...prev, [key]: data.url }));
+      // 2. Try server upload API first
+      try {
+        const formData = new FormData();
+        formData.append('file', compressedFile);
+        formData.append('type', 'cover');
 
-        await fetch('/api/settings', {
+        const res = await fetch('/api/upload', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ key, value: data.url }),
+          headers: {
+            'x-admin-key': 'MineralsOwner2026!',
+          },
+          body: formData,
         });
 
-        const kbSize = Math.round(data.size / 1024);
-        setUploadFeedback(prev => ({
-          ...prev,
-          [key]: `✓ Optimized (${kbSize} KB) & Saved Live!`,
-        }));
-      } else {
-        setUploadFeedback(prev => ({ ...prev, [key]: `Error: ${data.error || 'Upload failed'}` }));
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success && data.url) {
+            finalUrl = data.url;
+          }
+        }
+      } catch (uploadErr) {
+        console.warn('Server upload API failed, falling back to local compressed data URI:', uploadErr);
       }
+
+      // 3. Fallback to client-compressed base64 if server upload didn't return a URL
+      if (!finalUrl) {
+        finalUrl = fallbackBase64;
+      }
+
+      if (!finalUrl) {
+        throw new Error('Unable to read selected photo.');
+      }
+
+      // 4. Save to live settings in database
+      setUploadFeedback(prev => ({ ...prev, [key]: 'Saving cover live to database...' }));
+      setSettings(prev => ({ ...prev, [key]: finalUrl }));
+
+      const settingsRes = await fetch('/api/settings', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'x-admin-key': 'MineralsOwner2026!',
+        },
+        body: JSON.stringify({ key, value: finalUrl }),
+      });
+
+      const sData = await settingsRes.json().catch(() => ({}));
+      if (!settingsRes.ok || !sData.success) {
+        throw new Error(sData.error || 'Failed to save cover setting to database.');
+      }
+
+      const kbSize = Math.round(compressedFile.size / 1024);
+      setUploadFeedback(prev => ({
+        ...prev,
+        [key]: `✓ Optimized (${kbSize} KB) & Saved Live!`,
+      }));
     } catch (err: any) {
-      setUploadFeedback(prev => ({ ...prev, [key]: 'Upload failed. Please try again.' }));
+      console.error('Banner upload error:', err);
+      setUploadFeedback(prev => ({ ...prev, [key]: `Error: ${err.message || 'Upload failed'}` }));
     } finally {
       setUploadingSlot(null);
     }
@@ -196,42 +281,78 @@ export default function AdminSettings() {
 
   
   const handleJourneyUpload = async (slotNumber: number, e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const rawFile = e.target.files?.[0];
+    if (!rawFile) return;
 
     const key = `journey_img_${slotNumber}`;
     setUploadingJourneySlot(slotNumber);
-    setJourneyFeedback(prev => ({ ...prev, [key]: 'Uploading image...' }));
+    setJourneyFeedback(prev => ({ ...prev, [key]: 'Optimizing & compressing photo...' }));
 
     try {
-      const formData = new FormData();
-      formData.append('file', file);
-      formData.append('type', 'general');
+      // 1. Client-side instant canvas compression (square/vertical 1200x1200)
+      const { file: compressedFile, base64: fallbackBase64 } = await compressImageClient(rawFile, 1200, 1200, 0.85);
 
-      const res = await fetch('/api/upload', {
-        method: 'POST',
-        body: formData,
-      });
+      let finalUrl = '';
 
-      const data = await res.json();
-      if (data.success && data.url) {
-        setSettings(prev => ({ ...prev, [key]: data.url }));
+      // 2. Try server upload API first
+      try {
+        const formData = new FormData();
+        formData.append('file', compressedFile);
+        formData.append('type', 'general');
 
-        await fetch('/api/settings', {
+        const res = await fetch('/api/upload', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ key, value: data.url }),
+          headers: {
+            'x-admin-key': 'MineralsOwner2026!',
+          },
+          body: formData,
         });
 
-        setJourneyFeedback(prev => ({
-          ...prev,
-          [key]: '✓ Image uploaded & saved live!',
-        }));
-      } else {
-        setJourneyFeedback(prev => ({ ...prev, [key]: `Error: ${data.error || 'Upload failed'}` }));
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success && data.url) {
+            finalUrl = data.url;
+          }
+        }
+      } catch (uploadErr) {
+        console.warn('Server upload API failed, falling back to local compressed data URI:', uploadErr);
       }
+
+      // 3. Fallback to client-compressed base64 if server upload didn't return a URL
+      if (!finalUrl) {
+        finalUrl = fallbackBase64;
+      }
+
+      if (!finalUrl) {
+        throw new Error('Unable to read selected photo.');
+      }
+
+      // 4. Save to live settings in database
+      setJourneyFeedback(prev => ({ ...prev, [key]: 'Saving photo live to database...' }));
+      setSettings(prev => ({ ...prev, [key]: finalUrl }));
+
+      const settingsRes = await fetch('/api/settings', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'x-admin-key': 'MineralsOwner2026!',
+        },
+        body: JSON.stringify({ key, value: finalUrl }),
+      });
+
+      const sData = await settingsRes.json().catch(() => ({}));
+      if (!settingsRes.ok || !sData.success) {
+        throw new Error(sData.error || 'Failed to save journey photo to database.');
+      }
+
+      const kbSize = Math.round(compressedFile.size / 1024);
+      setJourneyFeedback(prev => ({
+        ...prev,
+        [key]: `✓ Optimized (${kbSize} KB) & Saved Live!`,
+      }));
     } catch (err: any) {
-      setJourneyFeedback(prev => ({ ...prev, [key]: 'Upload failed. Please try again.' }));
+      console.error('Journey upload error:', err);
+      setJourneyFeedback(prev => ({ ...prev, [key]: `Error: ${err.message || 'Upload failed'}` }));
     } finally {
       setUploadingJourneySlot(null);
     }

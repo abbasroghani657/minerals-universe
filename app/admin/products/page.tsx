@@ -166,30 +166,104 @@ export default function AdminProducts() {
     }
   };
 
+  const compressImageClient = async (
+    file: File,
+    maxWidth = 1600,
+    maxHeight = 1600,
+    quality = 0.85
+  ): Promise<{ file: File; base64: string }> => {
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const dataUrl = (event.target?.result as string) || '';
+        const img = document.createElement('img');
+        img.onload = () => {
+          let { width, height } = img;
+          if (width > maxWidth || height > maxHeight) {
+            const ratio = Math.min(maxWidth / width, maxHeight / height);
+            width = Math.round(width * ratio);
+            height = Math.round(height * ratio);
+          }
+          const canvas = document.createElement('canvas');
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          if (!ctx) {
+            resolve({ file, base64: dataUrl });
+            return;
+          }
+          ctx.drawImage(img, 0, 0, width, height);
+          const compressedBase64 = canvas.toDataURL('image/webp', quality);
+          canvas.toBlob(
+            (blob) => {
+              if (blob) {
+                const cleanName = file.name.replace(/\.[^.]+$/, '.webp');
+                const compressedFile = new File([blob], cleanName, { type: 'image/webp' });
+                resolve({ file: compressedFile, base64: compressedBase64 });
+              } else {
+                resolve({ file, base64: dataUrl });
+              }
+            },
+            'image/webp',
+            quality
+          );
+        };
+        img.onerror = () => resolve({ file, base64: dataUrl });
+        img.src = dataUrl;
+      };
+      reader.onerror = () => resolve({ file, base64: '' });
+      reader.readAsDataURL(file);
+    });
+  };
+
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const rawFile = e.target.files?.[0];
+    if (!rawFile) return;
 
     setIsUploading(true);
     setUploadError(null);
 
     try {
-      const formData = new FormData();
-      formData.append('file', file);
+      // 1. Client-side instant canvas compression (drops 10MB down to ~150KB)
+      const { file: compressedFile, base64: fallbackBase64 } = await compressImageClient(rawFile, 1600, 1600, 0.85);
 
-      const res = await fetch('/api/upload', {
-        method: 'POST',
-        body: formData,
-      });
+      let finalUrl = '';
 
-      const data = await res.json();
-      if (data.success && data.url) {
-        setImageUrl(data.url);
-        showToast('Image uploaded successfully!');
-      } else {
-        setUploadError(data.error || 'Failed to upload image');
-        showToast(data.error || 'Failed to upload image', 'error');
+      // 2. Try server upload API first
+      try {
+        const formData = new FormData();
+        formData.append('file', compressedFile);
+        formData.append('type', 'product');
+
+        const res = await fetch('/api/upload', {
+          method: 'POST',
+          headers: {
+            'x-admin-key': 'MineralsOwner2026!',
+          },
+          body: formData,
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success && data.url) {
+            finalUrl = data.url;
+          }
+        }
+      } catch (uploadErr) {
+        console.warn('Server upload API failed, falling back to local compressed data URI:', uploadErr);
       }
+
+      // 3. Fallback to client-compressed base64 if server upload didn't return a URL
+      if (!finalUrl) {
+        finalUrl = fallbackBase64;
+      }
+
+      if (!finalUrl) {
+        throw new Error('Unable to read selected photo.');
+      }
+
+      setImageUrl(finalUrl);
+      showToast('Image processed & attached successfully!');
     } catch (err: any) {
       console.error('[Upload Error]', err);
       setUploadError(err.message || 'Image upload error');

@@ -8,7 +8,7 @@ datasource db {
 
 model Product {
   id        Int     @id @default(autoincrement())
-  img       String
+  img       String  @db.LongText
   mainCat   String?
   cat       String
   name      String
@@ -94,7 +94,7 @@ model Faq {
 
 model Setting {
   key   String @id
-  value String @db.Text
+  value String @db.LongText
 }
 
 model Bundle {
@@ -104,7 +104,7 @@ model Bundle {
   badge       String?  @default("Special Offer")
   originalUSD Float
   saleUSD     Float
-  imgs        String   @db.Text
+  imgs        String   @db.LongText
   items       String?  @db.Text
   stock       String?  @default("In Stock")
   isActive    Boolean  @default(true)
