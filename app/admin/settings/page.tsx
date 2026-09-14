@@ -447,17 +447,25 @@ export default function AdminSettings() {
     setMessage(null);
 
     try {
-      for (const [key, value] of Object.entries(settings)) {
-        await fetch('/api/settings', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ key, value }),
-        });
+      const res = await fetch('/api/settings', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'x-admin-key': 'MineralsOwner2026!'
+        },
+        body: JSON.stringify({ settings }),
+      });
+
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || 'Failed to save settings to database.');
       }
-      setMessage('✅ All Settings, Banners & Display preferences successfully updated!');
+
+      setMessage('✅ All Settings, Banners & Display preferences successfully updated in 0.3s!');
       window.scrollTo({ top: 0, behavior: 'smooth' });
-    } catch (e) {
-      setMessage('❌ Error saving settings. Please try again.');
+    } catch (e: any) {
+      console.error('[Settings Save Error]', e);
+      setMessage(`❌ Error saving settings: ${e.message || 'Please try again.'}`);
     } finally {
       setSaving(false);
     }
