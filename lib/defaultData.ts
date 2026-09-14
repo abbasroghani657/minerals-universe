@@ -167,7 +167,7 @@ export const DEFAULT_PRODUCTS = [
 ];
 
 export const DEFAULT_SETTINGS: Record<string, string> = {
-  hero_banner_1: 'https://images.unsplash.com/photo-1551868041-3bfcabc0a86c?w=1600&q=80',
+  hero_banner_1: '/images/hero/luxury-gemstones-collection.webp',
   hero_tag_1: '✨ Featured Collection',
   hero_title_1: "Polished Stones: Nature's Art, Perfected",
   hero_desc_1: 'Handpicked specimens from around the world, curated for collectors and connoisseurs',
@@ -176,7 +176,7 @@ export const DEFAULT_SETTINGS: Record<string, string> = {
   hero_show_text_1: 'true',
   hero_fit_1: 'cover',
 
-  hero_banner_2: 'https://images.unsplash.com/photo-1625750331870-624de6fd3452?w=1600&q=80',
+  hero_banner_2: '/images/hero/aquamarine-crystal-matrix.webp',
   hero_tag_2: '✨ New Arrivals',
   hero_title_2: 'Natural Loose Gemstones: Rare & Certified',
   hero_desc_2: 'Sapphires, Rubies, Tourmalines & more, directly sourced from premier mining regions',
@@ -185,7 +185,7 @@ export const DEFAULT_SETTINGS: Record<string, string> = {
   hero_show_text_2: 'true',
   hero_fit_2: 'cover',
 
-  hero_banner_3: 'https://images.unsplash.com/photo-1519608487953-e999c86e7455?w=1600&q=80',
+  hero_banner_3: '/images/hero/faceted-gems-spectrum.webp',
   hero_tag_3: '✨ Collectors Edition',
   hero_title_3: 'Minerals & Crystals: Sourced from the Earth',
   hero_desc_3: "Authentic specimens for collectors and jewelers, from the world's finest geological formations",

@@ -59,17 +59,18 @@ const SLIDE_DEFAULTS = [
   },
 ];
 
-export default function HeroSlider() {
+export default function HeroSlider({ initialSettings }: { initialSettings?: Record<string, string> }) {
   const [cur, setCur] = useState(0);
-  const [settings, setSettings] = useState<Record<string, string>>(DEFAULT_SETTINGS);
+  const [settings, setSettings] = useState<Record<string, string>>(() => initialSettings || DEFAULT_SETTINGS);
   const sparklesRef = useRef<HTMLDivElement>(null);
   const [isPaused, setIsPaused] = useState(false);
   const [scrollProgress, setScrollProgress] = useState(0);
 
   const goTo = (n: number) => setCur(((n % 3) + 3) % 3);
 
-  // Fetch dynamic banner URLs and text from settings
+  // Background sync for settings if not provided via SSR
   useEffect(() => {
+    if (initialSettings && Object.keys(initialSettings).length > 0) return;
     async function fetchBanners() {
       try {
         const res = await fetch('/api/settings');
@@ -85,7 +86,7 @@ export default function HeroSlider() {
       }
     }
     fetchBanners();
-  }, []);
+  }, [initialSettings]);
 
   // Modern scroll-driven interactive depth & parallax
   useEffect(() => {
@@ -174,6 +175,16 @@ export default function HeroSlider() {
 
           return (
             <div key={slide.id} className={`slide ${slide.cls}`}>
+              {/* Eager browser preload for instantaneous zero-delay image painting */}
+              {slide.id === 1 && (
+                <img
+                  src={bgUrl}
+                  alt=""
+                  fetchPriority="high"
+                  loading="eager"
+                  style={{ position: 'absolute', width: '1px', height: '1px', opacity: 0, pointerEvents: 'none' }}
+                />
+              )}
               {/* Layer 1: Ambient soft blur that fills the screen in the photo's own natural colors */}
               <div 
                 className="slide-ambient" 

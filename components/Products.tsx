@@ -8,10 +8,11 @@ import { inferMainCategory } from '@/utils/categories';
 import { Sparkles, ShoppingBag } from 'lucide-react';
 import { DEFAULT_PRODUCTS } from '@/lib/defaultData';
 
-export default function Products() {
-  const [homeProducts, setHomeProducts] = useState<any[]>(() => DEFAULT_PRODUCTS.slice(0, 4));
+export default function Products({ initialProducts }: { initialProducts?: any[] }) {
+  const [homeProducts, setHomeProducts] = useState<any[]>(() => (initialProducts && initialProducts.length > 0) ? initialProducts : DEFAULT_PRODUCTS.slice(0, 4));
 
   useEffect(() => {
+    if (initialProducts && initialProducts.length > 0) return;
     async function fetchHomeProducts() {
       try {
         const res = await fetch('/api/products');
@@ -20,7 +21,6 @@ export default function Products() {
         if (!cType.includes('application/json')) return;
         const data = await res.json();
         if (data.success && data.products) {
-          // Display newest 4 real products from database
           setHomeProducts(data.products.slice(0, 4));
         }
       } catch (err) {
@@ -28,7 +28,7 @@ export default function Products() {
       }
     }
     fetchHomeProducts();
-  }, []);
+  }, [initialProducts]);
 
   const { addToCart, wishlist, toggleWishlist, currency, exchangeRates } = useCart();
   const [added, setAdded] = useState<Set<number>>(new Set());

@@ -13,14 +13,23 @@ import Reviews from '@/components/Reviews';
 import FAQ from '@/components/FAQ';
 import Contact from '@/components/Contact';
 
-export default function Home() {
+import { getHomepageSettings, getHomepageProducts } from '@/lib/homepageData';
+
+export const revalidate = 60;
+
+export default async function Home() {
+  const [settings, products] = await Promise.all([
+    getHomepageSettings(),
+    getHomepageProducts(),
+  ]);
+
   return (
     <>
       <ScrollReveal />
-      <HeroSlider />
+      <HeroSlider initialSettings={settings} />
       <TrustBar />
       <About />
-      <Products />
+      <Products initialProducts={products} />
       <SpecsStrip />
       <Categories />
       <Bundles />
