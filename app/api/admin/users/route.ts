@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { currentUser, clerkClient } from '@clerk/nextjs/server';
 import prisma from '@/lib/prisma';
 import { ADMIN_EMAILS, MASTER_PASSKEYS } from '@/lib/auth';
+import { getCache, setCache, invalidateCache } from '@/lib/cache';
 
 export const dynamic = 'force-dynamic';
 
@@ -58,65 +59,96 @@ export async function GET(req: Request) {
       return NextResponse.json({ success: false, error: 'Unauthorized. Admin access required.' }, { status: 403 });
     }
 
+    const cacheKey = 'admin_users_list';
+    const cached = getCache<any>(cacheKey);
+    if (cached) {
+      return NextResponse.json({ success: true, ...cached, fromCache: true });
+    }
+
     const adminEmails = ADMIN_EMAILS;
 
-    // 1. Fetch users from Prisma
-    let prismaUsers: any[] = [];
-    try {
-      prismaUsers = await prisma.user.findMany({
-        orderBy: { createdAt: 'desc' }
-      });
-    } catch (err) {
-      console.error('[GET /api/admin/users] Prisma fetch error:', err);
-    }
+    // 1. Fetch users from Prisma & Clerk in parallel
+    const [prismaUsersRes, clerkUsersRes, ordersRes] = await Promise.all([
+      prisma.user.findMany({ orderBy: { createdAt: 'desc' } }).catch(err => {
+        console.error('[GET /api/admin/users] Prisma fetch error:', err);
+        return [];
+      }),
+      (async () => {
+        try {
+          const client = await clerkClient();
+          const response = await client.users.getUserList({ limit: 100, orderBy: '-created_at' });
+          return (response as any).data || response || [];
+        } catch (err) {
+          console.error('[GET /api/admin/users] Clerk fetch error:', err);
+          return [];
+        }
+      })(),
+      prisma.order.findMany({
+        select: { customerEmail: true, total: true, status: true, createdAt: true }
+      }).catch(err => {
+        console.error('[GET /api/admin/users] Order stats error:', err);
+        return [];
+      })
+    ]);
 
-    // 2. Fetch users from Clerk
-    let clerkUsers: any[] = [];
-    try {
-      const client = await clerkClient();
-      const response = await client.users.getUserList({ limit: 100, orderBy: '-created_at' });
-      // Clerk v5/v6/v7 data structure compatibility
-      clerkUsers = (response as any).data || response || [];
-    } catch (err) {
-      console.error('[GET /api/admin/users] Clerk fetch error:', err);
-    }
+    const prismaUsers = prismaUsersRes || [];
+    const clerkUsers = clerkUsersRes || [];
+    const orders = ordersRes || [];
 
-    // 3. Aggregate Orders per email
+    // 2. Aggregate Orders per email
     const orderStats = new Map<string, { count: number; totalSpent: number; lastOrder: string }>();
-    try {
-      const orders = await prisma.order.findMany({
-        select: {
-          customerEmail: true,
-          total: true,
-          status: true,
-          createdAt: true
-        }
-      });
-      for (const ord of orders) {
-        const em = ord.customerEmail?.toLowerCase().trim();
-        if (!em) continue;
-        const current = orderStats.get(em) || { count: 0, totalSpent: 0, lastOrder: '' };
-        current.count += 1;
-        current.totalSpent += (ord.total || 0);
-        if (!current.lastOrder || new Date(ord.createdAt) > new Date(current.lastOrder)) {
-          current.lastOrder = ord.createdAt.toISOString();
-        }
-        orderStats.set(em, current);
+    for (const ord of orders) {
+      const em = ord.customerEmail?.toLowerCase().trim();
+      if (!em) continue;
+      const current = orderStats.get(em) || { count: 0, totalSpent: 0, lastOrder: '' };
+      current.count += 1;
+      current.totalSpent += (ord.total || 0);
+      if (!current.lastOrder || new Date(ord.createdAt) > new Date(current.lastOrder)) {
+        current.lastOrder = ord.createdAt.toISOString();
       }
-    } catch (err) {
-      console.error('[GET /api/admin/users] Order stats error:', err);
+      orderStats.set(em, current);
     }
 
-    // 4. Map & Sync users
+    // 3. Map Prisma users
     const prismaByEmail = new Map<string, any>();
     prismaUsers.forEach(u => {
       if (u.email) prismaByEmail.set(u.email.toLowerCase().trim(), u);
     });
 
+    // 4. Identify any missing Clerk users that should be batch created in Prisma
+    const missingToCreate: any[] = [];
+    for (const cu of clerkUsers) {
+      const primaryEmailObj = cu.emailAddresses?.find((e: any) => e.id === cu.primaryEmailAddressId) || cu.emailAddresses?.[0];
+      const email = (primaryEmailObj?.emailAddress || '').toLowerCase().trim();
+      if (!email) continue;
+      if (!prismaByEmail.has(email)) {
+        const fullName = [cu.firstName, cu.lastName].filter(Boolean).join(' ').trim() || cu.username || email.split('@')[0];
+        const isConfigAdmin = adminEmails.includes(email);
+        missingToCreate.push({
+          email,
+          name: fullName,
+          role: isConfigAdmin ? 'Admin' : 'Customer',
+          createdAt: cu.createdAt ? new Date(cu.createdAt) : new Date()
+        });
+      }
+    }
+
+    if (missingToCreate.length > 0) {
+      try {
+        await prisma.user.createMany({
+          data: missingToCreate,
+          skipDuplicates: true
+        });
+        missingToCreate.forEach(m => prismaByEmail.set(m.email, m));
+      } catch (e) {
+        console.warn('[admin/users] Batch user creation warning:', e);
+      }
+    }
+
     const unifiedUsers: any[] = [];
     const seenEmails = new Set<string>();
 
-    // Process Clerk users first
+    // Process Clerk users
     for (const cu of clerkUsers) {
       const primaryEmailObj = cu.emailAddresses?.find((e: any) => e.id === cu.primaryEmailAddressId) || cu.emailAddresses?.[0];
       const email = (primaryEmailObj?.emailAddress || '').toLowerCase().trim();
@@ -125,27 +157,9 @@ export async function GET(req: Request) {
 
       const fullName = [cu.firstName, cu.lastName].filter(Boolean).join(' ').trim() || cu.username || email.split('@')[0];
       const isConfigAdmin = adminEmails.includes(email);
-      let dbUser = prismaByEmail.get(email);
-
-      // Auto sync into Prisma if missing
-      if (!dbUser) {
-        try {
-          dbUser = await prisma.user.create({
-            data: {
-              email,
-              name: fullName,
-              role: isConfigAdmin ? 'Admin' : 'Customer',
-              createdAt: cu.createdAt ? new Date(cu.createdAt) : new Date()
-            }
-          });
-          prismaByEmail.set(email, dbUser);
-        } catch (e) {
-          // ignore duplicate race condition
-        }
-      }
-
+      const dbUser = prismaByEmail.get(email);
       const role = isConfigAdmin ? 'Admin' : (dbUser?.role || 'Customer');
-      const orders = orderStats.get(email) || { count: 0, totalSpent: 0, lastOrder: '' };
+      const userOrders = orderStats.get(email) || { count: 0, totalSpent: 0, lastOrder: '' };
 
       unifiedUsers.push({
         id: cu.id,
@@ -157,9 +171,9 @@ export async function GET(req: Request) {
         isEmailVerified: primaryEmailObj?.verification?.status === 'verified',
         createdAt: cu.createdAt ? new Date(cu.createdAt).toISOString() : (dbUser?.createdAt ? new Date(dbUser.createdAt).toISOString() : new Date().toISOString()),
         lastSignInAt: cu.lastSignInAt ? new Date(cu.lastSignInAt).toISOString() : null,
-        ordersCount: orders.count,
-        totalSpent: Math.round(orders.totalSpent * 100) / 100,
-        lastOrderDate: orders.lastOrder || null
+        ordersCount: userOrders.count,
+        totalSpent: Math.round(userOrders.totalSpent * 100) / 100,
+        lastOrderDate: userOrders.lastOrder || null
       });
     }
 
@@ -171,7 +185,7 @@ export async function GET(req: Request) {
 
       const isConfigAdmin = adminEmails.includes(email);
       const role = isConfigAdmin ? 'Admin' : (pu.role || 'Customer');
-      const orders = orderStats.get(email) || { count: 0, totalSpent: 0, lastOrder: '' };
+      const userOrders = orderStats.get(email) || { count: 0, totalSpent: 0, lastOrder: '' };
 
       unifiedUsers.push({
         id: pu.id,
@@ -183,9 +197,9 @@ export async function GET(req: Request) {
         isEmailVerified: true,
         createdAt: pu.createdAt ? new Date(pu.createdAt).toISOString() : new Date().toISOString(),
         lastSignInAt: null,
-        ordersCount: orders.count,
-        totalSpent: Math.round(orders.totalSpent * 100) / 100,
-        lastOrderDate: orders.lastOrder || null
+        ordersCount: userOrders.count,
+        totalSpent: Math.round(userOrders.totalSpent * 100) / 100,
+        lastOrderDate: userOrders.lastOrder || null
       });
     }
 
@@ -201,8 +215,7 @@ export async function GET(req: Request) {
     const totalAdmins = unifiedUsers.filter(u => u.role === 'Admin').length;
     const newThisWeek = unifiedUsers.filter(u => new Date(u.createdAt).getTime() >= sevenDaysAgo).length;
 
-    return NextResponse.json({
-      success: true,
+    const payload = {
       stats: {
         totalUsers,
         totalCustomers,
@@ -210,6 +223,14 @@ export async function GET(req: Request) {
         newThisWeek
       },
       users: unifiedUsers
+    };
+
+    // Cache admin users list for 20 seconds
+    setCache(cacheKey, payload, 20);
+
+    return NextResponse.json({
+      success: true,
+      ...payload
     });
   } catch (err: any) {
     console.error('[GET /api/admin/users] Critical error:', err);
@@ -275,6 +296,9 @@ export async function PATCH(req: Request) {
     } catch (clerkErr) {
       console.warn('[PATCH /api/admin/users] Clerk metadata sync warning:', clerkErr);
     }
+
+    // Invalidate users list cache
+    invalidateCache('admin_users_list');
 
     return NextResponse.json({ 
       success: true, 

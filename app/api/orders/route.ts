@@ -4,6 +4,7 @@ import { sendOrderConfirmationEmail } from '@/lib/email';
 import stripe from '@/lib/stripe';
 import prisma from '@/lib/prisma';
 import { verifyAdminRequest } from '@/lib/auth';
+import { invalidateCache } from '@/lib/cache';
 
 export async function GET(req: Request) {
   try {
@@ -144,6 +145,9 @@ export async function POST(req: Request) {
       console.error('[POST /api/orders] Failed to send order confirmation email:', emailErr);
     }
 
+    // Invalidate admin dashboard cache
+    invalidateCache('admin_overview_data');
+
     return NextResponse.json({ success: true, orderId });
   } catch (err: any) {
     console.error('[POST /api/orders]', err);
@@ -173,6 +177,7 @@ export async function PUT(req: Request) {
       }
     });
 
+    invalidateCache('admin_overview_data');
     return NextResponse.json({ success: true, order: updated });
   } catch (err: any) {
     console.error('[PUT /api/orders]', err);
@@ -198,6 +203,7 @@ export async function DELETE(req: Request) {
       where: { id }
     });
 
+    invalidateCache('admin_overview_data');
     return NextResponse.json({ success: true });
   } catch (err: any) {
     console.error('[DELETE /api/orders]', err);

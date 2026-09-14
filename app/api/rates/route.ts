@@ -26,13 +26,15 @@ const CACHE_TTL_MS = 60 * 60 * 1000; // 1 hour
 export async function GET() {
   try {
     const now = Date.now();
+    const cacheHeaders = { 'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=86400' };
+
     if (cachedRates && now - lastFetchTime < CACHE_TTL_MS) {
       return NextResponse.json({
         success: true,
         source: 'cache',
         base: 'USD',
         rates: cachedRates,
-      });
+      }, { headers: cacheHeaders });
     }
 
     const res = await fetch('https://open.er-api.com/v6/latest/USD', {
@@ -53,17 +55,18 @@ export async function GET() {
         base: 'USD',
         rates: data.rates,
         lastUpdated: data.time_last_update_utc,
-      });
+      }, { headers: cacheHeaders });
     }
 
     throw new Error('Invalid rate response format');
   } catch (err: any) {
     console.error('[GET /api/rates] Error fetching exchange rates:', err.message);
+    const cacheHeaders = { 'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=86400' };
     return NextResponse.json({
       success: true,
       source: 'fallback',
       base: 'USD',
       rates: cachedRates || FALLBACK_RATES,
-    });
+    }, { headers: cacheHeaders });
   }
 }

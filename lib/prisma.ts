@@ -17,11 +17,14 @@ const isTidbOrSsl = urlParsed.searchParams.get('sslaccept') || urlParsed.hostnam
 
 const adapter = new PrismaMariaDb({
   host: urlParsed.hostname || 'localhost',
-  port: urlParsed.port ? Number(urlParsed.port) : 3306,
+  port: urlParsed.port ? Number(urlParsed.port) : (isTidbOrSsl ? 4000 : 3306),
   user: urlParsed.username || 'root',
   password: urlParsed.password ? decodeURIComponent(urlParsed.password) : '',
-  database: urlParsed.pathname.replace(/^\//, '') || 'abbasshoping',
-  connectionLimit: 10,
+  database: urlParsed.pathname.replace(/^\//, '') || 'minerals_shop',
+  connectionLimit: 5,
+  connectTimeout: 4000,
+  acquireTimeout: 4000,
+  idleTimeout: 60,
   ssl: isTidbOrSsl ? { rejectUnauthorized: true } : undefined,
 });
 

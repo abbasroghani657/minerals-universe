@@ -1,5 +1,6 @@
 'use client';
 import { useEffect, useRef, useState } from 'react';
+import { DEFAULT_SETTINGS } from '@/lib/defaultData';
 
 const SLIDE_DEFAULTS = [
   {
@@ -60,7 +61,7 @@ const SLIDE_DEFAULTS = [
 
 export default function HeroSlider() {
   const [cur, setCur] = useState(0);
-  const [settings, setSettings] = useState<Record<string, string>>({});
+  const [settings, setSettings] = useState<Record<string, string>>(DEFAULT_SETTINGS);
   const sparklesRef = useRef<HTMLDivElement>(null);
   const [isPaused, setIsPaused] = useState(false);
   const [scrollProgress, setScrollProgress] = useState(0);

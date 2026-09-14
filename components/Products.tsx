@@ -6,9 +6,10 @@ import { useRouter } from 'next/navigation';
 import { formatPrice, parsePrice } from '@/utils/price';
 import { inferMainCategory } from '@/utils/categories';
 import { Sparkles, ShoppingBag } from 'lucide-react';
+import { DEFAULT_PRODUCTS } from '@/lib/defaultData';
 
 export default function Products() {
-  const [homeProducts, setHomeProducts] = useState<any[]>([]);
+  const [homeProducts, setHomeProducts] = useState<any[]>(() => DEFAULT_PRODUCTS.slice(0, 4));
 
   useEffect(() => {
     async function fetchHomeProducts() {

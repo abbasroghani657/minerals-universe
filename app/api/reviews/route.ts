@@ -2,11 +2,20 @@ import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { DEFAULT_REVIEWS } from '@/lib/defaultData';
 import { verifyAdminRequest } from '@/lib/auth';
+import { getCache, setCache, invalidateCache } from '@/lib/cache';
 
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
   const statusFilter = searchParams.get('status');
   const productIdFilter = searchParams.get('productId');
+
+  const cacheKey = `reviews_${statusFilter || 'all'}_${productIdFilter || 'all'}`;
+  const cacheHeaders = { 'Cache-Control': 'public, s-maxage=120, stale-while-revalidate=600' };
+
+  const cached = getCache<any[]>(cacheKey);
+  if (cached) {
+    return NextResponse.json({ success: true, reviews: cached, fromCache: true }, { headers: cacheHeaders });
+  }
 
   try {
     const whereClause: any = {};
@@ -22,11 +31,10 @@ export async function GET(req: Request) {
       orderBy: { createdAt: 'desc' }
     });
 
-    const cacheHeaders = { 'Cache-Control': 'public, s-maxage=120, stale-while-revalidate=600' };
+    setCache(cacheKey, reviews, 120);
     return NextResponse.json({ success: true, reviews }, { headers: cacheHeaders });
   } catch (err: any) {
     console.warn('[GET /api/reviews] Database not ready, using fallback reviews:', err.message);
-    const cacheHeaders = { 'Cache-Control': 'public, s-maxage=120, stale-while-revalidate=600' };
     return NextResponse.json({ success: true, reviews: DEFAULT_REVIEWS }, { headers: cacheHeaders });
   }
 }
@@ -53,6 +61,7 @@ export async function POST(req: Request) {
       }
     });
 
+    invalidateCache('reviews');
     return NextResponse.json({ success: true, review: newReview });
   } catch (err: any) {
     console.error('[POST /api/reviews]', err);
@@ -79,6 +88,7 @@ export async function PUT(req: Request) {
       data: { status }
     });
 
+    invalidateCache('reviews');
     return NextResponse.json({ success: true });
   } catch (err: any) {
     console.error('[PUT /api/reviews]', err);
@@ -104,6 +114,7 @@ export async function DELETE(req: Request) {
       where: { id }
     });
 
+    invalidateCache('reviews');
     return NextResponse.json({ success: true });
   } catch (err: any) {
     console.error('[DELETE /api/reviews]', err);

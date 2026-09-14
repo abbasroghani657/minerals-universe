@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { verifyAdminRequest } from '@/lib/auth';
+import { invalidateCache } from '@/lib/cache';
 
 export async function GET(req: Request) {
   try {
@@ -42,6 +43,7 @@ export async function POST(req: Request) {
       }
     });
 
+    invalidateCache('admin_overview_data');
     return NextResponse.json({ success: true, inquiry: newInquiry });
   } catch (err: any) {
     console.error('[POST /api/inquiries]', err);
@@ -67,6 +69,7 @@ export async function PUT(req: Request) {
       data: { status }
     });
 
+    invalidateCache('admin_overview_data');
     return NextResponse.json({ success: true });
   } catch (err: any) {
     console.error('[PUT /api/inquiries]', err);

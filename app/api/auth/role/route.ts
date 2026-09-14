@@ -20,12 +20,35 @@ export async function GET(req: Request) {
 
     // 1. Immediate super-admin check from configured emails or Clerk publicMetadata
     let isAdmin = allUserEmails.some(e => ADMIN_EMAILS.includes(e)) || (user.publicMetadata as any)?.role === 'Admin';
-    let dbRole = isAdmin ? 'Admin' : 'Customer';
     let dbName = `${user.firstName || ''} ${user.lastName || ''}`.trim() || (isAdmin ? 'Administrator' : 'User');
 
-    // 2. Safe Database sync (non-blocking if DB has latency)
+    // If verified directly via Clerk metadata or super admin email list, return immediately (sub-10ms)
+    if (isAdmin) {
+      // Background non-blocking sync to TiDB
+      prisma.user.upsert({
+        where: { email: lowerEmail },
+        update: { role: 'Admin' },
+        create: {
+          email: lowerEmail,
+          name: dbName,
+          role: 'Admin'
+        }
+      }).catch(err => console.warn('[GET /api/auth/role] async sync warning:', err.message));
+
+      return NextResponse.json({ 
+        success: true, 
+        role: 'Admin', 
+        email: lowerEmail, 
+        name: dbName,
+        loggedIn: true,
+        isAdmin: true
+      });
+    }
+
+    // 2. Safe Database lookup for non-superadmin users
+    let dbRole = 'Customer';
     try {
-      let dbUser = await prisma.user.findFirst({
+      const dbUser = await prisma.user.findFirst({
         where: { email: { in: allUserEmails } }
       });
 
@@ -33,24 +56,9 @@ export async function GET(req: Request) {
         isAdmin = true;
         dbRole = 'Admin';
       }
-
-      if (!dbUser) {
-        dbUser = await prisma.user.create({
-          data: {
-            email: lowerEmail,
-            name: dbName,
-            role: isAdmin ? 'Admin' : 'Customer'
-          }
-        });
-      } else if (isAdmin && dbUser.role !== 'Admin') {
-        await prisma.user.update({
-          where: { id: dbUser.id },
-          data: { role: 'Admin' }
-        });
-      }
       if (dbUser?.name) dbName = dbUser.name;
     } catch (dbErr) {
-      console.warn('[GET /api/auth/role] Non-fatal DB sync warning:', dbErr);
+      console.warn('[GET /api/auth/role] Non-fatal DB lookup warning:', dbErr);
     }
 
     return NextResponse.json({ 

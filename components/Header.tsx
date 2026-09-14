@@ -5,35 +5,32 @@ import { useCart } from '@/context/CartContext';
 import { Search, Heart, ShoppingCart, Menu } from 'lucide-react';
 import MobileNavDrawer from '@/components/MobileNavDrawer';
 import { useRouter } from 'next/navigation';
-import { useAuth, UserButton, ClerkLoaded, ClerkLoading } from '@clerk/nextjs';
+import { useAuth, useUser, UserButton, ClerkLoaded, ClerkLoading } from '@clerk/nextjs';
+
+const ADMIN_EMAILS = [
+  'abbasroghani869@gmail.com',
+  'abbasroghani657@gmail.com',
+  'drtoolofficial@gmail.com',
+  '22pwbcs0904@uetpeshawar.edu.pk'
+];
 
 export default function Header() {
   const { cartCount, wishlist, currency, setCurrency, openCart } = useCart();
   const router = useRouter();
   const { isSignedIn, isLoaded } = useAuth();
+  const { user } = useUser();
   const [mounted, setMounted] = useState(false);
-  const [isAdmin, setIsAdmin] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const searchRef = useRef<HTMLInputElement>(null);
 
+  const allEmails = (user?.emailAddresses || []).map(e => e.emailAddress?.toLowerCase().trim());
+  const isAdmin = allEmails.some(e => ADMIN_EMAILS.includes(e)) || (user?.publicMetadata as any)?.role === 'Admin';
+
   useEffect(() => {
     setMounted(true);
   }, []);
-
-  useEffect(() => {
-    if (isSignedIn) {
-      fetch('/api/auth/role')
-        .then(res => res.json())
-        .then(data => {
-          if (data.isAdmin) setIsAdmin(true);
-        })
-        .catch(() => {});
-    } else {
-      setIsAdmin(false);
-    }
-  }, [isSignedIn]);
 
   useEffect(() => {
     if (searchOpen) searchRef.current?.focus();

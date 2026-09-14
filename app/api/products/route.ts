@@ -3,6 +3,7 @@ import prisma from '@/lib/prisma';
 import { DEFAULT_PRODUCTS } from '@/lib/defaultData';
 import { inferMainCategory, isPrimaryCategory, normalizeCategory, CATEGORY_TREE, getVarietiesForMain } from '@/utils/categories';
 import { verifyAdminRequest } from '@/lib/auth';
+import { getCache, setCache, invalidateCache } from '@/lib/cache';
 
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
@@ -11,25 +12,48 @@ export async function GET(req: Request) {
   const mainCategory = searchParams.get('mainCategory');
   const search = searchParams.get('search');
 
+  const cacheHeaders = { 'Cache-Control': 'public, s-maxage=120, stale-while-revalidate=600' };
+
+  // Fast in-memory cache accessor for all product operations
+  const getAllProductsCached = async () => {
+    const cached = getCache<any[]>('products_all');
+    if (cached && cached.length > 0) return cached;
+    try {
+      const dbProducts = await prisma.product.findMany({ orderBy: { id: 'desc' } });
+      const result = (dbProducts && dbProducts.length > 0) ? dbProducts : (DEFAULT_PRODUCTS as any[]);
+      setCache('products_all', result, 120);
+      return result;
+    } catch (err: any) {
+      console.warn('[getAllProductsCached] Database issue, using fallback data:', err.message);
+      return DEFAULT_PRODUCTS as any[];
+    }
+  };
+
   try {
     // 1. Fetch single product by ID
     if (id) {
+      const cachedAll = getCache<any[]>('products_all');
+      if (cachedAll) {
+        const found = cachedAll.find(p => p.id === Number(id));
+        if (found) return NextResponse.json({ success: true, product: found }, { headers: cacheHeaders });
+      }
+
       const product = await prisma.product.findUnique({
         where: { id: Number(id) }
       });
       if (product) {
-        return NextResponse.json({ success: true, product });
+        return NextResponse.json({ success: true, product }, { headers: cacheHeaders });
       }
       const fallback = DEFAULT_PRODUCTS.find(p => p.id === Number(id));
-      return NextResponse.json({ success: true, product: fallback || null });
+      return NextResponse.json({ success: true, product: fallback || null }, { headers: cacheHeaders });
     }
+
+    // Get all products (0ms from cache if already loaded)
+    const sourceList = await getAllProductsCached();
 
     // 2. Global search query across name, category, origin, description
     if (search) {
       const sTrimmed = search.trim().toLowerCase();
-      const allDbProducts = await prisma.product.findMany({ orderBy: { id: 'desc' } });
-      const sourceList = allDbProducts && allDbProducts.length > 0 ? allDbProducts : (DEFAULT_PRODUCTS as any[]);
-      
       const filtered = sourceList.filter(p => {
         const pAny = p as any;
         return (
@@ -41,7 +65,7 @@ export async function GET(req: Request) {
         );
       });
 
-      return NextResponse.json({ success: true, products: filtered });
+      return NextResponse.json({ success: true, products: filtered }, { headers: cacheHeaders });
     }
 
     // 3. Filter by Main Department (e.g. "Loose Gemstones", "minerals-and-crystals", "Polished Stones")
@@ -51,9 +75,6 @@ export async function GET(req: Request) {
       const normTarget = normalizeCategory(targetMain);
       const matchedMainName = Object.keys(CATEGORY_TREE).find(k => normalizeCategory(k) === normTarget) || targetMain;
       const childVarieties = getVarietiesForMain(matchedMainName).map(v => v.toLowerCase());
-
-      const allDbProducts = await prisma.product.findMany({ orderBy: { id: 'desc' } });
-      const sourceList = allDbProducts && allDbProducts.length > 0 ? allDbProducts : (DEFAULT_PRODUCTS as any[]);
 
       const filtered = sourceList.filter(p => {
         const pAny = p as any;
@@ -69,16 +90,13 @@ export async function GET(req: Request) {
         );
       });
 
-      return NextResponse.json({ success: true, products: filtered });
+      return NextResponse.json({ success: true, products: filtered }, { headers: cacheHeaders });
     }
 
     // 4. Filter by Specific Variety (e.g. "lapis-lazuli", "Aquamarine", "emerald", "Quartz")
     if (category) {
       const rawCat = category.trim();
       const normalizedCat = rawCat.replace(/-/g, ' ').toLowerCase();
-
-      const allDbProducts = await prisma.product.findMany({ orderBy: { id: 'desc' } });
-      const sourceList = allDbProducts && allDbProducts.length > 0 ? allDbProducts : (DEFAULT_PRODUCTS as any[]);
 
       const filtered = sourceList.filter(p => {
         const pCat = (p.cat || '').toLowerCase();
@@ -95,23 +113,14 @@ export async function GET(req: Request) {
         );
       });
 
-      return NextResponse.json({ success: true, products: filtered });
+      return NextResponse.json({ success: true, products: filtered }, { headers: cacheHeaders });
     }
 
     // 5. Return all products
-    const products = await prisma.product.findMany({
-      orderBy: { id: 'desc' }
-    });
-
-    const cacheHeaders = { 'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=300' };
-
-    if (products && products.length > 0) {
-      return NextResponse.json({ success: true, products }, { headers: cacheHeaders });
-    }
-    return NextResponse.json({ success: true, products: DEFAULT_PRODUCTS }, { headers: cacheHeaders });
+    return NextResponse.json({ success: true, products: sourceList }, { headers: cacheHeaders });
   } catch (err: any) {
     console.warn('[GET /api/products] Database issue, using fallback data:', err.message);
-    const cacheHeaders = { 'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=300' };
+    const cacheHeaders = { 'Cache-Control': 'public, s-maxage=120, stale-while-revalidate=600' };
     if (id) {
       const fallback = DEFAULT_PRODUCTS.find(p => p.id === Number(id));
       return NextResponse.json({ success: true, product: fallback || null }, { headers: cacheHeaders });
@@ -152,6 +161,7 @@ export async function POST(req: Request) {
       }
     });
 
+    invalidateCache('products*');
     return NextResponse.json({ success: true, product: newProduct }, { status: 201 });
   } catch (err: any) {
     console.error('[POST /api/products] Error:', err);
@@ -192,6 +202,7 @@ export async function PUT(req: Request) {
       }
     });
 
+    invalidateCache('products*');
     return NextResponse.json({ success: true, product: updated });
   } catch (err: any) {
     console.error('[PUT /api/products] Error:', err);
@@ -217,6 +228,7 @@ export async function DELETE(req: Request) {
       where: { id: Number(id) }
     });
 
+    invalidateCache('products*');
     return NextResponse.json({ success: true, message: `Product ${id} deleted successfully.` });
   } catch (err: any) {
     console.error('[DELETE /api/products] Error:', err);

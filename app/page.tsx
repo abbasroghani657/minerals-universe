@@ -12,12 +12,10 @@ import InstagramGrid from '@/components/InstagramGrid';
 import Reviews from '@/components/Reviews';
 import FAQ from '@/components/FAQ';
 import Contact from '@/components/Contact';
-import Loader from '@/components/Loader';
 
 export default function Home() {
   return (
     <>
-      <Loader />
       <ScrollReveal />
       <HeroSlider />
       <TrustBar />

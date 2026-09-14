@@ -2,17 +2,26 @@ import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { DEFAULT_FAQS } from '@/lib/defaultData';
 import { verifyAdminRequest } from '@/lib/auth';
+import { getCache, setCache, invalidateCache } from '@/lib/cache';
+
+const CACHE_KEY = 'faqs_data';
 
 export async function GET() {
   const cacheHeaders = { 'Cache-Control': 'public, s-maxage=120, stale-while-revalidate=600' };
+
+  // Fast in-memory cache check (0ms response)
+  const cached = getCache<any[]>(CACHE_KEY);
+  if (cached) {
+    return NextResponse.json({ success: true, faqs: cached, fromCache: true }, { headers: cacheHeaders });
+  }
+
   try {
     const faqs = await prisma.faq.findMany({
       orderBy: { id: 'asc' }
     });
-    if (faqs && faqs.length > 0) {
-      return NextResponse.json({ success: true, faqs }, { headers: cacheHeaders });
-    }
-    return NextResponse.json({ success: true, faqs: DEFAULT_FAQS }, { headers: cacheHeaders });
+    const result = faqs && faqs.length > 0 ? faqs : DEFAULT_FAQS;
+    setCache(CACHE_KEY, result, 120); // 2 minutes
+    return NextResponse.json({ success: true, faqs: result }, { headers: cacheHeaders });
   } catch (err: any) {
     console.warn('[GET /api/faqs] Database not ready, using fallback FAQs:', err.message);
     return NextResponse.json({ success: true, faqs: DEFAULT_FAQS }, { headers: cacheHeaders });
@@ -37,6 +46,7 @@ export async function POST(req: Request) {
       data: { question, answer }
     });
 
+    invalidateCache(CACHE_KEY);
     return NextResponse.json({ success: true, faq });
   } catch (err: any) {
     console.error('[POST /api/faqs]', err);
@@ -63,6 +73,7 @@ export async function PUT(req: Request) {
       data: { question, answer }
     });
 
+    invalidateCache(CACHE_KEY);
     return NextResponse.json({ success: true, faq });
   } catch (err: any) {
     console.error('[PUT /api/faqs]', err);
@@ -88,6 +99,7 @@ export async function DELETE(req: Request) {
       where: { id: Number(id) }
     });
 
+    invalidateCache(CACHE_KEY);
     return NextResponse.json({ success: true });
   } catch (err: any) {
     console.error('[DELETE /api/faqs]', err);

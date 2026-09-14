@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { verifyAdminRequest } from '@/lib/auth';
+import { getCache, setCache, invalidateCache } from '@/lib/cache';
 
 const INITIAL_BUNDLES = [
   {
@@ -48,10 +49,18 @@ const INITIAL_BUNDLES = [
 ];
 
 export async function GET(req: Request) {
-  try {
-    const { searchParams } = new URL(req.url);
-    const all = searchParams.get('all') === 'true';
+  const { searchParams } = new URL(req.url);
+  const all = searchParams.get('all') === 'true';
+  const cacheKey = all ? 'bundles_all' : 'bundles_active';
+  const cacheHeaders = { 'Cache-Control': 'public, s-maxage=120, stale-while-revalidate=600' };
 
+  // High-speed memory cache check (serves in <2ms)
+  const cached = getCache<any[]>(cacheKey);
+  if (cached && cached.length > 0) {
+    return NextResponse.json({ success: true, bundles: cached }, { headers: cacheHeaders });
+  }
+
+  try {
     let bundles = await prisma.bundle.findMany({
       where: all ? {} : { isActive: true },
       orderBy: { id: 'desc' },
@@ -86,26 +95,29 @@ export async function GET(req: Request) {
       };
     });
 
+    const finalResult = formatted.length > 0 ? formatted : INITIAL_BUNDLES.map((b, idx) => ({
+      ...b,
+      id: 101 + idx,
+      imgs: JSON.parse(b.imgs),
+    }));
+
+    setCache(cacheKey, finalResult, 120);
+
     return NextResponse.json(
-      { success: true, bundles: formatted },
-      { headers: { 'Cache-Control': 'public, s-maxage=120, stale-while-revalidate=600' } }
+      { success: true, bundles: finalResult },
+      { headers: cacheHeaders }
     );
   } catch (err: any) {
-    console.error('[GET /api/bundles]', err);
+    console.warn('[GET /api/bundles] Database delay, using cached fallback:', err.message);
+    const fallbacks = INITIAL_BUNDLES.map((b, idx) => ({
+      ...b,
+      id: 101 + idx,
+      imgs: JSON.parse(b.imgs),
+    }));
+    setCache(cacheKey, fallbacks, 120);
     return NextResponse.json(
-      {
-        success: false,
-        error: err.message,
-        bundles: INITIAL_BUNDLES.map((b, idx) => ({
-          ...b,
-          id: 101 + idx,
-          imgs: JSON.parse(b.imgs),
-        })),
-      },
-      { 
-        status: 200,
-        headers: { 'Cache-Control': 'public, s-maxage=120, stale-while-revalidate=600' }
-      }
+      { success: true, bundles: fallbacks },
+      { status: 200, headers: cacheHeaders }
     );
   }
 }
@@ -145,6 +157,7 @@ export async function POST(req: Request) {
       },
     });
 
+    invalidateCache('bundles*');
     return NextResponse.json({
       success: true,
       bundle: {
@@ -188,6 +201,7 @@ export async function PUT(req: Request) {
       data: updateData,
     });
 
+    invalidateCache('bundles*');
     return NextResponse.json({
       success: true,
       bundle: {
@@ -219,6 +233,7 @@ export async function DELETE(req: Request) {
       where: { id: Number(id) },
     });
 
+    invalidateCache('bundles*');
     return NextResponse.json({ success: true });
   } catch (err: any) {
     console.error('[DELETE /api/bundles]', err);

@@ -22,10 +22,32 @@ export default function AdminDashboard() {
   const [inquiries, setInquiries] = useState<any[]>([]);
   const [reviews, setReviews] = useState<any[]>([]);
   const [products, setProducts] = useState<any[]>([]);
+  const [calculatedStats, setCalculatedStats] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function loadDashboardData() {
+      try {
+        const res = await fetch('/api/admin/overview');
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success) {
+            setOrders(data.recentOrders || []);
+            setInquiries(data.unreadInquiries || []);
+            setReviews(data.pendingReviews || []);
+            setProducts(data.lowStockProducts || []);
+            if (data.stats) {
+              setCalculatedStats(data.stats);
+            }
+            setLoading(false);
+            return;
+          }
+        }
+      } catch (err) {
+        console.warn('Overview fetch error, falling back:', err);
+      }
+
+      // Fallback
       try {
         const [ordersRes, inqRes, revRes, prodRes] = await Promise.all([
           fetch('/api/orders').catch(() => null),
@@ -34,28 +56,28 @@ export default function AdminDashboard() {
           fetch('/api/products').catch(() => null),
         ]);
 
-        if (ordersRes && ordersRes.ok) {
+        if (ordersRes?.ok) {
           const ordersData = await ordersRes.json();
           if (ordersData.success && Array.isArray(ordersData.orders)) {
             setOrders(ordersData.orders);
           }
         }
 
-        if (inqRes && inqRes.ok) {
+        if (inqRes?.ok) {
           const inqData = await inqRes.json();
           if (inqData.success && Array.isArray(inqData.inquiries)) {
             setInquiries(inqData.inquiries);
           }
         }
 
-        if (revRes && revRes.ok) {
+        if (revRes?.ok) {
           const revData = await revRes.json();
           if (revData.success && Array.isArray(revData.reviews)) {
             setReviews(revData.reviews);
           }
         }
 
-        if (prodRes && prodRes.ok) {
+        if (prodRes?.ok) {
           const prodData = await prodRes.json();
           if (prodData.success && Array.isArray(prodData.products)) {
             setProducts(prodData.products);
@@ -70,13 +92,17 @@ export default function AdminDashboard() {
     loadDashboardData();
   }, []);
 
-  // Real live calculations (Zero hardcoded/fake numbers)
-  const totalRevenue = orders.reduce((sum, o) => sum + (Number(o.total) || 0), 0);
-  const totalOrdersCount = orders.length;
+  // Real live calculations (instant from overview stats)
+  const totalRevenue = calculatedStats?.totalRevenue ?? orders.reduce((sum, o) => sum + (Number(o.total) || 0), 0);
+  const totalOrdersCount = calculatedStats?.totalOrdersCount ?? orders.length;
+  const processingCount = calculatedStats?.processingOrdersCount ?? orders.filter(o => (o.status || 'Processing') === 'Processing').length;
+  const deliveredCount = calculatedStats?.deliveredOrdersCount ?? orders.filter(o => o.status === 'Delivered').length;
+  const unreadCount = calculatedStats?.unreadInquiriesCount ?? inquiries.filter((i: any) => i.status === 'Unread').length;
+  const pendingCount = calculatedStats?.pendingReviewsCount ?? reviews.filter((r: any) => r.status === 'Pending').length;
+
   const processingOrders = orders.filter(o => (o.status || 'Processing') === 'Processing');
-  const deliveredOrders = orders.filter(o => o.status === 'Delivered');
-  const unreadInquiries = inquiries.filter((i: any) => i.status === 'Unread');
-  const pendingReviews = reviews.filter((r: any) => r.status === 'Pending');
+  const unreadInquiries = inquiries.filter(i => (i.status || 'Unread') === 'Unread');
+  const pendingReviews = reviews.filter(r => (r.status || 'Pending') === 'Pending');
 
   // Identify low stock products
   const lowStockProducts = products.filter((p: any) => {
@@ -101,23 +127,23 @@ export default function AdminDashboard() {
     { 
       title: 'Total Orders', 
       value: String(totalOrdersCount), 
-      subtitle: totalOrdersCount === 0 ? '0 pending fulfillments' : `${processingOrders.length} processing • ${deliveredOrders.length} delivered`,
+      subtitle: totalOrdersCount === 0 ? '0 pending fulfillments' : `${processingCount} processing • ${deliveredCount} delivered`,
       icon: ShoppingBag, 
       color: '#c5a059', 
       bg: '#fdf8ec' 
     },
     { 
       title: 'Pending Reviews', 
-      value: String(pendingReviews.length), 
-      subtitle: pendingReviews.length === 0 ? 'All reviews moderated' : 'Awaiting admin approval',
+      value: String(pendingCount), 
+      subtitle: pendingCount === 0 ? 'All reviews moderated' : 'Awaiting admin approval',
       icon: MessageSquare, 
       color: '#4a90e2', 
       bg: '#eef6fd' 
     },
     { 
       title: 'New Inquiries', 
-      value: String(unreadInquiries.length), 
-      subtitle: unreadInquiries.length === 0 ? 'All messages answered' : 'Requires customer reply',
+      value: String(unreadCount), 
+      subtitle: unreadCount === 0 ? 'All messages answered' : 'Requires customer reply',
       icon: Clock, 
       color: '#c94438', 
       bg: '#fdf2f2' 
@@ -161,7 +187,7 @@ export default function AdminDashboard() {
     );
   }
 
-  const hasPendingActions = unreadInquiries.length > 0 || pendingReviews.length > 0 || processingOrders.length > 0 || lowStockProducts.length > 0;
+  const hasPendingActions = unreadCount > 0 || pendingCount > 0 || processingCount > 0 || lowStockProducts.length > 0;
 
   return (
     <div>

@@ -2,17 +2,26 @@ import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { DEFAULT_SETTINGS } from '@/lib/defaultData';
 import { verifyAdminRequest } from '@/lib/auth';
+import { getCache, setCache, invalidateCache } from '@/lib/cache';
 
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
   const key = searchParams.get('key');
+  const cacheHeaders = { 'Cache-Control': 'public, s-maxage=120, stale-while-revalidate=600' };
+
+  if (!key) {
+    const cached = getCache<any>('settings_all');
+    if (cached) {
+      return NextResponse.json({ success: true, settings: cached }, { headers: cacheHeaders });
+    }
+  }
 
   try {
     if (key) {
       const setting = await prisma.setting.findUnique({
         where: { key }
       });
-      return NextResponse.json({ success: true, key, value: setting ? setting.value : (DEFAULT_SETTINGS[key] || null) });
+      return NextResponse.json({ success: true, key, value: setting ? setting.value : (DEFAULT_SETTINGS[key] || null) }, { headers: cacheHeaders });
     }
 
     const settings = await prisma.setting.findMany();
@@ -21,13 +30,15 @@ export async function GET(req: Request) {
         acc[s.key] = s.value;
         return acc;
       }, {});
-      return NextResponse.json({ success: true, settings: { ...DEFAULT_SETTINGS, ...config } }, { headers: { 'Cache-Control': 'public, s-maxage=120, stale-while-revalidate=600' } });
+      const merged = { ...DEFAULT_SETTINGS, ...config };
+      setCache('settings_all', merged, 120);
+      return NextResponse.json({ success: true, settings: merged }, { headers: cacheHeaders });
     }
 
-    return NextResponse.json({ success: true, settings: DEFAULT_SETTINGS }, { headers: { 'Cache-Control': 'public, s-maxage=120, stale-while-revalidate=600' } });
+    setCache('settings_all', DEFAULT_SETTINGS, 120);
+    return NextResponse.json({ success: true, settings: DEFAULT_SETTINGS }, { headers: cacheHeaders });
   } catch (err: any) {
-    console.warn('[GET /api/settings] Database not ready, using fallback settings:', err.message);
-    const cacheHeaders = { 'Cache-Control': 'public, s-maxage=120, stale-while-revalidate=600' };
+    console.warn('[GET /api/settings] Database fallback:', err.message);
     if (key) {
       return NextResponse.json({ success: true, key, value: DEFAULT_SETTINGS[key] || null }, { headers: cacheHeaders });
     }
@@ -55,6 +66,7 @@ export async function POST(req: Request) {
       create: { key, value: String(value) }
     });
 
+    invalidateCache('settings*');
     return NextResponse.json({ success: true, setting });
   } catch (err: any) {
     console.error('[POST /api/settings]', err);
