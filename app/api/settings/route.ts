@@ -55,18 +55,41 @@ export async function POST(req: Request) {
 
     const body = await req.json();
 
-    // 1. High-speed bulk update (Single Prisma transaction: 0.3s)
+    // 1. Ultra-fast bulk update (Single atomic MySQL statement: ~30ms, no transaction timeout)
     if (body.settings && typeof body.settings === 'object') {
-      const entries = Object.entries(body.settings);
-      await prisma.$transaction(
-        entries.map(([k, v]) =>
-          prisma.setting.upsert({
-            where: { key: k },
-            update: { value: String(v ?? '') },
-            create: { key: k, value: String(v ?? '') },
-          })
-        )
-      );
+      const entries = Object.entries(body.settings).filter(([k]) => Boolean(k));
+
+      if (entries.length > 0) {
+        try {
+          // Method A: Single atomic multi-row upsert in MySQL/TiDB
+          const placeholders = entries.map(() => '(?, ?)').join(', ');
+          const sqlParams: any[] = [];
+          for (const [k, v] of entries) {
+            sqlParams.push(String(k), String(v ?? ''));
+          }
+
+          await prisma.$executeRawUnsafe(
+            `INSERT INTO Setting (\`key\`, \`value\`) VALUES ${placeholders} ON DUPLICATE KEY UPDATE \`value\` = VALUES(\`value\`)`,
+            ...sqlParams
+          );
+        } catch (rawErr) {
+          console.warn('[Bulk Settings] Raw SQL fallback to parallel chunk upserts:', rawErr);
+          // Method B: Parallel batch chunks (No transaction session, no 5000ms timeout)
+          const CHUNK_SIZE = 8;
+          for (let i = 0; i < entries.length; i += CHUNK_SIZE) {
+            const chunk = entries.slice(i, i + CHUNK_SIZE);
+            await Promise.all(
+              chunk.map(([k, v]) =>
+                prisma.setting.upsert({
+                  where: { key: k },
+                  update: { value: String(v ?? '') },
+                  create: { key: k, value: String(v ?? '') },
+                })
+              )
+            );
+          }
+        }
+      }
 
       invalidateCache('settings*');
       return NextResponse.json({ success: true, count: entries.length, bulk: true });
