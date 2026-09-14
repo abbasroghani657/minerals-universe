@@ -7,12 +7,16 @@ import { useCart } from '@/context/CartContext';
 import { ShieldCheck, Truck, PackageCheck, ArrowLeft, Heart, ShoppingBag, Award } from 'lucide-react';
 import { FaWhatsapp } from 'react-icons/fa';
 import { formatPrice, parsePrice } from '@/utils/price';
+import { DEFAULT_PRODUCTS } from '@/lib/defaultData';
 
 export default function ProductPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
   const router = useRouter();
   const { addToCart, wishlist, toggleWishlist, currency, exchangeRates } = useCart();
-  const [product, setProduct] = useState<any>(null);
+  
+  const parsedId = parseInt(resolvedParams.id);
+  const initialProduct = DEFAULT_PRODUCTS.find(p => p.id === parsedId) || null;
+  const [product, setProduct] = useState<any>(initialProduct);
 
   const [added, setAdded] = useState(false);
   const [qty, setQty] = useState(1);
@@ -20,10 +24,9 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
   const [related, setRelated] = useState<any[]>([]);
 
   useEffect(() => {
-    const id = parseInt(resolvedParams.id);
     async function loadProduct() {
       try {
-        const res = await fetch(`/api/products?id=${id}`);
+        const res = await fetch(`/api/products?id=${parsedId}`);
         const data = await res.json();
         if (data.success && data.product) {
           setProduct(data.product);
@@ -33,7 +36,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
       }
     }
     loadProduct();
-  }, [resolvedParams.id]);
+  }, [parsedId]);
 
   useEffect(() => {
     if (product) {
@@ -54,9 +57,18 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
       }
       loadRelated();
     }
-  }, [product]);
+  }, [product?.id, product?.cat]);
 
-  if (!product) return null;
+  if (!product) {
+    return (
+      <div style={{ minHeight: '80vh', background: '#f8f7f5', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'DM Sans', sans-serif" }}>
+        <div style={{ textAlign: 'center', color: '#1a5c4a', fontWeight: 600 }}>
+          <div style={{ width: '36px', height: '36px', border: '3px solid rgba(26,92,74,0.2)', borderTopColor: '#1a5c4a', borderRadius: '50%', margin: '0 auto 16px', animation: 'spin 0.8s linear infinite' }}></div>
+          <span>Unveiling Gemstone Details...</span>
+        </div>
+      </div>
+    );
+  }
 
   const handleAddToCart = () => {
     addToCart({ id: product.id, name: product.name, price: product.priceNum, img: product.img, quantity: qty });

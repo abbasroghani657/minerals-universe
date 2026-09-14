@@ -9,6 +9,13 @@ export default function AdminOrders() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('All Statuses');
+  const [deleteTargetOrder, setDeleteTargetOrder] = useState<any | null>(null);
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+
+  const showToast = (message: string, type: 'success' | 'error' = 'success') => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 3500);
+  };
 
   useEffect(() => {
     async function loadOrders() {
@@ -74,28 +81,34 @@ export default function AdminOrders() {
       if (data.success) {
         setOrders(prev => prev.map(o => o.id === selectedOrder.id ? { ...o, status, tracking } : o));
         setSelectedOrder(null);
+        showToast('Fulfillment updated successfully!');
       } else {
-        alert(data.error || 'Failed to update order fulfillment.');
+        showToast(data.error || 'Failed to update order fulfillment.', 'error');
       }
     } catch (err) {
       console.error('Error updating fulfillment:', err);
+      showToast('Error updating fulfillment', 'error');
     }
   };
 
-  const handleDeleteOrder = async (id: string) => {
-    if (!confirm(`Are you sure you want to delete order ${id}?`)) return;
+  const executeDeleteOrder = async () => {
+    if (!deleteTargetOrder) return;
     try {
-      const res = await fetch(`/api/orders?id=${id}`, {
+      const res = await fetch(`/api/orders?id=${deleteTargetOrder.id}`, {
         method: 'DELETE',
       });
       const data = await res.json();
       if (data.success) {
-        setOrders(prev => prev.filter(o => o.id !== id));
+        setOrders(prev => prev.filter(o => o.id !== deleteTargetOrder.id));
+        showToast(`Order #${deleteTargetOrder.id} deleted successfully`);
       } else {
-        alert(data.error || 'Failed to delete order.');
+        showToast(data.error || 'Failed to delete order.', 'error');
       }
     } catch (err) {
       console.error('Error deleting order:', err);
+      showToast('Error deleting order', 'error');
+    } finally {
+      setDeleteTargetOrder(null);
     }
   };
 
@@ -180,7 +193,7 @@ export default function AdminOrders() {
                   <button onClick={() => setSelectedOrder(o)} style={{ background: '#f8f9fa', border: '1px solid #e8e6e1', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer', color: '#333', fontSize: '13px', display: 'inline-flex', alignItems: 'center', gap: '6px', marginRight: '8px' }}>
                     <Eye size={14} /> View
                   </button>
-                  <button onClick={() => handleDeleteOrder(o.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#c94438' }} title="Delete Order">
+                  <button onClick={() => setDeleteTargetOrder(o)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#c94438' }} title="Delete Order">
                     <Trash2 size={16} />
                   </button>
                 </td>
@@ -288,6 +301,63 @@ export default function AdminOrders() {
 
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Luxury Delete Order Confirmation Modal */}
+      {deleteTargetOrder && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.65)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10000, padding: '20px' }}>
+          <div style={{ background: '#fff', borderRadius: '12px', padding: '28px 24px', maxWidth: '440px', width: '100%', boxShadow: '0 20px 50px rgba(0,0,0,0.2)', textAlign: 'center', fontFamily: "'DM Sans', sans-serif" }}>
+            <div style={{ width: '52px', height: '52px', borderRadius: '50%', background: '#fdf2f2', color: '#c94438', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
+              <Trash2 size={24} />
+            </div>
+            <h3 style={{ fontSize: '20px', fontWeight: 700, color: '#1a1a1a', margin: '0 0 8px', fontFamily: "'Cormorant Garamond', serif" }}>
+              Delete Order #{deleteTargetOrder.id}?
+            </h3>
+            <p style={{ fontSize: '13.5px', color: '#666', margin: '0 0 24px', lineHeight: 1.5 }}>
+              Are you sure you want to permanently delete this customer order record for <strong>{deleteTargetOrder.customerName}</strong>? This cannot be undone.
+            </p>
+            <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
+              <button
+                type="button"
+                onClick={() => setDeleteTargetOrder(null)}
+                style={{ padding: '10px 20px', borderRadius: '6px', border: '1px solid #dcdad5', background: '#fff', color: '#555', fontWeight: 600, fontSize: '13.5px', cursor: 'pointer' }}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={executeDeleteOrder}
+                style={{ padding: '10px 22px', borderRadius: '6px', border: 'none', background: '#c94438', color: '#fff', fontWeight: 600, fontSize: '13.5px', cursor: 'pointer', boxShadow: '0 4px 12px rgba(201,68,56,0.3)' }}
+              >
+                Delete Order
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Luxury Toast Notification */}
+      {toast && (
+        <div style={{
+          position: 'fixed',
+          bottom: '30px',
+          right: '30px',
+          zIndex: 10001,
+          background: toast.type === 'error' ? '#c94438' : '#1a5c4a',
+          color: '#fff',
+          padding: '12px 22px',
+          borderRadius: '8px',
+          boxShadow: '0 8px 24px rgba(0,0,0,0.2)',
+          fontFamily: "'DM Sans', sans-serif",
+          fontSize: '13.5px',
+          fontWeight: 600,
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px',
+        }}>
+          <span>{toast.type === 'error' ? '⚠️' : '✓'}</span>
+          <span>{toast.message}</span>
         </div>
       )}
     </>

@@ -94,6 +94,8 @@ export default function AdminSettings() {
   const [expandedTextSlot, setExpandedTextSlot] = useState<number | null>(null);
   const [uploadingJourneySlot, setUploadingJourneySlot] = useState<number | null>(null);
   const [journeyFeedback, setJourneyFeedback] = useState<Record<string, string>>({});
+  const [resetModal, setResetModal] = useState<{ type: 'banner' | 'journey'; slot: number } | null>(null);
+  const [isResetting, setIsResetting] = useState(false);
 
 
   useEffect(() => {
@@ -188,27 +190,8 @@ export default function AdminSettings() {
     }
   };
 
-  const handleResetToDefault = async (slotNumber: number) => {
-    const key = `hero_banner_${slotNumber}`;
-    const defaultVal = FACTORY_DEFAULTS[key];
-    if (!defaultVal) return;
-
-    const confirmReset = window.confirm(`Reset Slide ${slotNumber} back to factory default cover image?`);
-    if (!confirmReset) return;
-
-    setSettings(prev => ({ ...prev, [key]: defaultVal }));
-    setUploadFeedback(prev => ({ ...prev, [key]: 'Resetting to default...' }));
-
-    try {
-      await fetch('/api/settings', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ key, value: defaultVal }),
-      });
-      setUploadFeedback(prev => ({ ...prev, [key]: '✓ Restored factory default cover!' }));
-    } catch (err) {
-      setUploadFeedback(prev => ({ ...prev, [key]: 'Failed to reset. Try again.' }));
-    }
+  const handleResetToDefault = (slotNumber: number) => {
+    setResetModal({ type: 'banner', slot: slotNumber });
   };
 
   
@@ -254,47 +237,86 @@ export default function AdminSettings() {
     }
   };
 
-  const handleResetJourneyToDefault = async (slotNumber: number) => {
-    const imgKey = `journey_img_${slotNumber}`;
-    const capKey = `journey_caption_${slotNumber}`;
-    const linkKey = `journey_link_${slotNumber}`;
-    const defaultImg = FACTORY_DEFAULTS[imgKey];
-    const defaultCap = FACTORY_DEFAULTS[capKey];
-    const defaultLink = FACTORY_DEFAULTS[linkKey];
-    if (!defaultImg) return;
+  const handleResetJourneyToDefault = (slotNumber: number) => {
+    setResetModal({ type: 'journey', slot: slotNumber });
+  };
 
-    const confirmReset = window.confirm(`Reset Journey Slot ${slotNumber} back to default authentic photo & caption?`);
-    if (!confirmReset) return;
+  const executeReset = async () => {
+    if (!resetModal) return;
+    const { type, slot } = resetModal;
+    setIsResetting(true);
 
-    setSettings(prev => ({ 
-      ...prev, 
-      [imgKey]: defaultImg,
-      [capKey]: defaultCap,
-      [linkKey]: defaultLink,
-    }));
-    setJourneyFeedback(prev => ({ ...prev, [imgKey]: 'Resetting to default...' }));
+    if (type === 'banner') {
+      const key = `hero_banner_${slot}`;
+      const defaultVal = FACTORY_DEFAULTS[key];
+      if (!defaultVal) {
+        setIsResetting(false);
+        setResetModal(null);
+        return;
+      }
 
-    try {
-      await Promise.all([
-        fetch('/api/settings', {
+      setSettings(prev => ({ ...prev, [key]: defaultVal }));
+      setUploadFeedback(prev => ({ ...prev, [key]: 'Resetting to default...' }));
+
+      try {
+        await fetch('/api/settings', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ key: imgKey, value: defaultImg }),
-        }),
-        fetch('/api/settings', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ key: capKey, value: defaultCap }),
-        }),
-        fetch('/api/settings', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ key: linkKey, value: defaultLink }),
-        })
-      ]);
-      setJourneyFeedback(prev => ({ ...prev, [imgKey]: '✓ Restored original museum photo!' }));
-    } catch (err) {
-      setJourneyFeedback(prev => ({ ...prev, [imgKey]: 'Failed to reset. Try again.' }));
+          body: JSON.stringify({ key, value: defaultVal }),
+        });
+        setUploadFeedback(prev => ({ ...prev, [key]: '✓ Restored factory default cover!' }));
+      } catch (err) {
+        setUploadFeedback(prev => ({ ...prev, [key]: 'Failed to reset. Try again.' }));
+      } finally {
+        setIsResetting(false);
+        setResetModal(null);
+      }
+    } else {
+      const imgKey = `journey_img_${slot}`;
+      const capKey = `journey_caption_${slot}`;
+      const linkKey = `journey_link_${slot}`;
+      const defaultImg = FACTORY_DEFAULTS[imgKey];
+      const defaultCap = FACTORY_DEFAULTS[capKey];
+      const defaultLink = FACTORY_DEFAULTS[linkKey];
+      if (!defaultImg) {
+        setIsResetting(false);
+        setResetModal(null);
+        return;
+      }
+
+      setSettings(prev => ({ 
+        ...prev, 
+        [imgKey]: defaultImg,
+        [capKey]: defaultCap,
+        [linkKey]: defaultLink,
+      }));
+      setJourneyFeedback(prev => ({ ...prev, [imgKey]: 'Resetting to default...' }));
+
+      try {
+        await Promise.all([
+          fetch('/api/settings', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ key: imgKey, value: defaultImg }),
+          }),
+          fetch('/api/settings', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ key: capKey, value: defaultCap }),
+          }),
+          fetch('/api/settings', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ key: linkKey, value: defaultLink }),
+          })
+        ]);
+        setJourneyFeedback(prev => ({ ...prev, [imgKey]: '✓ Restored original museum photo!' }));
+      } catch (err) {
+        setJourneyFeedback(prev => ({ ...prev, [imgKey]: 'Failed to reset. Try again.' }));
+      } finally {
+        setIsResetting(false);
+        setResetModal(null);
+      }
     }
   };
 
@@ -957,6 +979,68 @@ export default function AdminSettings() {
 
         </form>
       </div>
+
+      {/* Luxury Reset Confirmation Modal */}
+      {resetModal && (
+        <div style={{
+          position: 'fixed', inset: 0, zIndex: 10000,
+          background: 'rgba(5, 18, 14, 0.78)', backdropFilter: 'blur(8px)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px'
+        }}>
+          <div style={{
+            width: '100%', maxWidth: '460px',
+            background: 'linear-gradient(180deg, #112d23 0%, #071712 100%)',
+            border: '1px solid rgba(197, 160, 89, 0.4)', borderRadius: '16px',
+            padding: '32px 28px', color: '#fff', textAlign: 'center',
+            boxShadow: '0 20px 60px rgba(0,0,0,0.6)'
+          }}>
+            <div style={{
+              width: '56px', height: '56px', borderRadius: '50%',
+              background: 'rgba(197, 160, 89, 0.15)', border: '1.5px solid rgba(197, 160, 89, 0.4)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px',
+              color: '#c5a059'
+            }}>
+              <RotateCcw size={26} />
+            </div>
+            <h3 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '24px', margin: '0 0 8px', color: '#fff' }}>
+              Restore Factory Default?
+            </h3>
+            <p style={{ fontSize: '13.5px', color: 'rgba(255,255,255,0.7)', margin: '0 0 20px', lineHeight: 1.5 }}>
+              {resetModal.type === 'banner'
+                ? `Reset Slide ${resetModal.slot} back to the curated factory default cover image?`
+                : `Reset Journey Slot ${resetModal.slot} back to default authentic photo & caption?`}
+            </p>
+            <div style={{ display: 'flex', gap: '12px' }}>
+              <button
+                type="button"
+                onClick={() => setResetModal(null)}
+                disabled={isResetting}
+                style={{
+                  flex: 1, padding: '12px', background: 'transparent',
+                  border: '1px solid rgba(255,255,255,0.2)', color: 'rgba(255,255,255,0.85)',
+                  borderRadius: '8px', fontWeight: 600, fontSize: '14px', cursor: 'pointer'
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={executeReset}
+                disabled={isResetting}
+                style={{
+                  flex: 1, padding: '12px', background: 'linear-gradient(135deg, #c5a059 0%, #dfba73 100%)',
+                  border: 'none', color: '#071510', borderRadius: '8px', fontWeight: 700, fontSize: '14px',
+                  cursor: isResetting ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center',
+                  justifyContent: 'center', gap: '8px'
+                }}
+              >
+                {isResetting ? <Loader2 size={16} className="animate-spin" /> : <RotateCcw size={16} />}
+                {isResetting ? 'Restoring...' : 'Confirm Restore'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }

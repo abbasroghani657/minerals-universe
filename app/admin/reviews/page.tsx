@@ -1,11 +1,13 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { CheckCircle, XCircle, Trash2 } from 'lucide-react';
+import { CheckCircle, XCircle, Trash2, Loader2 } from 'lucide-react';
 
 export default function AdminReviews() {
   const [reviews, setReviews] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [deleteTargetReview, setDeleteTargetReview] = useState<any | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     async function loadReviews() {
@@ -40,17 +42,22 @@ export default function AdminReviews() {
     }
   };
 
-  const handleDelete = async (id: string) => {
+  const confirmDeleteReview = async () => {
+    if (!deleteTargetReview) return;
+    setIsDeleting(true);
     try {
-      const res = await fetch(`/api/reviews?id=${id}`, {
+      const res = await fetch(`/api/reviews?id=${deleteTargetReview.id}`, {
         method: 'DELETE',
       });
       const data = await res.json();
       if (data.success) {
-        setReviews(prev => prev.filter(rev => rev.id !== id));
+        setReviews(prev => prev.filter(rev => rev.id !== deleteTargetReview.id));
+        setDeleteTargetReview(null);
       }
     } catch (err) {
       console.error('Error deleting review:', err);
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -114,7 +121,7 @@ export default function AdminReviews() {
                   {r.status === 'Approved' && (
                     <button onClick={() => handleUpdateStatus(r.id, 'Rejected')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#c94438', marginRight: '8px' }} title="Reject"><XCircle size={18} /></button>
                   )}
-                  <button onClick={() => handleDelete(r.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#888' }} title="Delete"><Trash2 size={18} /></button>
+                  <button onClick={() => setDeleteTargetReview(r)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#888' }} title="Delete"><Trash2 size={18} /></button>
                 </td>
               </tr>
             ))}
@@ -126,6 +133,66 @@ export default function AdminReviews() {
           </tbody>
         </table>
       </div>
+
+      {/* Luxury Delete Confirmation Modal */}
+      {deleteTargetReview && (
+        <div style={{
+          position: 'fixed', inset: 0, zIndex: 10000,
+          background: 'rgba(5, 18, 14, 0.78)', backdropFilter: 'blur(8px)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px'
+        }}>
+          <div style={{
+            width: '100%', maxWidth: '460px',
+            background: 'linear-gradient(180deg, #112d23 0%, #071712 100%)',
+            border: '1px solid rgba(197, 160, 89, 0.4)', borderRadius: '16px',
+            padding: '32px 28px', color: '#fff', textAlign: 'center',
+            boxShadow: '0 20px 60px rgba(0,0,0,0.6)'
+          }}>
+            <div style={{
+              width: '56px', height: '56px', borderRadius: '50%',
+              background: 'rgba(220, 53, 69, 0.15)', border: '1.5px solid rgba(220, 53, 69, 0.4)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px',
+              color: '#ff6b6b'
+            }}>
+              <Trash2 size={26} />
+            </div>
+            <h3 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '24px', margin: '0 0 8px', color: '#fff' }}>
+              Delete Customer Review?
+            </h3>
+            <p style={{ fontSize: '13.5px', color: 'rgba(255,255,255,0.7)', margin: '0 0 20px', lineHeight: 1.5 }}>
+              Are you sure you want to permanently delete the review from <strong>{deleteTargetReview.author}</strong> on {deleteTargetReview.product}?
+            </p>
+            <div style={{ display: 'flex', gap: '12px' }}>
+              <button
+                type="button"
+                onClick={() => setDeleteTargetReview(null)}
+                disabled={isDeleting}
+                style={{
+                  flex: 1, padding: '12px', background: 'transparent',
+                  border: '1px solid rgba(255,255,255,0.2)', color: 'rgba(255,255,255,0.85)',
+                  borderRadius: '8px', fontWeight: 600, fontSize: '14px', cursor: 'pointer'
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={confirmDeleteReview}
+                disabled={isDeleting}
+                style={{
+                  flex: 1, padding: '12px', background: 'linear-gradient(135deg, #dc3545 0%, #bd2130 100%)',
+                  border: 'none', color: '#fff', borderRadius: '8px', fontWeight: 700, fontSize: '14px',
+                  cursor: isDeleting ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center',
+                  justifyContent: 'center', gap: '8px'
+                }}
+              >
+                {isDeleting ? <Loader2 size={16} className="animate-spin" /> : <Trash2 size={16} />}
+                {isDeleting ? 'Deleting...' : 'Confirm Delete'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

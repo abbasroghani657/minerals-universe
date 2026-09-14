@@ -24,6 +24,7 @@ export default function Reviews() {
   const [text, setText] = useState('');
   const [photoBase64, setPhotoBase64] = useState<string | null>(null);
   const [errorMsg, setErrorMsg] = useState('');
+  const [toastSuccess, setToastSuccess] = useState<string | null>(null);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -92,7 +93,8 @@ export default function Reviews() {
       });
 
       if (res.ok) {
-        alert('Thank you! Your review has been submitted for moderation and will appear once approved.');
+        setToastSuccess('Thank you! Your verified review has been submitted for moderation and will appear once approved.');
+        setTimeout(() => setToastSuccess(null), 5000);
         
         // Optimistically add to local state as pending indicator or simple addition
         const newReview = {
@@ -264,6 +266,32 @@ export default function Reviews() {
               </button>
             </form>
           </div>
+        </div>
+      )}
+
+      {toastSuccess && (
+        <div style={{
+          position: 'fixed',
+          bottom: '30px',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          zIndex: 9999,
+          background: 'linear-gradient(135deg, #1a5c4a 0%, #0d3b2f 100%)',
+          color: '#fff',
+          padding: '14px 24px',
+          borderRadius: '30px',
+          boxShadow: '0 10px 30px rgba(0,0,0,0.3)',
+          border: '1px solid rgba(197,160,89,0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '10px',
+          fontFamily: "'DM Sans', sans-serif",
+          fontSize: '14px',
+          fontWeight: 600,
+          animation: 'fadeIn 0.3s ease-out',
+        }}>
+          <span style={{ color: '#c5a059', fontSize: '18px' }}>✦</span>
+          <span>{toastSuccess}</span>
         </div>
       )}
     </>

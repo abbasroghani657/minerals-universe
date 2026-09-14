@@ -38,6 +38,7 @@ export default function AdminProducts() {
   const [isUploading, setIsUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [priceUSD, setPriceUSD] = useState<number | ''>('');
+  const [deleteTarget, setDeleteTarget] = useState<any | null>(null);
   const [origUSD, setOrigUSD] = useState<number | ''>('');
   const [selectedBadge, setSelectedBadge] = useState('');
   const [stockCount, setStockCount] = useState<number>(5);
@@ -199,15 +200,15 @@ export default function AdminProducts() {
     }
   };
 
-  const handleDelete = async (id: number) => {
-    if (!confirm('Are you sure you want to delete this gemstone from store?')) return;
+  const executeDelete = async () => {
+    if (!deleteTarget) return;
     try {
-      const res = await fetch(`/api/products?id=${id}`, {
+      const res = await fetch(`/api/products?id=${deleteTarget.id}`, {
         method: 'DELETE',
       });
       const data = await res.json();
       if (data.success) {
-        setProducts(prev => prev.filter(p => p.id !== id));
+        setProducts(prev => prev.filter(p => p.id !== deleteTarget.id));
         showToast('Gemstone deleted successfully');
       } else {
         showToast(data.error || 'Failed to delete product', 'error');
@@ -215,6 +216,8 @@ export default function AdminProducts() {
     } catch (err) {
       console.error('Error deleting product:', err);
       showToast('Error deleting product', 'error');
+    } finally {
+      setDeleteTarget(null);
     }
   };
 
@@ -226,23 +229,23 @@ export default function AdminProducts() {
     const finalVariety = isCustomVariety ? customVarietyName.trim() : selectedVariety;
 
     if (!finalMainCat) {
-      alert('Please select or specify a Primary Category (e.g. Loose Gemstones, Minerals & Crystals, Polished Stones).');
+      showToast('Please select or specify a Primary Category (e.g. Loose Gemstones, Minerals & Crystals, Polished Stones).', 'error');
       return;
     }
 
     if (!finalVariety) {
-      alert('Please select or enter the Gemstone / Mineral variety name.');
+      showToast('Please select or enter the Gemstone / Mineral variety name.', 'error');
       return;
     }
 
     if (!imageUrl.trim()) {
-      alert('Please upload an image or provide an image URL.');
+      showToast('Please upload an image or provide an image URL.', 'error');
       return;
     }
 
     const price = Number(priceUSD);
     if (!price || price <= 0) {
-      alert('Please enter a valid base price in USD ($).');
+      showToast('Please enter a valid base price in USD ($).', 'error');
       return;
     }
 
@@ -563,7 +566,7 @@ export default function AdminProducts() {
                           <Edit size={17} />
                         </button>
                         <button 
-                          onClick={() => handleDelete(p.id)} 
+                          onClick={() => setDeleteTarget(p)} 
                           title="Delete Gemstone"
                           style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#c94438', padding: '4px' }}
                         >
@@ -927,6 +930,39 @@ export default function AdminProducts() {
               </form>
             </div>
 
+          </div>
+        </div>
+      )}
+
+      {/* Luxury Delete Confirmation Modal */}
+      {deleteTarget && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.65)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10000, padding: '20px' }}>
+          <div style={{ background: '#fff', borderRadius: '12px', padding: '28px 24px', maxWidth: '440px', width: '100%', boxShadow: '0 20px 50px rgba(0,0,0,0.2)', textAlign: 'center', fontFamily: "'DM Sans', sans-serif" }}>
+            <div style={{ width: '52px', height: '52px', borderRadius: '50%', background: '#fdf2f2', color: '#c94438', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
+              <Trash2 size={24} />
+            </div>
+            <h3 style={{ fontSize: '20px', fontWeight: 700, color: '#1a1a1a', margin: '0 0 8px', fontFamily: "'Cormorant Garamond', serif" }}>
+              Remove Gemstone from Catalog?
+            </h3>
+            <p style={{ fontSize: '13.5px', color: '#666', margin: '0 0 24px', lineHeight: 1.5 }}>
+              Are you sure you want to permanently delete <strong>{deleteTarget.name}</strong> (${Number(deleteTarget.priceNum || 0).toLocaleString()} USD)? This action cannot be undone.
+            </p>
+            <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
+              <button
+                type="button"
+                onClick={() => setDeleteTarget(null)}
+                style={{ padding: '10px 20px', borderRadius: '6px', border: '1px solid #dcdad5', background: '#fff', color: '#555', fontWeight: 600, fontSize: '13.5px', cursor: 'pointer' }}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={executeDelete}
+                style={{ padding: '10px 22px', borderRadius: '6px', border: 'none', background: '#c94438', color: '#fff', fontWeight: 600, fontSize: '13.5px', cursor: 'pointer', boxShadow: '0 4px 12px rgba(201,68,56,0.3)' }}
+              >
+                Delete Gemstone
+              </button>
+            </div>
           </div>
         </div>
       )}

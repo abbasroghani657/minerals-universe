@@ -53,17 +53,21 @@ export default function CategoryPage({ params }: { params: Promise<{ name: strin
     async function loadData() {
       try {
         setLoading(true);
-        // Fetch products matching this category/variety
+        // Fetch products matching this category/variety in parallel
         const queryParam = isDepartment ? (matchedDepartment || rawParam) : rawParam;
-        const res = await fetch(`/api/products?category=${encodeURIComponent(queryParam)}`);
-        const data = await res.json();
-        if (data.success && Array.isArray(data.products)) {
-          setCategoryProducts(data.products);
+        const [res, depRes] = await Promise.all([
+          fetch(`/api/products?category=${encodeURIComponent(queryParam)}`),
+          (!isDepartment && parentDepartment) ? fetch(`/api/products?category=${encodeURIComponent(parentDepartment)}`) : Promise.resolve(null)
+        ]);
+
+        if (res?.ok) {
+          const data = await res.json();
+          if (data.success && Array.isArray(data.products)) {
+            setCategoryProducts(data.products);
+          }
         }
 
-        // If it is a variety with low/zero count, also fetch related department products
-        if (!isDepartment && parentDepartment) {
-          const depRes = await fetch(`/api/products?category=${encodeURIComponent(parentDepartment)}`);
+        if (depRes?.ok) {
           const depData = await depRes.json();
           if (depData.success && Array.isArray(depData.products)) {
             setDepartmentFallbackProducts(depData.products);

@@ -80,13 +80,18 @@ export async function POST(req: Request) {
     const prefix = type === 'cover' || type === 'banner' ? 'cover' : 'gem';
     const filename = `${prefix}-${Date.now()}-${Math.floor(Math.random() * 10000)}.webp`;
 
-    const uploadsDir = path.join(process.cwd(), 'public', 'uploads');
-    await fs.mkdir(uploadsDir, { recursive: true });
+    let publicUrl = '';
+    try {
+      const uploadsDir = path.join(process.cwd(), 'public', 'uploads');
+      await fs.mkdir(uploadsDir, { recursive: true });
 
-    const filePath = path.join(uploadsDir, filename);
-    await fs.writeFile(filePath, optimizedBuffer);
-
-    const publicUrl = `/uploads/${filename}`;
+      const filePath = path.join(uploadsDir, filename);
+      await fs.writeFile(filePath, optimizedBuffer);
+      publicUrl = `/uploads/${filename}`;
+    } catch (diskErr) {
+      console.warn('[Upload Warning] Serverless disk write failed, fallback to Data URI:', diskErr);
+      publicUrl = `data:image/webp;base64,${optimizedBuffer.toString('base64')}`;
+    }
     return NextResponse.json({
       success: true,
       url: publicUrl,

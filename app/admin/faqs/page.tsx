@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Plus, Search, Edit, Trash2, X, Check } from 'lucide-react';
+import { Plus, Search, Edit, Trash2, X, Check, AlertCircle, CheckCircle2, Loader2 } from 'lucide-react';
 
 export default function AdminFAQs() {
   const [faqs, setFaqs] = useState<any[]>([]);
@@ -9,6 +9,14 @@ export default function AdminFAQs() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingFaq, setEditingFaq] = useState<any>(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [deleteTargetFaq, setDeleteTargetFaq] = useState<any | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+
+  const showToast = (message: string, type: 'success' | 'error' = 'success') => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 4000);
+  };
 
   useEffect(() => {
     async function loadFaqs() {
@@ -37,20 +45,26 @@ export default function AdminFAQs() {
     setIsModalOpen(true);
   };
 
-  const handleDelete = async (id: number) => {
-    if (!confirm('Are you sure you want to delete this FAQ?')) return;
+  const confirmDeleteFaq = async () => {
+    if (!deleteTargetFaq) return;
+    setIsDeleting(true);
     try {
-      const res = await fetch(`/api/faqs?id=${id}`, {
+      const res = await fetch(`/api/faqs?id=${deleteTargetFaq.id}`, {
         method: 'DELETE',
       });
       const data = await res.json();
       if (data.success) {
-        setFaqs(prev => prev.filter(f => f.id !== id));
+        setFaqs(prev => prev.filter(f => f.id !== deleteTargetFaq.id));
+        showToast('FAQ deleted successfully.', 'success');
+        setDeleteTargetFaq(null);
       } else {
-        alert(data.error || 'Failed to delete FAQ.');
+        showToast(data.error || 'Failed to delete FAQ.', 'error');
       }
     } catch (err) {
       console.error('Error deleting FAQ:', err);
+      showToast('Error deleting FAQ. Please try again.', 'error');
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -72,8 +86,9 @@ export default function AdminFAQs() {
         const data = await res.json();
         if (data.success && data.faq) {
           setFaqs(prev => prev.map(f => f.id === editingFaq.id ? data.faq : f));
+          showToast('FAQ updated successfully.', 'success');
         } else {
-          alert(data.error || 'Failed to update FAQ.');
+          showToast(data.error || 'Failed to update FAQ.', 'error');
         }
       } else {
         const res = await fetch('/api/faqs', {
@@ -84,13 +99,15 @@ export default function AdminFAQs() {
         const data = await res.json();
         if (data.success && data.faq) {
           setFaqs(prev => [...prev, data.faq]);
+          showToast('FAQ published successfully.', 'success');
         } else {
-          alert(data.error || 'Failed to create FAQ.');
+          showToast(data.error || 'Failed to create FAQ.', 'error');
         }
       }
       setIsModalOpen(false);
     } catch (err) {
       console.error('Error saving FAQ:', err);
+      showToast('Error saving FAQ. Please try again.', 'error');
     }
   };
 
@@ -105,6 +122,21 @@ export default function AdminFAQs() {
 
   return (
     <>
+      {/* Toast Notification */}
+      {toast && (
+        <div style={{
+          position: 'fixed', bottom: '24px', right: '24px', zIndex: 10000,
+          background: toast.type === 'success' ? 'linear-gradient(135deg, #112d23 0%, #071712 100%)' : 'linear-gradient(135deg, #3d1414 0%, #1a0808 100%)',
+          border: `1px solid ${toast.type === 'success' ? 'rgba(197,160,89,0.5)' : 'rgba(239,68,68,0.5)'}`,
+          borderRadius: '10px', padding: '14px 20px', color: '#fff', fontSize: '14px', fontWeight: 500,
+          display: 'flex', alignItems: 'center', gap: '10px', boxShadow: '0 8px 30px rgba(0,0,0,0.5)',
+          animation: 'fadeInUp 0.3s ease-out'
+        }}>
+          {toast.type === 'success' ? <CheckCircle2 size={18} color="#c5a059" /> : <AlertCircle size={18} color="#f87171" />}
+          <span>{toast.message}</span>
+        </div>
+      )}
+
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
         <h2 style={{ margin: 0, fontSize: '28px', color: '#333', fontFamily: "'Cormorant Garamond', serif" }}>FAQs Manager</h2>
         <button onClick={handleAddNew} style={{ background: '#1a5c4a', color: '#fff', border: 'none', padding: '10px 20px', borderRadius: '4px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 500 }}>
@@ -138,14 +170,74 @@ export default function AdminFAQs() {
                 <td style={{ padding: '16px 0', fontSize: '14px', fontWeight: 600, color: '#1a5c4a' }}>{faq.question}</td>
                 <td style={{ padding: '16px 0', fontSize: '14px', color: '#555', lineHeight: '1.6' }}>{faq.answer}</td>
                 <td style={{ padding: '16px 0', textAlign: 'right' }}>
-                  <button onClick={() => handleEdit(faq)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#4a90e2', marginRight: '12px' }}><Edit size={16} /></button>
-                  <button onClick={() => handleDelete(faq.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#c94438' }}><Trash2 size={16} /></button>
+                  <button onClick={() => handleEdit(faq)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#4a90e2', marginRight: '12px' }} title="Edit FAQ"><Edit size={16} /></button>
+                  <button onClick={() => setDeleteTargetFaq(faq)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#c94438' }} title="Delete FAQ"><Trash2 size={16} /></button>
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {deleteTargetFaq && (
+        <div style={{
+          position: 'fixed', inset: 0, zIndex: 10000,
+          background: 'rgba(5, 18, 14, 0.78)', backdropFilter: 'blur(8px)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px'
+        }}>
+          <div style={{
+            width: '100%', maxWidth: '480px',
+            background: 'linear-gradient(180deg, #112d23 0%, #071712 100%)',
+            border: '1px solid rgba(197, 160, 89, 0.4)', borderRadius: '16px',
+            padding: '32px 28px', color: '#fff', textAlign: 'center',
+            boxShadow: '0 20px 60px rgba(0,0,0,0.6)'
+          }}>
+            <div style={{
+              width: '56px', height: '56px', borderRadius: '50%',
+              background: 'rgba(220, 53, 69, 0.15)', border: '1.5px solid rgba(220, 53, 69, 0.4)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px',
+              color: '#ff6b6b'
+            }}>
+              <Trash2 size={26} />
+            </div>
+            <h3 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '24px', margin: '0 0 8px', color: '#fff' }}>
+              Delete FAQ?
+            </h3>
+            <p style={{ fontSize: '13.5px', color: 'rgba(255,255,255,0.7)', margin: '0 0 20px', lineHeight: 1.5 }}>
+              Are you sure you want to remove &quot;{deleteTargetFaq.question}&quot;? This action cannot be undone.
+            </p>
+            <div style={{ display: 'flex', gap: '12px' }}>
+              <button
+                type="button"
+                onClick={() => setDeleteTargetFaq(null)}
+                disabled={isDeleting}
+                style={{
+                  flex: 1, padding: '12px', background: 'transparent',
+                  border: '1px solid rgba(255,255,255,0.2)', color: 'rgba(255,255,255,0.85)',
+                  borderRadius: '8px', fontWeight: 600, fontSize: '14px', cursor: 'pointer'
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={confirmDeleteFaq}
+                disabled={isDeleting}
+                style={{
+                  flex: 1, padding: '12px', background: 'linear-gradient(135deg, #dc3545 0%, #bd2130 100%)',
+                  border: 'none', color: '#fff', borderRadius: '8px', fontWeight: 700, fontSize: '14px',
+                  cursor: isDeleting ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center',
+                  justifyContent: 'center', gap: '8px'
+                }}
+              >
+                {isDeleting ? <Loader2 size={16} className="animate-spin" /> : <Trash2 size={16} />}
+                {isDeleting ? 'Deleting...' : 'Confirm Delete'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* FAQ Form Modal */}
       {isModalOpen && (

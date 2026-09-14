@@ -7,6 +7,7 @@ import { useCart } from '@/context/CartContext';
 import { formatPrice } from '@/utils/price';
 import { Search, X, Layers, ShoppingBag } from 'lucide-react';
 import { CATEGORY_TREE, MAIN_CATEGORY_NAMES, inferMainCategory, isPrimaryCategory, normalizeCategory, getProductBadge } from '@/utils/categories';
+import { DEFAULT_PRODUCTS } from '@/lib/defaultData';
 
 function ShopContent() {
   const router = useRouter();
@@ -17,7 +18,7 @@ function ShopContent() {
 
   const { addToCart, wishlist, toggleWishlist, currency, exchangeRates } = useCart();
   const [added, setAdded] = useState<Set<number>>(new Set());
-  const [products, setProducts] = useState<any[]>([]);
+  const [products, setProducts] = useState<any[]>(DEFAULT_PRODUCTS);
   const [searchQuery, setSearchQuery] = useState(initialSearch);
 
   // Department Filter
@@ -30,7 +31,7 @@ function ShopContent() {
     !isPrimaryCategory(initialCat) ? initialCat : 'All'
   );
 
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
 
   // Sync URL search queries
   useEffect(() => {
@@ -51,7 +52,6 @@ function ShopContent() {
   useEffect(() => {
     async function loadShopData() {
       try {
-        setLoading(true);
         const res = await fetch('/api/products');
         const data = await res.json();
         if (data.success && Array.isArray(data.products)) {
@@ -59,8 +59,6 @@ function ShopContent() {
         }
       } catch (err) {
         console.error('Failed to load shop products:', err);
-      } finally {
-        setLoading(false);
       }
     }
     loadShopData();
