@@ -40,15 +40,15 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   // Set dedicated clean browser tab title for every admin route (no AI hyphens)
   useEffect(() => {
     const titles: Record<string, string> = {
-      '/admin': 'Admin Dashboard | Minerals Universe',
-      '/admin/products': 'Products | Minerals Universe Admin',
-      '/admin/orders': 'Orders & Shipments | Minerals Universe Admin',
-      '/admin/inquiries': 'Customer Inquiries | Minerals Universe Admin',
-      '/admin/users': 'Customer Management | Minerals Universe Admin',
-      '/admin/reviews': 'Reviews Moderation | Minerals Universe Admin',
-      '/admin/settings': 'Store Settings | Minerals Universe Admin',
-      '/admin/faqs': 'FAQs Management | Minerals Universe Admin',
-      '/admin/bundles': 'Complete Sets | Minerals Universe Admin',
+      '/executive-vault': 'Admin Dashboard | Minerals Universe',
+      '/executive-vault/products': 'Products | Minerals Universe Admin',
+      '/executive-vault/orders': 'Orders & Shipments | Minerals Universe Admin',
+      '/executive-vault/inquiries': 'Customer Inquiries | Minerals Universe Admin',
+      '/executive-vault/users': 'Customer Management | Minerals Universe Admin',
+      '/executive-vault/reviews': 'Reviews Moderation | Minerals Universe Admin',
+      '/executive-vault/settings': 'Store Settings | Minerals Universe Admin',
+      '/executive-vault/faqs': 'FAQs Management | Minerals Universe Admin',
+      '/executive-vault/bundles': 'Complete Sets | Minerals Universe Admin',
     };
     document.title = titles[pathname] || 'Admin Panel | Minerals Universe';
   }, [pathname]);
@@ -120,8 +120,24 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   const hasAdminClearance = isDirectAdmin || role === 'Admin';
 
-  // If user is not authorized, show authorization card
+  // If user is not authorized, show 404 decoy (or passkey claim if explicit claim=1 param)
   if (!hasAdminClearance) {
+    const isClaimMode = typeof window !== 'undefined' && window.location.search.includes('claim=1');
+    if (!isClaimMode) {
+      return (
+        <div style={{ display: 'flex', flexDirection: 'column', minHeight: '80vh', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: '40px 20px', fontFamily: "'DM Sans', sans-serif" }}>
+          <h1 style={{ fontSize: '56px', fontWeight: 800, color: '#1a5c4a', margin: '0 0 10px', letterSpacing: '-1px' }}>404</h1>
+          <h2 style={{ fontSize: '20px', fontWeight: 600, color: '#222', margin: '0 0 12px' }}>Page Not Found</h2>
+          <p style={{ color: '#666', fontSize: '14px', maxWidth: '420px', margin: '0 0 24px', lineHeight: 1.5 }}>
+            The page you are looking for does not exist or has been moved.
+          </p>
+          <Link href="/" style={{ display: 'inline-block', background: '#1a5c4a', color: '#fff', padding: '10px 22px', borderRadius: '6px', textDecoration: 'none', fontWeight: 600, fontSize: '14px' }}>
+            Back to Home
+          </Link>
+        </div>
+      );
+    }
+
     return (
       <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', alignItems: 'center', justifyContent: 'center', background: 'radial-gradient(circle at top, #14352b 0%, #071510 100%)', padding: '40px 20px', fontFamily: "'DM Sans', sans-serif" }}>
         <div style={{ width: '100%', maxWidth: '460px', background: 'rgba(255, 255, 255, 0.04)', border: '1px solid rgba(197, 160, 89, 0.3)', borderRadius: '16px', padding: '40px 32px', boxShadow: '0 20px 50px rgba(0, 0, 0, 0.4)', backdropFilter: 'blur(16px)', textAlign: 'center' }}>
@@ -143,7 +159,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 Please sign in with your store owner Google account.
               </p>
               <Link 
-                href="/sign-in?redirect_url=/admin" 
+                href="/sign-in?redirect_url=/executive-vault" 
                 style={{ 
                   display: 'inline-block', 
                   background: 'linear-gradient(135deg, #c5a059 0%, #dfba73 100%)', 
@@ -262,15 +278,15 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   }
 
   const navItems = [
-    { name: 'Dashboard', href: '/admin', icon: LayoutDashboard },
-    { name: 'Products', href: '/admin/products', icon: Package },
-    { name: 'Complete Sets', href: '/admin/bundles', icon: Layers },
-    { name: 'Orders', href: '/admin/orders', icon: ShoppingCart },
-    { name: 'Users', href: '/admin/users', icon: Users },
-    { name: 'Reviews', href: '/admin/reviews', icon: MessageSquare },
-    { name: 'Inquiries', href: '/admin/inquiries', icon: Mail },
-    { name: 'FAQs', href: '/admin/faqs', icon: HelpCircle },
-    { name: 'Settings', href: '/admin/settings', icon: Settings },
+    { name: 'Dashboard', href: '/executive-vault', icon: LayoutDashboard },
+    { name: 'Products', href: '/executive-vault/products', icon: Package },
+    { name: 'Complete Sets', href: '/executive-vault/bundles', icon: Layers },
+    { name: 'Orders', href: '/executive-vault/orders', icon: ShoppingCart },
+    { name: 'Users', href: '/executive-vault/users', icon: Users },
+    { name: 'Reviews', href: '/executive-vault/reviews', icon: MessageSquare },
+    { name: 'Inquiries', href: '/executive-vault/inquiries', icon: Mail },
+    { name: 'FAQs', href: '/executive-vault/faqs', icon: HelpCircle },
+    { name: 'Settings', href: '/executive-vault/settings', icon: Settings },
   ];
 
   return (
@@ -282,13 +298,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             Minerals Universe
           </h2>
           <p style={{ margin: '4px 0 0', fontSize: '12px', color: 'rgba(255,255,255,0.6)', textTransform: 'uppercase', letterSpacing: '1px' }}>
-            Admin Panel
+            Executive Vault
           </p>
         </div>
 
         <nav style={{ flex: 1, padding: '24px 0', display: 'flex', flexDirection: 'column' }}>
           {navItems.map((item) => {
-            const isActive = pathname === item.href || (pathname?.startsWith(item.href) && item.href !== '/admin');
+            const isActive = pathname === item.href || (pathname?.startsWith(item.href) && item.href !== '/executive-vault');
             const Icon = item.icon;
             return (
               <Link key={item.name} href={item.href} style={{

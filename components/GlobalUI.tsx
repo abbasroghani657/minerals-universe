@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { usePathname } from 'next/navigation';
 import { FaWhatsapp } from 'react-icons/fa';
@@ -11,8 +11,8 @@ import MobileBottomBar from './MobileBottomBar';
 export default function GlobalUI({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   
-  // Hide header/footer on admin and auth routes
-  const hideHeaderFooter = pathname?.startsWith('/admin') || pathname?.startsWith('/sign-in') || pathname?.startsWith('/sign-up');
+  // Hide header/footer on admin, executive vault and auth routes
+  const hideHeaderFooter = pathname?.startsWith('/executive-vault') || pathname?.startsWith('/admin') || pathname?.startsWith('/sign-in') || pathname?.startsWith('/sign-up');
 
   if (hideHeaderFooter) {
     return (

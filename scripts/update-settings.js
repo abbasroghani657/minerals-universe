@@ -1,5 +1,5 @@
 const fs = require('fs');
-let code = fs.readFileSync('app/admin/settings/page.tsx', 'utf8');
+let code = fs.readFileSync('app/executive-vault/settings/page.tsx', 'utf8');
 
 // 1. Remove bank fields from state
 const bankFields = [
@@ -40,5 +40,5 @@ if (sec1Start !== -1 && sec2Start !== -1) {
   console.error('Could not find Section 1 markers!');
 }
 
-fs.writeFileSync('app/admin/settings/page.tsx', code, 'utf8');
+fs.writeFileSync('app/executive-vault/settings/page.tsx', code, 'utf8');
 console.log('Settings page successfully updated!');

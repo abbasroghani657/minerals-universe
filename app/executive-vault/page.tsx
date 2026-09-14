@@ -203,7 +203,7 @@ export default function AdminDashboard() {
         </div>
         <div style={{ display: 'flex', gap: '10px' }}>
           <Link
-            href="/admin/products"
+            href="/executive-vault/products"
             style={{
               display: 'inline-flex',
               alignItems: 'center',
@@ -285,7 +285,7 @@ export default function AdminDashboard() {
             </div>
             {orders.length > 0 && (
               <Link 
-                href="/admin/orders" 
+                href="/executive-vault/orders" 
                 style={{ 
                   background: 'transparent', 
                   border: 'none', 
@@ -315,7 +315,7 @@ export default function AdminDashboard() {
               </p>
               <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
                 <Link 
-                  href="/admin/products" 
+                  href="/executive-vault/products" 
                   style={{ 
                     display: 'inline-flex', 
                     alignItems: 'center', 
@@ -369,7 +369,7 @@ export default function AdminDashboard() {
                   {orders.slice(0, 6).map((order, i) => (
                     <tr key={order.id || i} style={{ borderBottom: i !== Math.min(orders.length, 6) - 1 ? '1px solid #f5f5f5' : 'none' }}>
                       <td style={{ padding: '14px 8px', fontSize: '13.5px', fontWeight: 600, color: '#1a5c4a' }}>
-                        <Link href="/admin/orders" style={{ color: '#1a5c4a', textDecoration: 'none' }}>
+                        <Link href="/executive-vault/orders" style={{ color: '#1a5c4a', textDecoration: 'none' }}>
                           {order.id.startsWith('#') ? order.id : `#${order.id}`}
                         </Link>
                       </td>
@@ -422,7 +422,7 @@ export default function AdminDashboard() {
               <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                 {processingOrders.length > 0 && (
                   <Link 
-                    href="/admin/orders" 
+                    href="/executive-vault/orders" 
                     style={{ 
                       padding: '14px 16px', 
                       background: '#fdf8ec', 
@@ -444,7 +444,7 @@ export default function AdminDashboard() {
 
                 {unreadInquiries.length > 0 && (
                   <Link 
-                    href="/admin/inquiries" 
+                    href="/executive-vault/inquiries" 
                     style={{ 
                       padding: '14px 16px', 
                       background: '#fdf2f2', 
@@ -468,7 +468,7 @@ export default function AdminDashboard() {
 
                 {pendingReviews.length > 0 && (
                   <Link 
-                    href="/admin/reviews" 
+                    href="/executive-vault/reviews" 
                     style={{ 
                       padding: '14px 16px', 
                       background: '#eef6fd', 
@@ -492,7 +492,7 @@ export default function AdminDashboard() {
 
                 {lowStockProducts.length > 0 && (
                   <Link 
-                    href="/admin/products" 
+                    href="/executive-vault/products" 
                     style={{ 
                       padding: '14px 16px', 
                       background: '#fff9e6', 
@@ -522,7 +522,7 @@ export default function AdminDashboard() {
             <h4 style={{ margin: '0 0 14px', fontSize: '15px', color: '#333', fontWeight: 600 }}>Quick Navigation</h4>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
               <Link 
-                href="/admin/products" 
+                href="/executive-vault/products" 
                 style={{ 
                   padding: '12px', 
                   borderRadius: '8px', 
@@ -541,7 +541,7 @@ export default function AdminDashboard() {
                 <Package size={16} color="#1a5c4a" /> Products ({products.length})
               </Link>
               <Link 
-                href="/admin/orders" 
+                href="/executive-vault/orders" 
                 style={{ 
                   padding: '12px', 
                   borderRadius: '8px', 
@@ -559,7 +559,7 @@ export default function AdminDashboard() {
                 <Truck size={16} color="#c5a059" /> Orders ({orders.length})
               </Link>
               <Link 
-                href="/admin/faqs" 
+                href="/executive-vault/faqs" 
                 style={{ 
                   padding: '12px', 
                   borderRadius: '8px', 
@@ -577,7 +577,7 @@ export default function AdminDashboard() {
                 <Sparkles size={16} color="#4a90e2" /> Manage FAQs
               </Link>
               <Link 
-                href="/admin/settings" 
+                href="/executive-vault/settings" 
                 style={{ 
                   padding: '12px', 
                   borderRadius: '8px', 

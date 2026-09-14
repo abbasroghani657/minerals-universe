@@ -13,8 +13,8 @@ export default function MobileBottomBar() {
   const [searchModalOpen, setSearchModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Hide on admin routes
-  if (pathname?.startsWith('/admin')) return null;
+  // Hide on admin and executive vault routes
+  if (pathname?.startsWith('/admin') || pathname?.startsWith('/executive-vault')) return null;
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();

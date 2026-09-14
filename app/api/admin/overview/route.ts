@@ -9,7 +9,7 @@ export async function GET(req: Request) {
   try {
     const auth = await verifyAdminRequest(req);
     if (!auth.authorized) {
-      return NextResponse.json({ success: false, error: 'Unauthorized: Admin clearance required.' }, { status: 403 });
+      return NextResponse.json({ success: false, error: 'Resource not found' }, { status: 404 });
     }
 
     const cacheKey = 'admin_overview_data';

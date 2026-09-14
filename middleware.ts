@@ -1,11 +1,34 @@
 import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
+import { NextResponse } from 'next/server';
 
-const isAdminRoute = createRouteMatcher(['/admin(.*)']);
+// Match automated scanner honeypots & predictable admin paths
+const isHoneypotProbe = createRouteMatcher([
+  '/admin(.*)',
+  '/wp-admin(.*)',
+  '/administrator(.*)',
+  '/backend(.*)',
+  '/cpanel(.*)',
+  '/user/admin(.*)',
+]);
+
+// Match the secret executive vault management route
+const isExecutiveVault = createRouteMatcher(['/executive-vault(.*)']);
 
 export default clerkMiddleware(async (auth, req) => {
-  if (isAdminRoute(req)) {
-    // Protect admin panel: requires sign-in, then layout verifies role
-    await auth.protect();
+  // 1. Trap automated scanners and hackers attempting to probe standard admin paths
+  // Rewrite to native 404 (Not Found) decoy - Zero information disclosure
+  if (isHoneypotProbe(req)) {
+    return NextResponse.rewrite(new URL('/_not-found', req.url));
+  }
+
+  // 2. Zero-Knowledge Stealth Defense for /executive-vault
+  // If an unauthenticated user or bot visits the stealth path, DO NOT redirect to login (which proves existence).
+  // Instead, immediately rewrite to 404 Not Found so the scanner assumes it doesn't exist.
+  if (isExecutiveVault(req)) {
+    const session = await auth();
+    if (!session.userId) {
+      return NextResponse.rewrite(new URL('/_not-found', req.url));
+    }
   }
 });
 

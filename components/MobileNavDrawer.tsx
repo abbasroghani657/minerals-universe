@@ -457,7 +457,7 @@ export default function MobileNavDrawer({
           {/* Admin Portal Button (Only shown to authenticated verified admin) */}
           {mounted && isSignedIn && isAdmin && (
             <button
-              onClick={() => handleLinkClick('/admin')}
+              onClick={() => handleLinkClick('/executive-vault')}
               style={{
                 width: '100%',
                 display: 'flex',

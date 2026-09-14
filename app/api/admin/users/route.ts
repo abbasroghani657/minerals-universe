@@ -56,7 +56,7 @@ export async function GET(req: Request) {
   try {
     const auth = await verifyAdmin(req);
     if (!auth) {
-      return NextResponse.json({ success: false, error: 'Unauthorized. Admin access required.' }, { status: 403 });
+      return NextResponse.json({ success: false, error: 'Resource not found' }, { status: 404 });
     }
 
     const cacheKey = 'admin_users_list';
@@ -243,7 +243,7 @@ export async function PATCH(req: Request) {
   try {
     const auth = await verifyAdmin(req);
     if (!auth) {
-      return NextResponse.json({ success: false, error: 'Unauthorized. Store Owner clearance required.' }, { status: 403 });
+      return NextResponse.json({ success: false, error: 'Resource not found' }, { status: 404 });
     }
 
     const body = await req.json();

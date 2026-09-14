@@ -188,7 +188,7 @@ export default function Header() {
             {/* Store Owner Admin Button - Securely shown ONLY to verified authenticated admins */}
             {mounted && isSignedIn && isAdmin && (
               <Link
-                href="/admin"
+                href="/executive-vault"
                 title="Store Management & Admin Portal"
                 style={{
                   display: 'inline-flex',

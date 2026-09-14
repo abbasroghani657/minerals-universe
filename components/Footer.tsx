@@ -25,7 +25,6 @@ export default function Footer() {
     { label: 'Returns & 30-Day Guarantee', href: '/returns-refunds' },
     { label: 'Privacy & Security', href: '/privacy-policy' },
     { label: 'Terms of Acquisition', href: '/terms' },
-    { label: 'Admin Portal', href: '/admin' },
   ];
 
   return (
