@@ -3,26 +3,39 @@
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
-import { useClerk } from '@clerk/nextjs';
+import { useClerk, useUser } from '@clerk/nextjs';
 import { 
   LayoutDashboard, Package, ShoppingCart, MessageSquare, Mail, 
   LogOut, HelpCircle, Settings, Users, Layers, ShieldCheck, KeyRound, ArrowLeft, Loader2
 } from 'lucide-react';
 
+const ADMIN_EMAILS = [
+  'abbasroghani869@gmail.com',
+  'abbasroghani657@gmail.com',
+  'drtoolofficial@gmail.com',
+  '22pwbcs0904@uetpeshawar.edu.pk',
+];
+
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const { signOut } = useClerk();
+  const { user: clerkUser, isLoaded, isSignedIn } = useUser();
+
   const [role, setRole] = useState<string | null>(null);
-  const [userEmail, setUserEmail] = useState<string | null>(null);
   const [userName, setUserName] = useState<string>('Zaheer Abbas');
-  const [loading, setLoading] = useState(true);
+  const [apiChecking, setApiChecking] = useState(true);
 
   // Passkey unlock state
   const [passkeyInput, setPasskeyInput] = useState('');
   const [isSubmittingPasskey, setIsSubmittingPasskey] = useState(false);
   const [passkeyError, setPasskeyError] = useState<string | null>(null);
   const [passkeySuccess, setPasskeySuccess] = useState<string | null>(null);
+
+  // 1. Direct check from Clerk profile
+  const allClerkEmails = (clerkUser?.emailAddresses || []).map(e => e.emailAddress.toLowerCase().trim());
+  const isDirectAdmin = allClerkEmails.some(e => ADMIN_EMAILS.includes(e));
+  const activeEmail = clerkUser?.primaryEmailAddress?.emailAddress?.toLowerCase().trim() || allClerkEmails[0] || null;
 
   useEffect(() => {
     async function fetchRole() {
@@ -31,19 +44,21 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         const data = await res.json();
         if (data.success && data.role) {
           setRole(data.role);
-          if (data.email) setUserEmail(data.email);
           if (data.name) setUserName(data.name);
-        } else if (data.email) {
-          setUserEmail(data.email);
         }
       } catch (err) {
-        console.error('Error checking user role:', err);
+        console.warn('Non-fatal role check error:', err);
       } finally {
-        setLoading(false);
+        setApiChecking(false);
       }
     }
-    fetchRole();
-  }, []);
+
+    if (isSignedIn) {
+      fetchRole();
+    } else {
+      setApiChecking(false);
+    }
+  }, [isSignedIn]);
 
   const handleClaimAdmin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -77,7 +92,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     }
   };
 
-  if (loading) {
+  // Loading state while Clerk or initial check initializes (skip if direct admin detected)
+  if (!isLoaded || (apiChecking && !isDirectAdmin)) {
     return (
       <div style={{ display: 'flex', minHeight: '100vh', alignItems: 'center', justifyContent: 'center', background: '#0a1f18', color: '#c5a059', fontWeight: 600, fontFamily: "'DM Sans', sans-serif", gap: '12px' }}>
         <Loader2 size={24} className="animate-spin" style={{ animation: 'spin 1s linear infinite' }} />
@@ -86,8 +102,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     );
   }
 
-  // If user is not an Admin, show luxury owner elevation panel
-  if (role !== 'Admin') {
+  const hasAdminClearance = isDirectAdmin || role === 'Admin';
+
+  // If user is not authorized, show authorization card
+  if (!hasAdminClearance) {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', alignItems: 'center', justifyContent: 'center', background: 'radial-gradient(circle at top, #14352b 0%, #071510 100%)', padding: '40px 20px', fontFamily: "'DM Sans', sans-serif" }}>
         <div style={{ width: '100%', maxWidth: '460px', background: 'rgba(255, 255, 255, 0.04)', border: '1px solid rgba(197, 160, 89, 0.3)', borderRadius: '16px', padding: '40px 32px', boxShadow: '0 20px 50px rgba(0, 0, 0, 0.4)', backdropFilter: 'blur(16px)', textAlign: 'center' }}>
@@ -103,93 +121,112 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             This administrative control system is strictly restricted to verified owners of Minerals Universe.
           </p>
 
-          {userEmail ? (
-            <div style={{ background: 'rgba(26, 92, 74, 0.25)', border: '1px solid rgba(197, 160, 89, 0.25)', borderRadius: '8px', padding: '12px', marginBottom: '22px', fontSize: '13px', color: '#e0d8c3', textAlign: 'left' }}>
-              <div style={{ color: 'rgba(255, 255, 255, 0.5)', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '4px' }}>Active Account</div>
-              <strong style={{ color: '#fff', wordBreak: 'break-all' }}>{userEmail}</strong>
-            </div>
-          ) : (
+          {!isSignedIn ? (
             <div style={{ marginBottom: '20px' }}>
-              <Link href="/sign-in?redirect_url=/admin" style={{ display: 'inline-block', background: '#c5a059', color: '#071510', padding: '10px 20px', borderRadius: '6px', fontWeight: 600, fontSize: '13.5px', textDecoration: 'none' }}>
-                Sign In First →
-              </Link>
-            </div>
-          )}
-
-          {userEmail && (
-            <form onSubmit={handleClaimAdmin} style={{ display: 'flex', flexDirection: 'column', gap: '14px', textAlign: 'left' }}>
-              <div>
-                <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: 'rgba(255,255,255,0.7)', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                  Master Owner Passkey
-                </label>
-                <input 
-                  type="password"
-                  value={passkeyInput}
-                  onChange={(e) => setPasskeyInput(e.target.value)}
-                  placeholder="Enter secret passkey"
-                  style={{
-                    width: '100%',
-                    background: 'rgba(0, 0, 0, 0.35)',
-                    border: '1px solid rgba(255, 255, 255, 0.15)',
-                    borderRadius: '8px',
-                    padding: '12px 14px',
-                    color: '#fff',
-                    fontSize: '14px',
-                    outline: 'none',
-                    boxSizing: 'border-box',
-                    transition: 'border-color 0.2s',
-                  }}
-                  onFocus={(e) => (e.currentTarget.style.borderColor = '#c5a059')}
-                  onBlur={(e) => (e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.15)')}
-                />
-              </div>
-
-              {passkeyError && (
-                <div style={{ color: '#ff6b6b', fontSize: '12.5px', background: 'rgba(255, 107, 107, 0.1)', padding: '8px 12px', borderRadius: '6px', border: '1px solid rgba(255, 107, 107, 0.2)' }}>
-                  {passkeyError}
-                </div>
-              )}
-
-              {passkeySuccess && (
-                <div style={{ color: '#51cf66', fontSize: '12.5px', background: 'rgba(81, 207, 102, 0.1)', padding: '8px 12px', borderRadius: '6px', border: '1px solid rgba(81, 207, 102, 0.2)' }}>
-                  {passkeySuccess}
-                </div>
-              )}
-
-              <button
-                type="submit"
-                disabled={isSubmittingPasskey}
-                style={{
-                  background: 'linear-gradient(135deg, #c5a059 0%, #dfba73 100%)',
-                  color: '#071510',
-                  border: 'none',
-                  padding: '12px 20px',
-                  borderRadius: '8px',
-                  fontWeight: 700,
-                  fontSize: '14px',
-                  cursor: isSubmittingPasskey ? 'not-allowed' : 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '8px',
-                  boxShadow: '0 4px 15px rgba(197, 160, 89, 0.3)',
-                  transition: 'opacity 0.2s',
-                  marginTop: '4px',
+              <p style={{ color: 'rgba(255, 255, 255, 0.6)', fontSize: '13px', marginBottom: '16px' }}>
+                Please sign in with your store owner Google account.
+              </p>
+              <Link 
+                href="/sign-in?redirect_url=/admin" 
+                style={{ 
+                  display: 'inline-block', 
+                  background: 'linear-gradient(135deg, #c5a059 0%, #dfba73 100%)', 
+                  color: '#071510', 
+                  padding: '12px 24px', 
+                  borderRadius: '8px', 
+                  fontWeight: 700, 
+                  fontSize: '14px', 
+                  textDecoration: 'none',
+                  boxShadow: '0 4px 15px rgba(197, 160, 89, 0.3)'
                 }}
               >
-                {isSubmittingPasskey ? (
-                  <>
-                    <Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} />
-                    Verifying...
-                  </>
-                ) : (
-                  <>
-                    <ShieldCheck size={18} />
-                    Unlock Admin Access
-                  </>
+                Sign In as Store Owner →
+              </Link>
+            </div>
+          ) : (
+            <>
+              {activeEmail && (
+                <div style={{ background: 'rgba(26, 92, 74, 0.25)', border: '1px solid rgba(197, 160, 89, 0.25)', borderRadius: '8px', padding: '12px', marginBottom: '22px', fontSize: '13px', color: '#e0d8c3', textAlign: 'left' }}>
+                  <div style={{ color: 'rgba(255, 255, 255, 0.5)', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '4px' }}>Active Account</div>
+                  <strong style={{ color: '#fff', wordBreak: 'break-all' }}>{activeEmail}</strong>
+                  <div style={{ fontSize: '11.5px', color: 'rgba(255, 255, 255, 0.6)', marginTop: '4px' }}>Enter your master owner passkey below to unlock Administrator access:</div>
+                </div>
+              )}
+
+              <form onSubmit={handleClaimAdmin} style={{ display: 'flex', flexDirection: 'column', gap: '14px', textAlign: 'left' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: 'rgba(255,255,255,0.7)', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                    Master Owner Passkey
+                  </label>
+                  <input 
+                    type="password"
+                    value={passkeyInput}
+                    onChange={(e) => setPasskeyInput(e.target.value)}
+                    placeholder="Enter secret passkey"
+                    style={{
+                      width: '100%',
+                      background: 'rgba(0, 0, 0, 0.35)',
+                      border: '1px solid rgba(255, 255, 255, 0.15)',
+                      borderRadius: '8px',
+                      padding: '12px 14px',
+                      color: '#fff',
+                      fontSize: '14px',
+                      outline: 'none',
+                      boxSizing: 'border-box',
+                      transition: 'border-color 0.2s',
+                    }}
+                    onFocus={(e) => (e.currentTarget.style.borderColor = '#c5a059')}
+                    onBlur={(e) => (e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.15)')}
+                  />
+                </div>
+
+                {passkeyError && (
+                  <div style={{ color: '#ff6b6b', fontSize: '12.5px', background: 'rgba(255, 107, 107, 0.1)', padding: '8px 12px', borderRadius: '6px', border: '1px solid rgba(255, 107, 107, 0.2)' }}>
+                    {passkeyError}
+                  </div>
                 )}
-              </button>
-            </form>
+
+                {passkeySuccess && (
+                  <div style={{ color: '#51cf66', fontSize: '12.5px', background: 'rgba(81, 207, 102, 0.1)', padding: '8px 12px', borderRadius: '6px', border: '1px solid rgba(81, 207, 102, 0.2)' }}>
+                    {passkeySuccess}
+                  </div>
+                )}
+
+                <button
+                  type="submit"
+                  disabled={isSubmittingPasskey}
+                  style={{
+                    background: 'linear-gradient(135deg, #c5a059 0%, #dfba73 100%)',
+                    color: '#071510',
+                    border: 'none',
+                    padding: '12px 20px',
+                    borderRadius: '8px',
+                    fontWeight: 700,
+                    fontSize: '14px',
+                    cursor: isSubmittingPasskey ? 'not-allowed' : 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '8px',
+                    boxShadow: '0 4px 15px rgba(197, 160, 89, 0.3)',
+                    transition: 'opacity 0.2s',
+                    marginTop: '4px',
+                  }}
+                >
+                  {isSubmittingPasskey ? (
+                    <>
+                      <Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} />
+                      Verifying...
+                    </>
+                  ) : (
+                    <>
+                      <ShieldCheck size={18} />
+                      Unlock Admin Access
+                    </>
+                  )}
+                </button>
+              </form>
+            </>
           )}
 
           <div style={{ marginTop: '24px', borderTop: '1px solid rgba(255, 255, 255, 0.08)', paddingTop: '16px' }}>
@@ -289,11 +326,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           </h1>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             <div style={{ width: '36px', height: '36px', background: '#c5a059', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 600, fontSize: '14px' }}>
-              {userName.substring(0, 2).toUpperCase()}
+              {(userName || 'ZA').substring(0, 2).toUpperCase()}
             </div>
             <div>
-              <p style={{ margin: 0, fontSize: '14px', fontWeight: 600, color: '#333' }}>{userName}</p>
-              <p style={{ margin: 0, fontSize: '12px', color: '#888' }}>Administrator</p>
+              <p style={{ margin: 0, fontSize: '14px', fontWeight: 600, color: '#333' }}>{userName || 'Zaheer Abbas'}</p>
+              <p style={{ margin: 0, fontSize: '12px', color: '#888' }}>Administrator ({activeEmail || 'Owner'})</p>
             </div>
           </div>
         </div>

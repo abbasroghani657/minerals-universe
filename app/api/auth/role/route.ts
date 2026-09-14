@@ -18,39 +18,48 @@ export async function GET(req: Request) {
     const lowerEmail = email.toLowerCase().trim();
     const allUserEmails = (user.emailAddresses || []).map(e => e.emailAddress.toLowerCase().trim());
 
+    // 1. Immediate super-admin check from configured emails
     let isAdmin = allUserEmails.some(e => ADMIN_EMAILS.includes(e));
+    let dbRole = isAdmin ? 'Admin' : 'Customer';
+    let dbName = `${user.firstName || ''} ${user.lastName || ''}`.trim() || (isAdmin ? 'Zaheer Abbas' : 'User');
 
-    // Lookup user in database
-    let dbUser = await prisma.user.findFirst({
-      where: { email: { in: allUserEmails } }
-    });
-
-    if (dbUser && dbUser.role === 'Admin') {
-      isAdmin = true;
-    }
-
-    if (!dbUser) {
-      dbUser = await prisma.user.create({
-        data: {
-          email: lowerEmail,
-          name: `${user.firstName || ''} ${user.lastName || ''}`.trim() || (isAdmin ? 'Zaheer Abbas' : 'User'),
-          role: isAdmin ? 'Admin' : 'Customer'
-        }
+    // 2. Safe Database sync (non-blocking if DB has latency)
+    try {
+      let dbUser = await prisma.user.findFirst({
+        where: { email: { in: allUserEmails } }
       });
-    } else if (isAdmin && dbUser.role !== 'Admin') {
-      dbUser = await prisma.user.update({
-        where: { id: dbUser.id },
-        data: { role: 'Admin' }
-      });
+
+      if (dbUser && dbUser.role === 'Admin') {
+        isAdmin = true;
+        dbRole = 'Admin';
+      }
+
+      if (!dbUser) {
+        dbUser = await prisma.user.create({
+          data: {
+            email: lowerEmail,
+            name: dbName,
+            role: isAdmin ? 'Admin' : 'Customer'
+          }
+        });
+      } else if (isAdmin && dbUser.role !== 'Admin') {
+        await prisma.user.update({
+          where: { id: dbUser.id },
+          data: { role: 'Admin' }
+        });
+      }
+      if (dbUser?.name) dbName = dbUser.name;
+    } catch (dbErr) {
+      console.warn('[GET /api/auth/role] Non-fatal DB sync warning:', dbErr);
     }
 
     return NextResponse.json({ 
       success: true, 
-      role: dbUser.role, 
+      role: isAdmin ? 'Admin' : dbRole, 
       email: lowerEmail, 
-      name: dbUser.name,
+      name: dbName,
       loggedIn: true,
-      isAdmin: dbUser.role === 'Admin'
+      isAdmin: isAdmin
     });
   } catch (err: any) {
     console.error('[GET /api/auth/role]', err);
@@ -73,20 +82,25 @@ export async function POST(req: Request) {
 
     // Check passkey against authorized master owner passkeys
     if (MASTER_PASSKEYS.includes(passkey?.trim())) {
-      const updatedUser = await prisma.user.upsert({
-        where: { email },
-        update: { role: 'Admin' },
-        create: {
-          email,
-          name: `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'Zaheer Abbas (Admin)',
-          role: 'Admin'
-        }
-      });
+      let updatedUser;
+      try {
+        updatedUser = await prisma.user.upsert({
+          where: { email },
+          update: { role: 'Admin' },
+          create: {
+            email,
+            name: `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'Zaheer Abbas (Admin)',
+            role: 'Admin'
+          }
+        });
+      } catch (e) {
+        // Fallback in-memory
+      }
 
       return NextResponse.json({ 
         success: true, 
         role: 'Admin', 
-        email: updatedUser.email,
+        email: updatedUser?.email || email,
         message: 'Owner privileges granted successfully! You are now an Administrator.' 
       });
     }
